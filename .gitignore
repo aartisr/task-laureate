@@ -1,0 +1,47 @@
+# Dependencies
+node_modules/
+package-lock.json
+npm-debug.log
+npm-error.log
+yarn-error.log
+pnpm-error.log
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+
+# IDE & Editor
+.vscode/
+.idea/
+.DS_Store
+*.swp
+*.swo
+*~
+.env.local
+.env.*.local
+
+# Environment variables
+.env
+.env.production
+.env.development
+.env.test
+
+# Testing
+coverage/
+.nyc_output/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# OS files
+Thumbs.db
+.DS_Store
+*.log
+
+# Build system
+dist-types/
+.turbo/
