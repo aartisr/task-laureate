@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { Link, Outlet } from '@tanstack/react-router';
 import { useTheme } from '../core/themes/ThemeProvider';
@@ -11,9 +12,36 @@ interface AppShellProps {
 export function AppShell({ children, navItems }: AppShellProps) {
   const { currentTheme } = useTheme();
   const isDarkTheme = currentTheme !== 'luxury-minimal';
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const mobileNavItems = [
+    { label: 'Dashboard', to: '/', icon: '📊', description: 'Overview' },
+    ...navItems,
+    { label: 'Help & Support', to: '/support', icon: '💡', description: 'Help center' },
+  ].filter((item, index, items) => items.findIndex((candidate) => candidate.to === item.to) === index);
+
+  const shellThemeClass = isDarkTheme ? 'app-shell--dark' : 'app-shell--light';
 
   return (
-    <div className="app-shell" style={{ colorScheme: isDarkTheme ? 'dark' : 'light' }}>
+    <div className={`app-shell ${shellThemeClass}`}>
+      <header className="mobile-topbar" aria-label="Mobile navigation">
+        <div className="mobile-topbar__brand">
+          <span>Task-Laureate</span>
+          <small>Mobile menu</small>
+        </div>
+        <button
+          type="button"
+          className="mobile-menu-toggle"
+          aria-expanded={isMobileMenuOpen}
+          aria-controls="mobile-navigation-panel"
+          onClick={() => setIsMobileMenuOpen((open) => !open)}
+        >
+          <span className="mobile-menu-toggle__icon" aria-hidden="true">
+            ☰
+          </span>
+          Menu
+        </button>
+      </header>
       <aside className="sidebar" aria-label="Navigation">
         <div className="brand-mark" title="Task-Laureate - Premium task management">
           <span>Task-Laureate</span>
@@ -40,7 +68,7 @@ export function AppShell({ children, navItems }: AppShellProps) {
             </Link>
           ))}
         </nav>
-        <div style={{ flex: 1 }} />
+        <div className="sidebar-spacer" />
 
         {/* ===== UTILITY SECTION ===== */}
         <div className="sidebar-footer">
@@ -74,6 +102,58 @@ export function AppShell({ children, navItems }: AppShellProps) {
 
         </div>
       </aside>
+      <div
+        className={`mobile-navigation ${isMobileMenuOpen ? 'is-open' : ''}`}
+        aria-hidden={!isMobileMenuOpen}
+      >
+        <button
+          type="button"
+          className="mobile-navigation__backdrop"
+          aria-label="Close navigation"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+        <nav
+          id="mobile-navigation-panel"
+          className="mobile-navigation__panel"
+          aria-label="Primary Navigation"
+        >
+          <div className="mobile-navigation__header">
+            <div>
+              <p className="mobile-navigation__eyebrow">Quick access</p>
+              <h2>Navigate the app</h2>
+            </div>
+            <button
+              type="button"
+              className="mobile-navigation__close"
+              aria-label="Close menu"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              ×
+            </button>
+          </div>
+
+          <div className="mobile-navigation__items">
+            {mobileNavItems.map((item) => (
+              <Link
+                key={item.to}
+                to={item.to}
+                activeProps={{ className: 'active' }}
+                className="mobile-navigation__link"
+                aria-label={item.label}
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <span className="mobile-navigation__icon" aria-hidden="true">
+                  {item.icon ?? '•'}
+                </span>
+                <span className="mobile-navigation__text">
+                  <strong>{item.label}</strong>
+                  <small>{item.description ?? 'Open section'}</small>
+                </span>
+              </Link>
+            ))}
+          </div>
+        </nav>
+      </div>
       <main className="workspace" role="main">
         {children ?? <Outlet />}
       </main>

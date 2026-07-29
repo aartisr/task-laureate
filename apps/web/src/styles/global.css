@@ -64,6 +64,14 @@ input {
   position: relative;
 }
 
+.app-shell--dark {
+  color-scheme: dark;
+}
+
+.app-shell--light {
+  color-scheme: light;
+}
+
 .sidebar {
   display: none;
   order: -1;
@@ -76,6 +84,10 @@ input {
   overflow-x: hidden;
   display: flex;
   flex-direction: column;
+}
+
+.sidebar-spacer {
+  flex: 1;
 }
 
 @media (min-width: 768px) {
@@ -1758,6 +1770,7 @@ select:focus {
   line-height: var(--line-height-normal);
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -2643,7 +2656,7 @@ select:focus {
   text-align: left;
   cursor: pointer;
   transition: background var(--transition-base);
-  min-height: auto;
+  min-height: 0;
 }
 
 .faq-question:hover { background: rgba(139,92,246,0.04); }
