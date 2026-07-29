@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
-import { Link, Outlet } from '@tanstack/react-router';
+import { Link, Outlet, useRouterState } from '@tanstack/react-router';
 import { useTheme } from '../core/themes/ThemeProvider';
 import type { NavItem } from '../core/contracts/feature';
 
@@ -13,34 +13,101 @@ export function AppShell({ children, navItems }: AppShellProps) {
   const { currentTheme } = useTheme();
   const isDarkTheme = currentTheme !== 'luxury-minimal';
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const currentPath = useRouterState({ select: (state) => state.location.pathname });
 
-  const mobileNavItems = [
-    { label: 'Dashboard', to: '/', icon: '📊', description: 'Overview' },
-    ...navItems,
-    { label: 'Help & Support', to: '/support', icon: '💡', description: 'Help center' },
-  ].filter((item, index, items) => items.findIndex((candidate) => candidate.to === item.to) === index);
+  const mobileNavItems = useMemo(
+    () =>
+      [
+        { label: 'Dashboard', to: '/', icon: '📊', description: 'Overview' },
+        ...navItems,
+        { label: 'Help & Support', to: '/support', icon: '💡', description: 'Help center' },
+      ].filter((item, index, items) => items.findIndex((candidate) => candidate.to === item.to) === index),
+    [navItems],
+  );
+
+  const currentSection = useMemo(
+    () =>
+      mobileNavItems.find((item) =>
+        item.to === '/'
+          ? currentPath === '/'
+          : currentPath === item.to || currentPath.startsWith(`${item.to}/`),
+      ) ?? mobileNavItems[0],
+    [currentPath, mobileNavItems],
+  );
+
+  const mobileTabConfig = useMemo(
+    () => [
+      { to: '/', fallbackLabel: 'Home', displayLabel: 'Home', icon: '🏠' },
+      { to: '/tasks', fallbackLabel: 'Tasks', displayLabel: 'Tasks', icon: '✓' },
+      { to: '/search', fallbackLabel: 'Search', displayLabel: 'Search', icon: '🔍' },
+      { to: '/settings', fallbackLabel: 'Settings', displayLabel: 'Settings', icon: '⚙️' },
+    ],
+    [],
+  );
+
+  const mobilePrimaryTabs = useMemo(() => {
+    return mobileTabConfig.map((tab) => {
+      const existing = mobileNavItems.find((item) => item.to === tab.to);
+      return {
+        label: tab.fallbackLabel,
+        to: tab.to,
+        icon: existing?.icon ?? tab.icon,
+        description: existing?.description,
+        mobileLabel: tab.displayLabel,
+      };
+    });
+  }, [mobileNavItems, mobileTabConfig]);
+
+  const mobileSecondaryItems = useMemo(
+    () => mobileNavItems.filter((item) => !mobilePrimaryTabs.some((tab) => tab.to === item.to)),
+    [mobileNavItems, mobilePrimaryTabs],
+  );
+
+  useEffect(() => {
+    const originalOverflow = document.body.style.overflow;
+
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    }
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsMobileMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [isMobileMenuOpen]);
 
   const shellThemeClass = isDarkTheme ? 'app-shell--dark' : 'app-shell--light';
+  const getLinkActiveOptions = (to: string) => (to === '/' ? { exact: true } : undefined);
 
   return (
     <div className={`app-shell ${shellThemeClass}`}>
       <header className="mobile-topbar" aria-label="Mobile navigation">
         <div className="mobile-topbar__brand">
           <span>Task-Laureate</span>
-          <small>Mobile menu</small>
+          <small>Now viewing: {currentSection?.label ?? 'Dashboard'}</small>
         </div>
-        <button
-          type="button"
-          className="mobile-menu-toggle"
-          aria-expanded={isMobileMenuOpen}
-          aria-controls="mobile-navigation-panel"
-          onClick={() => setIsMobileMenuOpen((open) => !open)}
-        >
-          <span className="mobile-menu-toggle__icon" aria-hidden="true">
-            ☰
-          </span>
-          Menu
-        </button>
+        <div className="mobile-topbar__actions">
+          <button
+            type="button"
+            className="mobile-menu-toggle"
+            aria-expanded={isMobileMenuOpen}
+            aria-controls="mobile-navigation-panel"
+            onClick={() => setIsMobileMenuOpen((open) => !open)}
+          >
+            <span className="mobile-menu-toggle__icon" aria-hidden="true">
+              ☰
+            </span>
+            Menu
+          </button>
+        </div>
       </header>
       <aside className="sidebar" aria-label="Navigation">
         <div className="brand-mark" title="Task-Laureate - Premium task management">
@@ -48,8 +115,9 @@ export function AppShell({ children, navItems }: AppShellProps) {
           <small>Premium Tasks</small>
         </div>
         <nav className="sidebar-nav" aria-label="Primary Navigation">
-          <Link 
-            to="/" 
+          <Link
+            to="/"
+            activeOptions={getLinkActiveOptions('/')}
             activeProps={{ className: 'active' }}
             className="sidebar-link"
             aria-label="Dashboard"
@@ -57,9 +125,10 @@ export function AppShell({ children, navItems }: AppShellProps) {
             📊 Dashboard
           </Link>
           {navItems.map((item) => (
-            <Link 
-              key={item.to} 
-              to={item.to} 
+            <Link
+              key={item.to}
+              to={item.to}
+              activeOptions={getLinkActiveOptions(item.to)}
               activeProps={{ className: 'active' }}
               className="sidebar-link"
               aria-label={item.label}
@@ -81,6 +150,7 @@ export function AppShell({ children, navItems }: AppShellProps) {
           {/* Support — highlighted, stands out */}
           <Link
             to="/support"
+            activeOptions={getLinkActiveOptions('/support')}
             activeProps={{ className: 'active' }}
             className="sidebar-link sidebar-link--support"
             aria-label="Help & Support"
@@ -133,10 +203,11 @@ export function AppShell({ children, navItems }: AppShellProps) {
           </div>
 
           <div className="mobile-navigation__items">
-            {mobileNavItems.map((item) => (
+            {mobilePrimaryTabs.map((item) => (
               <Link
                 key={item.to}
                 to={item.to}
+                activeOptions={getLinkActiveOptions(item.to)}
                 activeProps={{ className: 'active' }}
                 className="mobile-navigation__link"
                 aria-label={item.label}
@@ -152,11 +223,65 @@ export function AppShell({ children, navItems }: AppShellProps) {
               </Link>
             ))}
           </div>
+          {mobileSecondaryItems.length > 0 ? (
+            <div className="mobile-navigation__secondary">
+              <p className="mobile-navigation__subheading">More destinations</p>
+              <div className="mobile-navigation__items">
+                {mobileSecondaryItems.map((item) => (
+                  <Link
+                    key={item.to}
+                    to={item.to}
+                    activeOptions={getLinkActiveOptions(item.to)}
+                    activeProps={{ className: 'active' }}
+                    className="mobile-navigation__link mobile-navigation__link--secondary"
+                    aria-label={item.label}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <span className="mobile-navigation__icon" aria-hidden="true">
+                      {item.icon ?? '•'}
+                    </span>
+                    <span className="mobile-navigation__text">
+                      <strong>{item.label}</strong>
+                      <small>{item.description ?? 'Open section'}</small>
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          ) : null}
         </nav>
       </div>
       <main className="workspace" role="main">
         {children ?? <Outlet />}
       </main>
+      <nav className="mobile-bottom-nav" aria-label="Quick Navigation">
+        {mobilePrimaryTabs.map((item) => (
+          <Link
+            key={item.to}
+            to={item.to}
+            activeOptions={getLinkActiveOptions(item.to)}
+            activeProps={{ className: 'active' }}
+            className="mobile-bottom-nav__link"
+            aria-label={item.mobileLabel ?? item.label}
+          >
+            <span className="mobile-bottom-nav__icon" aria-hidden="true">
+              {item.icon ?? '•'}
+            </span>
+            <span className="mobile-bottom-nav__label">{item.mobileLabel ?? item.label}</span>
+          </Link>
+        ))}
+        <button
+          type="button"
+          className={`mobile-bottom-nav__link mobile-bottom-nav__button ${isMobileMenuOpen ? 'active' : ''}`}
+          aria-expanded={isMobileMenuOpen}
+          aria-controls="mobile-navigation-panel"
+          aria-label="Open more navigation options"
+          onClick={() => setIsMobileMenuOpen((open) => !open)}
+        >
+          <span className="mobile-bottom-nav__icon" aria-hidden="true">☰</span>
+          <span className="mobile-bottom-nav__label">More</span>
+        </button>
+      </nav>
     </div>
   );
 }
