@@ -1,6 +1,6 @@
 {
-  "buildCommand": "npm run build",
-  "outputDirectory": "apps/web/dist",
+  "buildCommand": "npm run build && rm -rf dist && mkdir -p dist && cp -R apps/web/dist/. dist/",
+  "outputDirectory": "dist",
   "installCommand": "npm install --include=optional",
   "framework": null,
   "rewrites": [
