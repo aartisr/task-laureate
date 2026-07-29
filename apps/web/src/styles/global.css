@@ -213,9 +213,12 @@ input {
 
 /* ===== LANDSCAPE MOBILE OPTIMIZATIONS ===== */
 @media (max-height: 600px) and (orientation: landscape) {
+  .app-shell {
+    grid-template-columns: 1fr;
+  }
+
   .sidebar {
-    height: auto;
-    position: relative;
+    display: none;
   }
 
   .workspace {

@@ -1,0 +1,135 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// Core Domain Models
+// ============================================================================
+
+/// TodoList represents a collection of related tasks
+model TodoList {
+  id                String       @id @default(cuid())
+  title             String       @db.VarChar(255)
+  description       String       @default("") @db.Text
+  status            ListStatus   @default(ACTIVE)
+  templateId        String?
+  
+  // Aggregated fields (computed from tasks)
+  taskCount         Int          @default(0)
+  completedTaskCount Int         @default(0)
+  completionPercent Float        @default(0)
+  
+  // Timestamps
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  archivedAt        DateTime?
+  deletedAt         DateTime?
+  
+  // Relations
+  tasks             TodoItem[]
+  activities        ActivityEvent[]
+  
+  @@index([status])
+  @@index([deletedAt])
+  @@map("todo_lists")
+}
+
+/// TodoItem represents a single task within a list
+model TodoItem {
+  id                String       @id @default(cuid())
+  listId            String
+  title             String       @db.VarChar(255)
+  notes             String       @default("") @db.Text
+  status            TaskStatus   @default(TODO)
+  priority          Priority     @default(MEDIUM)
+  dueDate           DateTime?
+  tags              String[]     @default([])
+  order             Int          @default(0)
+  
+  // Timestamps
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  completedAt       DateTime?
+  deletedAt         DateTime?
+  
+  // Relations
+  list              TodoList     @relation(fields: [listId], references: [id], onDelete: Cascade)
+  activities        ActivityEvent[]
+  
+  @@index([listId])
+  @@index([status])
+  @@index([priority])
+  @@index([dueDate])
+  @@index([deletedAt])
+  @@map("todo_items")
+}
+
+/// ActivityEvent tracks all mutations for audit trail
+model ActivityEvent {
+  id                String       @id @default(cuid())
+  entityType        String       @db.VarChar(50)  // "list" | "task"
+  entityId          String
+  action            String       @db.VarChar(50)  // "created" | "updated" | "completed" | "deleted"
+  actor             String       @default("system") @db.VarChar(100)
+  metadata          Json         @default("{}")
+  timestamp         DateTime     @default(now())
+  
+  // Relations (polymorphic pattern)
+  list              TodoList?    @relation(fields: [listId], references: [id], onDelete: Cascade)
+  listId            String?
+  task              TodoItem?    @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  taskId            String?
+  
+  @@index([entityType])
+  @@index([entityId])
+  @@index([timestamp])
+  @@index([listId])
+  @@index([taskId])
+  @@map("activity_events")
+}
+
+/// ListTemplate provides starter templates for new lists
+model ListTemplate {
+  id                String       @id @default(cuid())
+  title             String       @db.VarChar(255)
+  description       String       @default("") @db.Text
+  listDefaults      Json         @default("{}")
+  taskDefaults      Json[]       @default([])
+  
+  // Timestamps
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  
+  @@map("list_templates")
+}
+
+// ============================================================================
+// Enums
+// ============================================================================
+
+enum ListStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+enum TaskStatus {
+  TODO
+  DOING
+  DONE
+  BLOCKED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
