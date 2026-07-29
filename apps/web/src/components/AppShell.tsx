@@ -41,16 +41,37 @@ export function AppShell({ children, navItems }: AppShellProps) {
           ))}
         </nav>
         <div style={{ flex: 1 }} />
-        <div style={{ paddingTop: 'var(--spacing-6)', borderTop: '1px solid var(--color-border-light)' }}>
-          <Link 
-            to="/settings" 
+
+        {/* ===== UTILITY SECTION ===== */}
+        <div className="sidebar-footer">
+
+          {/* Divider with label */}
+          <div className="sidebar-footer__divider">
+            <span>Workspace</span>
+          </div>
+
+          {/* Support — highlighted, stands out */}
+          <Link
+            to="/support"
             activeProps={{ className: 'active' }}
-            className="sidebar-link"
-            aria-label="Settings"
-            title="Settings & Theme"
+            className="sidebar-link sidebar-link--support"
+            aria-label="Help & Support"
           >
-            ⚙️ Settings
+            <span className="sidebar-link__icon">💡</span>
+            <span className="sidebar-link__label">Help & Support</span>
+            <span className="sidebar-link__badge">FAQs</span>
           </Link>
+
+          {/* Creator attribution */}
+          <div className="sidebar-credit">
+            <a href="https://ai-aarti.com" target="_blank" rel="noopener noreferrer" className="sidebar-credit__name">
+              Aarti S Ravikumar
+            </a>
+            <a href="https://saugus.pioneercss.org" target="_blank" rel="noopener noreferrer" className="sidebar-credit__school">
+              PCSSII
+            </a>
+          </div>
+
         </div>
       </aside>
       <main className="workspace" role="main">

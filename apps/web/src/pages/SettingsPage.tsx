@@ -2,6 +2,7 @@ import { PageContainer } from '../components/layouts';
 import { useTheme } from '../core/themes/ThemeProvider';
 import { ThemeSwitcher, ThemePreviewCard } from '../core/themes/ThemeSwitcher';
 import { THEME_OPTIONS } from '../core/themes/themes';
+import { usePageSEO, PAGE_SEO } from '../hooks/usePageSEO';
 
 /**
  * Premium Settings Page
@@ -12,6 +13,7 @@ import { THEME_OPTIONS } from '../core/themes/themes';
  * - All changes apply instantly without reload
  */
 export function SettingsPage() {
+  usePageSEO(PAGE_SEO.settings);
   const { currentTheme } = useTheme();
   const currentThemeLabel = THEME_OPTIONS.find(t => t.name === currentTheme)?.label || 'Unknown';
 

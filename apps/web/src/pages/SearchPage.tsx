@@ -7,8 +7,10 @@ import { usePageNav } from '../hooks/usePageNav';
 import { queryKeys } from '../core/contracts/queryKeys';
 import type { SearchResult } from '../core/contracts/domain';
 import { appServices } from '../app/runtime/appServices';
+import { usePageSEO, PAGE_SEO } from '../hooks/usePageSEO';
 
 export function SearchPage() {
+  usePageSEO(PAGE_SEO.search);
   const navigate = useNavigate();
   const repository = appServices.repository;
   const [searchQuery, setSearchQuery] = useState('');

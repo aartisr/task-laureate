@@ -5,8 +5,8 @@
  * Can be extended to persist to database or Vercel Postgres
  */
 
-import type { PageContent } from './types';
-import { defaultPageContents } from './config';
+import type { PageContent } from '../core/puck/types';
+import { defaultPageContents } from '../core/puck/config';
 
 // In-memory cache for page contents (production: use database)
 const pageContentCache = new Map<string, PageContent>();
@@ -85,7 +85,7 @@ export function contentToPuckData(content: PageContent): any {
       type: 'PageLayout',
       props: {},
     },
-    content: content.blocks.map(block => ({
+    content: content.blocks.map((block: { type: string; props: Record<string, unknown> }) => ({
       type: block.type.charAt(0).toUpperCase() + block.type.slice(1),
       props: block.props,
     })),

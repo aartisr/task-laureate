@@ -334,7 +334,7 @@ export const defaultPageContents: Record<string, PageContent> = {
         type: 'hero',
         props: {
           eyebrow: 'Activity',
-          heading: 'See what's happening.',
+          heading: "See what's happening.",
           subheading: 'A complete timeline of changes, assignments, and completions.',
         },
       },

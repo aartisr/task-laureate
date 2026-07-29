@@ -6,6 +6,7 @@
 
 import { useState } from 'react';
 import { useTheme } from '../../core/themes/ThemeProvider';
+import type { ThemeName } from '../../core/themes/themes';
 import { usePuckContent } from '../../components/withPuckEditor';
 import { PuckPageRenderer } from '../../components/PuckPageRenderer';
 
@@ -15,7 +16,7 @@ export function SettingsPagePuckCompliant() {
 
   // Business logic: Theme selection
   const { currentTheme, setTheme } = useTheme();
-  const [notifications, setNotifications] = useState({
+  const [notifications, setNotifications] = useState<Record<string, boolean>>({
     taskDueSoon: true,
     taskCompleted: true,
     taskAssigned: true,
@@ -29,6 +30,10 @@ export function SettingsPagePuckCompliant() {
     }));
   };
 
+  const handleThemeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setTheme(e.target.value as ThemeName);
+  };
+
   if (!puckContent) {
     return <div>Loading...</div>;
   }
@@ -38,7 +43,7 @@ export function SettingsPagePuckCompliant() {
       {/* Business logic: Theme selector and preferences */}
       <div key="theme-settings" className="settings-section">
         <h3>Theme</h3>
-        <select value={currentTheme} onChange={(e) => setTheme(e.target.value)}>
+        <select value={currentTheme} onChange={handleThemeChange}>
           <option value="dark-pro">Dark Pro</option>
           <option value="luxury-minimal">Luxury Minimal</option>
           <option value="warm-community">Warm & Community</option>

@@ -9,7 +9,6 @@ import { appServices } from '../runtime/appServices';
 import { activityQueryOptions } from '../../core/contracts/queryKeys';
 import { usePuckContent } from '../../components/withPuckEditor';
 import { PuckPageRenderer } from '../../components/PuckPageRenderer';
-import { formatDistanceToNow } from '../../core/domain/format';
 
 export function ActivityPagePuckCompliant() {
   // Load Puck content
@@ -28,8 +27,8 @@ export function ActivityPagePuckCompliant() {
       <div key="activity-timeline" className="activity-timeline">
         {activities?.map((activity) => (
           <article key={activity.id} className="activity-item">
-            <time dateTime={activity.timestamp.toISOString()}>
-              {formatDistanceToNow(activity.timestamp)}
+            <time dateTime={activity.timestamp}>
+              {new Date(activity.timestamp).toLocaleDateString()}
             </time>
             <div className="activity-content">
               <p>

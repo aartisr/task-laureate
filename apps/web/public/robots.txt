@@ -1,0 +1,37 @@
+# robots.txt for Task-Laureate
+# https://task-laureate.vercel.app/
+
+User-agent: *
+Allow: /
+
+# Sitemaps
+Sitemap: https://task-laureate.vercel.app/sitemap.xml
+Sitemap: https://task-laureate.vercel.app/sitemap-images.xml
+
+# AI Crawlers — allow for GEO (Generative Engine Optimization)
+User-agent: GPTBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: Omgilibot
+Allow: /
+
+User-agent: FacebookBot
+Allow: /
+
+User-agent: Applebot
+Allow: /
+
+# Crawl delay (be polite to search engines)
+Crawl-delay: 1

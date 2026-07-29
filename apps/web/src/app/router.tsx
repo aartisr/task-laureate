@@ -10,8 +10,13 @@ import { AppShell } from '../components/AppShell';
 import { ActivityPage } from '../pages/ActivityPage';
 import { DashboardPage } from '../pages/DashboardPage';
 import { ListDetailPage } from '../pages/ListDetailPage';
+import { ListsPage } from '../pages/ListsPage';
+import { TasksPage } from '../pages/TasksPage';
+import { CompletedPage } from '../pages/CompletedPage';
+import { ProgressPage } from '../pages/ProgressPage';
 import { SearchPage } from '../pages/SearchPage';
 import { SettingsPage } from '../pages/SettingsPage';
+import { SupportPage } from '../pages/SupportPage';
 import { listQueryOptions, listTasksQueryOptions, dashboardQueryOptions, activityQueryOptions, searchQueryOptions } from '../core/contracts/queryKeys';
 
 const rootRoute = createRootRouteWithContext<{
@@ -73,12 +78,59 @@ const settingsRoute = createRoute({
   component: SettingsRoute,
 });
 
+const listsOverviewRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: 'lists-overview',
+  loader: async () => {
+    await appServices.queryClient.prefetchQuery(dashboardQueryOptions(appServices.repository));
+  },
+  component: () => <ListsPage />,
+});
+
+const tasksRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: 'tasks',
+  loader: async () => {
+    await appServices.queryClient.prefetchQuery(dashboardQueryOptions(appServices.repository));
+  },
+  component: () => <TasksPage />,
+});
+
+const completedRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: 'completed',
+  loader: async () => {
+    await appServices.queryClient.prefetchQuery(dashboardQueryOptions(appServices.repository));
+  },
+  component: () => <CompletedPage />,
+});
+
+const progressRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: 'progress',
+  loader: async () => {
+    await appServices.queryClient.prefetchQuery(dashboardQueryOptions(appServices.repository));
+  },
+  component: () => <ProgressPage />,
+});
+
+const supportRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: 'support',
+  component: () => <SupportPage />,
+});
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   listRoute,
   searchRoute,
   activityRoute,
   settingsRoute,
+  listsOverviewRoute,
+  tasksRoute,
+  completedRoute,
+  progressRoute,
+  supportRoute,
 ]);
 
 export const router = createRouter({

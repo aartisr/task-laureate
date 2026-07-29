@@ -8,6 +8,7 @@ import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 import { announceToScreenReader, createId } from '../lib/a11y';
 import { TaskList } from '../components/TaskList';
 import { appServices } from '../app/runtime/appServices';
+import { usePageSEO, PAGE_SEO } from '../hooks/usePageSEO';
 
 export interface ListDetailPageProps {
   listId: string;
@@ -39,6 +40,9 @@ export function ListDetailPage({ listId }: ListDetailPageProps) {
     queryFn: () => repository.getList(listId),
     staleTime: 5000,
   });
+
+  // Dynamic SEO from list title
+  usePageSEO(PAGE_SEO.listDetail(list?.title ?? 'List'));
 
   const { data: tasks = [], isLoading: tasksLoading } = useSuspenseQuery({
     queryKey: queryKeys.tasks(listId),

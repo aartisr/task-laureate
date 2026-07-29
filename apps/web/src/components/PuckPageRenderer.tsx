@@ -19,7 +19,7 @@ import {
 interface PuckPageRendererProps {
   content: PageContent;
   dynamicData?: Record<string, any>;
-  children?: Record<string, React.ReactNode>;
+  children?: React.ReactNode;
 }
 
 /**
@@ -73,10 +73,10 @@ export function PuckPageRenderer({
 
   return (
     <section className="page-stack" data-page-id={content.id}>
-      {content.blocks.map((block, idx) => {
-        const blockChildren = children?.[block.id];
-        return renderBlock(block, dynamicData, blockChildren);
+      {content.blocks.map((block) => {
+        return renderBlock(block, dynamicData, children);
       })}
+      {children}
     </section>
   );
 }

@@ -7,8 +7,10 @@ import { useListMutations } from '../core/mutations/useListMutations';
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 import { announceToScreenReader, createId } from '../lib/a11y';
 import { appServices } from '../app/runtime/appServices';
+import { usePageSEO, PAGE_SEO } from '../hooks/usePageSEO';
 
 export function DashboardPage() {
+  usePageSEO(PAGE_SEO.dashboard);
   const navigate = useNavigate();
   const repository = appServices.repository;
   const [isCreatingList, setIsCreatingList] = useState(false);
@@ -106,7 +108,7 @@ export function DashboardPage() {
     >
       {/* Summary Stats */}
       <Grid columns={4} gap="normal">
-        <Card variant="elevated" ariaLabel="Lists summary">
+        <Card variant="elevated" ariaLabel="Lists summary" onClick={() => navigate({ to: '/lists-overview' })}>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-medium text-[var(--color-text-secondary)] uppercase tracking-wider">
               Lists
@@ -121,10 +123,10 @@ export function DashboardPage() {
           >
             {stats.totalLists}
           </p>
-          <p className="text-xs text-[var(--color-text-tertiary)] mt-2">Total list collections</p>
+          <p className="text-xs text-[var(--color-text-tertiary)] mt-2">View all lists →</p>
         </Card>
 
-        <Card variant="elevated" ariaLabel="Tasks summary">
+        <Card variant="elevated" ariaLabel="Tasks summary" onClick={() => navigate({ to: '/tasks' })}>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-medium text-[var(--color-text-secondary)] uppercase tracking-wider">
               Tasks
@@ -139,10 +141,10 @@ export function DashboardPage() {
           >
             {stats.totalTasks}
           </p>
-          <p className="text-xs text-[var(--color-text-tertiary)] mt-2">Total tasks created</p>
+          <p className="text-xs text-[var(--color-text-tertiary)] mt-2">View all tasks →</p>
         </Card>
 
-        <Card variant="elevated" ariaLabel="Completed tasks summary">
+        <Card variant="elevated" ariaLabel="Completed tasks summary" onClick={() => navigate({ to: '/completed' })}>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-medium text-[var(--color-text-secondary)] uppercase tracking-wider">
               Completed
@@ -157,10 +159,10 @@ export function DashboardPage() {
           >
             {stats.completedTasks}
           </p>
-          <p className="text-xs text-[var(--color-text-tertiary)] mt-2">Tasks finished</p>
+          <p className="text-xs text-[var(--color-text-tertiary)] mt-2">See your wins →</p>
         </Card>
 
-        <Card variant="elevated" ariaLabel="Completion progress">
+        <Card variant="elevated" ariaLabel="Completion progress" onClick={() => navigate({ to: '/progress' })}>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-medium text-[var(--color-text-secondary)] uppercase tracking-wider">
               Progress
@@ -188,6 +190,7 @@ export function DashboardPage() {
               aria-hidden="true"
             />
           </div>
+          <p className="text-xs text-[var(--color-text-tertiary)] mt-2">View insights →</p>
         </Card>
       </Grid>
 

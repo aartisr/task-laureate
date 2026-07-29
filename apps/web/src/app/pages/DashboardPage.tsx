@@ -55,10 +55,10 @@ export function DashboardPage() {
       </header>
 
       <section className="stat-grid" aria-label="Workspace summary">
-        <StatCard label="Lists" value={formatCount(data.summary.listCount)} />
-        <StatCard label="Tasks" value={formatCount(data.summary.taskCount)} />
-        <StatCard label="Completed" value={formatCount(data.summary.completedCount)} />
-        <StatCard label="Active" value={formatCount(data.summary.activeCount)} />
+        <StatCard label="Lists" value={formatCount(data.summary.listCount)} icon="📋" subtitle="Click to explore" to="/lists-overview" />
+        <StatCard label="Tasks" value={formatCount(data.summary.taskCount)} icon="✓" subtitle="All tasks" to="/tasks" />
+        <StatCard label="Completed" value={formatCount(data.summary.completedCount)} icon="🎉" subtitle="Your wins" to="/completed" />
+        <StatCard label="Active" value={formatCount(data.summary.activeCount)} icon="📈" subtitle="In progress" to="/progress" />
       </section>
 
       <section className="panel">

@@ -1,0 +1,6 @@
+Contact: mailto:security@task-laureate.vercel.app
+Expires: 2027-07-29T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://task-laureate.vercel.app/.well-known/security.txt
+Policy: https://task-laureate.vercel.app/security
+Hiring: https://github.com/aartisr/task-laureate

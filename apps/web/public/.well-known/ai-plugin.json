@@ -1,0 +1,17 @@
+{
+  "schema_version": "v1",
+  "name_for_human": "Task-Laureate",
+  "name_for_model": "task_laureate",
+  "description_for_human": "Premium task management for high-performance teams. Manage lists, tasks, priorities, progress, and analytics.",
+  "description_for_model": "Task-Laureate is a free, open-source task management web application built by Aarti S Ravikumar (student at PCSSII). It supports task lists, tasks with priority levels (urgent/high/medium/low), status tracking (todo/doing/done/blocked), progress analytics, activity timelines, and full-text search. The app is deployed at https://task-laureate.vercel.app/",
+  "auth": {
+    "type": "none"
+  },
+  "api": {
+    "type": "openapi",
+    "url": "https://task-laureate.vercel.app/openapi.yaml"
+  },
+  "logo_url": "https://task-laureate.vercel.app/favicon.svg",
+  "contact_email": "aartisr@github.com",
+  "legal_info_url": "https://github.com/aartisr/task-laureate/blob/master/LICENSE"
+}
