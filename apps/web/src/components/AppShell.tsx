@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { Link, Outlet, useRouterState } from '@tanstack/react-router';
 import { useTheme } from '../core/themes/ThemeProvider';
 import type { NavItem } from '../core/contracts/feature';
+import { UndoCenter } from './UndoCenter';
 
 interface AppShellProps {
   children?: ReactNode;
@@ -254,6 +255,7 @@ export function AppShell({ children, navItems }: AppShellProps) {
       <main className="workspace" role="main">
         {children ?? <Outlet />}
       </main>
+      <UndoCenter />
       <nav className="mobile-bottom-nav" aria-label="Quick Navigation">
         {mobilePrimaryTabs.map((item) => (
           <Link

@@ -14,7 +14,8 @@ import { useMemo } from 'react';
 import type { TodoList, TodoListStatus } from '../contracts/domain';
 import type { TodoRepository, TodoListInput, TodoListUpdateInput } from '../contracts/repository';
 import { createMutationOrchestrator, type MutationOperation } from './mutationOrchestrator';
-import { listQueryOptions } from '../contracts/queryKeys';
+import { listQueryOptions, queryKeys } from '../contracts/queryKeys';
+import { undoJournal } from './undoJournal';
 
 interface ListMutationContext {
   repository: TodoRepository;
@@ -24,6 +25,13 @@ interface ListMutationContext {
 export function useListMutations(context: ListMutationContext) {
   const queryClient = useQueryClient();
   const { repository, userId } = context;
+  const refresh = async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.lists }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.activity }),
+    ]);
+  };
 
   const orchestrator = useMemo(() => {
     return createMutationOrchestrator({
@@ -69,6 +77,12 @@ export function useListMutations(context: ListMutationContext) {
       if (!result.success) {
         throw new Error(result.error?.message || 'Failed to create list');
       }
+      let listId = result.data!.id;
+      undoJournal.record({
+        label: `Created list “${result.data!.title}”`,
+        undo: async () => { await repository.deleteList(listId); await refresh(); },
+        redo: async () => { const list = await repository.createList(input); listId = list.id; await refresh(); },
+      });
       return result.data!;
     },
   });
@@ -84,7 +98,7 @@ export function useListMutations(context: ListMutationContext) {
       listId: string;
       input: TodoListUpdateInput;
     }) => {
-      const currentList = queryClient.getQueryData(listQueryOptions(repository, listId).queryKey);
+      const currentList = await repository.getList(listId);
 
       const operation: MutationOperation<TodoListUpdateInput, TodoList, TodoList | undefined> = {
         id: 'lists.update',
@@ -122,6 +136,14 @@ export function useListMutations(context: ListMutationContext) {
       if (!result.success) {
         throw new Error(result.error?.message || 'Failed to update list');
       }
+      if (currentList) {
+        const before: TodoListUpdateInput = { title: currentList.title, description: currentList.description, status: currentList.status };
+        undoJournal.record({
+          label: `Updated list “${result.data!.title}”`,
+          undo: async () => { await repository.updateList(listId, before); await refresh(); },
+          redo: async () => { await repository.updateList(listId, input); await refresh(); },
+        });
+      }
       return result.data!;
     },
   });
@@ -148,6 +170,11 @@ export function useListMutations(context: ListMutationContext) {
       if (!result.success) {
         throw new Error(result.error?.message || 'Failed to archive list');
       }
+      undoJournal.record({
+        label: `Archived list “${result.data!.title}”`,
+        undo: async () => { await repository.restoreList(listId); await refresh(); },
+        redo: async () => { await repository.archiveList(listId); await refresh(); },
+      });
       return result.data!;
     },
   });
@@ -184,6 +211,12 @@ export function useListMutations(context: ListMutationContext) {
       if (!result.success) {
         throw new Error(result.error?.message || 'Failed to delete list');
       }
+      undoJournal.record({
+        label: `Deleted list “${result.data!.title}”`,
+        detail: 'Restore this list and its tasks',
+        undo: async () => { await repository.restoreList(listId); await refresh(); },
+        redo: async () => { await repository.deleteList(listId); await refresh(); },
+      });
       return result.data!;
     },
   });
@@ -210,6 +243,11 @@ export function useListMutations(context: ListMutationContext) {
       if (!result.success) {
         throw new Error(result.error?.message || 'Failed to restore list');
       }
+      undoJournal.record({
+        label: `Restored list “${result.data!.title}”`,
+        undo: async () => { await repository.deleteList(listId); await refresh(); },
+        redo: async () => { await repository.restoreList(listId); await refresh(); },
+      });
       return result.data!;
     },
   });

@@ -16,6 +16,7 @@ import type {
 } from '../../core/contracts/repository';
 import { computeDashboardSummary, computeListCompletion, sortTasksByOrder } from '../../core/domain/logic';
 import { createId } from '../../core/utils/ids';
+import type { WorkspaceData } from '../persistence/workspace';
 
 function clone<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
@@ -25,12 +26,12 @@ function nowIso() {
   return new Date().toISOString();
 }
 
-export function createMemoryTodoRepository(seed: {
-  lists: TodoList[];
-  tasks: TodoItem[];
-  activity: ActivityEvent[];
-  templates: ListTemplate[];
-}): TodoRepository {
+export interface WorkspaceRepository extends TodoRepository {
+  exportWorkspace(): Promise<WorkspaceData>;
+  importWorkspace(workspace: WorkspaceData): Promise<void>;
+}
+
+export function createMemoryTodoRepository(seed: WorkspaceData, options: { onChange?: (workspace: WorkspaceData) => void } = {}): WorkspaceRepository {
   const lists = new Map(seed.lists.map((list) => [list.id, clone(list)] as const));
   const tasks = new Map(seed.tasks.map((task) => [task.id, clone(task)] as const));
   const activity = [...seed.activity.map((event) => clone(event))];
@@ -56,7 +57,12 @@ export function createMemoryTodoRepository(seed: {
 
   const findTaskById = (taskId: string) => tasks.get(taskId) ?? null;
 
-  return {
+  const exportWorkspace = (): WorkspaceData => ({
+    lists: [...lists.values()].map(clone), tasks: [...tasks.values()].map(clone),
+    activity: clone(activity), templates: clone(templates),
+  });
+
+  const repository: WorkspaceRepository = {
     async getDashboard() {
       const allLists = [...lists.values()];
       const allTasks = [...tasks.values()];
@@ -378,5 +384,31 @@ export function createMemoryTodoRepository(seed: {
         results,
       };
     },
+    async exportWorkspace() {
+      return exportWorkspace();
+    },
+    async importWorkspace(workspace) {
+      lists.clear(); tasks.clear(); activity.length = 0; templates.length = 0;
+      workspace.lists.forEach((list) => lists.set(list.id, clone(list)));
+      workspace.tasks.forEach((task) => tasks.set(task.id, clone(task)));
+      activity.push(...workspace.activity.map(clone));
+      templates.push(...workspace.templates.map(clone));
+    },
   };
+
+  const mutations = new Set<keyof WorkspaceRepository>([
+    'createList', 'updateList', 'archiveList', 'restoreList', 'deleteList',
+    'createTask', 'updateTask', 'completeTask', 'deleteTask', 'restoreTask', 'importWorkspace',
+  ]);
+  return new Proxy(repository, {
+    get(target, property, receiver) {
+      const value = Reflect.get(target, property, receiver);
+      if (typeof property !== 'string' || !mutations.has(property as keyof WorkspaceRepository) || typeof value !== 'function') return value;
+      return async (...args: unknown[]) => {
+        const result = await value.apply(target, args);
+        options.onChange?.(exportWorkspace());
+        return result;
+      };
+    },
+  });
 }

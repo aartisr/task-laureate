@@ -3,6 +3,7 @@ import { appServices } from '../../app/runtime/appServices';
 import type { DashboardSummary, TodoItem, TodoList } from '../contracts/domain';
 import { queryKeys } from '../contracts/queryKeys';
 import type { TodoListInput, TodoListUpdateInput, TodoTaskInput, TodoTaskUpdateInput } from '../contracts/repository';
+import { undoJournal } from './undoJournal';
 
 interface DashboardCache {
   summary: DashboardSummary;
@@ -292,6 +293,7 @@ export function useTodoMutations() {
       const cachedTasks = [...queryClient.getQueriesData<unknown>({ queryKey: queryKeys.lists })];
       const previousDashboard = queryClient.getQueryData<DashboardCache>(queryKeys.dashboard);
       const previousTaskStates = new Map<string, TodoItem[]>();
+      let previousTask: TodoItem | undefined;
 
       for (const [key, value] of cachedTasks) {
         const listId = key[1];
@@ -304,6 +306,7 @@ export function useTodoMutations() {
         if (!existingTask) {
           continue;
         }
+        previousTask ??= existingTask;
 
         previousTaskStates.set(listId, currentTasks);
         const nextTasks: TodoItem[] = currentTasks.map((task) =>
@@ -355,7 +358,7 @@ export function useTodoMutations() {
           });
         }
       }
-      return { previousDashboard, previousTaskStates };
+      return { previousDashboard, previousTaskStates, previousTask };
     },
     onError: (_error, _input, context) => {
       if (context?.previousDashboard) {
@@ -366,6 +369,30 @@ export function useTodoMutations() {
           queryClient.setQueryData(queryKeys.tasks(listId), tasks);
         }
       }
+    },
+    onSuccess: (task, variables, context) => {
+      const before = context?.previousTask;
+      if (!before) return;
+      const wasComplete = before.status === 'done';
+      undoJournal.record({
+        label: variables.isComplete ? `Completed “${before.title}”` : `Reopened “${before.title}”`,
+        undo: async () => {
+          await appServices.repository.completeTask(variables.taskId, wasComplete);
+          await Promise.all([
+            queryClient.invalidateQueries({ queryKey: queryKeys.tasks(task.listId) }),
+            queryClient.invalidateQueries({ queryKey: queryKeys.list(task.listId) }),
+            refreshWorkspace(),
+          ]);
+        },
+        redo: async () => {
+          await appServices.repository.completeTask(variables.taskId, variables.isComplete);
+          await Promise.all([
+            queryClient.invalidateQueries({ queryKey: queryKeys.tasks(task.listId) }),
+            queryClient.invalidateQueries({ queryKey: queryKeys.list(task.listId) }),
+            refreshWorkspace(),
+          ]);
+        },
+      });
     },
     onSettled: async (task) => {
       if (task) {

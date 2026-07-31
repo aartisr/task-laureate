@@ -7,9 +7,10 @@ import { searchFeature } from '../../features/search/feature';
 import { settingsFeature } from '../../features/settings/feature';
 import { taskFeature } from '../../features/tasks/feature';
 import { seedData } from '../../infrastructure/mock/seed';
+import { loadBrowserWorkspace, saveBrowserWorkspace } from '../../infrastructure/persistence/workspace';
 
 export const appServices = {
-  repository: createMemoryTodoRepository(seedData),
+  repository: createMemoryTodoRepository(loadBrowserWorkspace(seedData), { onChange: saveBrowserWorkspace }),
   queryClient: new QueryClient({
     defaultOptions: {
       queries: {

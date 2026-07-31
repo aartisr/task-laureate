@@ -3,6 +3,7 @@ import { useTheme } from '../core/themes/ThemeProvider';
 import { ThemeSwitcher, ThemePreviewCard } from '../core/themes/ThemeSwitcher';
 import { THEME_OPTIONS } from '../core/themes/themes';
 import { usePageSEO, PAGE_SEO } from '../hooks/usePageSEO';
+import { WorkspaceDataPanel } from '../components/WorkspaceDataPanel';
 
 /**
  * Premium Settings Page
@@ -296,6 +297,12 @@ export function SettingsPage() {
         </section>
 
         {/* Divider */}
+        <div style={{
+          borderTop: '1px solid var(--color-border-light)',
+        }} />
+
+        <WorkspaceDataPanel />
+
         <div style={{
           borderTop: '1px solid var(--color-border-light)',
         }} />

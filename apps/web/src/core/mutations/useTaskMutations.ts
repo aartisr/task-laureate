@@ -15,6 +15,8 @@ import type { TodoItem } from '../contracts/domain';
 import type { TodoRepository, TodoTaskInput, TodoTaskUpdateInput } from '../contracts/repository';
 import { createMutationOrchestrator, type MutationOperation } from './mutationOrchestrator';
 import { listTasksQueryOptions } from '../contracts/queryKeys';
+import { queryKeys } from '../contracts/queryKeys';
+import { undoJournal } from './undoJournal';
 
 interface TaskMutationContext {
   repository: TodoRepository;
@@ -24,6 +26,13 @@ interface TaskMutationContext {
 export function useTaskMutations(context: TaskMutationContext) {
   const queryClient = useQueryClient();
   const { repository, userId } = context;
+  const refresh = async (listId?: string) => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.activity }),
+      ...(listId ? [queryClient.invalidateQueries({ queryKey: queryKeys.tasks(listId) })] : []),
+    ]);
+  };
 
   const orchestrator = useMemo(() => {
     return createMutationOrchestrator({
@@ -77,6 +86,13 @@ export function useTaskMutations(context: TaskMutationContext) {
       if (!result.success) {
         throw new Error(result.error?.message || 'Failed to create task');
       }
+      let taskId = result.data!.id;
+      undoJournal.record({
+        label: `Created “${result.data!.title}”`,
+        detail: 'Remove or recreate this task',
+        undo: async () => { await repository.deleteTask(taskId); await refresh(input.listId); },
+        redo: async () => { const task = await repository.createTask(input); taskId = task.id; await refresh(input.listId); },
+      });
       return result.data!;
     },
   });
@@ -138,6 +154,17 @@ export function useTaskMutations(context: TaskMutationContext) {
       if (!result.success) {
         throw new Error(result.error?.message || 'Failed to update task');
       }
+      if (currentTask) {
+        const before: TodoTaskUpdateInput = {
+          title: currentTask.title, notes: currentTask.notes, priority: currentTask.priority,
+          dueDate: currentTask.dueDate, tags: currentTask.tags, status: currentTask.status,
+        };
+        undoJournal.record({
+          label: `Updated “${result.data!.title}”`,
+          undo: async () => { await repository.updateTask(taskId, before); await refresh(currentTask.listId); },
+          redo: async () => { await repository.updateTask(taskId, input); await refresh(currentTask.listId); },
+        });
+      }
       return result.data!;
     },
   });
@@ -175,6 +202,14 @@ export function useTaskMutations(context: TaskMutationContext) {
       const result = await orchestrator.executeMutation(operation, isComplete);
       if (!result.success) {
         throw new Error(result.error?.message || 'Failed to complete task');
+      }
+      if (currentTask) {
+        const priorComplete = currentTask.status === 'done';
+        undoJournal.record({
+          label: isComplete ? `Completed “${currentTask.title}”` : `Reopened “${currentTask.title}”`,
+          undo: async () => { await repository.completeTask(taskId, priorComplete); await refresh(currentTask.listId); },
+          redo: async () => { await repository.completeTask(taskId, isComplete); await refresh(currentTask.listId); },
+        });
       }
       return result.data!;
     },
@@ -217,6 +252,12 @@ export function useTaskMutations(context: TaskMutationContext) {
       if (!result.success) {
         throw new Error(result.error?.message || 'Failed to delete task');
       }
+      undoJournal.record({
+        label: `Deleted “${result.data!.title}”`,
+        detail: 'Restore this task',
+        undo: async () => { await repository.restoreTask(taskId); await refresh(currentTask?.listId); },
+        redo: async () => { await repository.deleteTask(taskId); await refresh(currentTask?.listId); },
+      });
       return result.data!;
     },
   });
@@ -246,6 +287,11 @@ export function useTaskMutations(context: TaskMutationContext) {
       if (!result.success) {
         throw new Error(result.error?.message || 'Failed to restore task');
       }
+      undoJournal.record({
+        label: `Restored “${result.data!.title}”`,
+        undo: async () => { await repository.deleteTask(taskId); await refresh(result.data!.listId); },
+        redo: async () => { await repository.restoreTask(taskId); await refresh(result.data!.listId); },
+      });
       return result.data!;
     },
   });
