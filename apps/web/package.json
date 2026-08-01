@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:supabase": "RUN_SUPABASE_INTEGRATION=true vitest run src/infrastructure/persistence/supabase.integration.test.ts",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "verify:public-registry": "node ../../scripts/verify-public-registry.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.8",
