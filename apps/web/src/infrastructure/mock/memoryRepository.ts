@@ -57,6 +57,17 @@ export function createMemoryTodoRepository(seed: WorkspaceData, options: { onCha
 
   const findTaskById = (taskId: string) => tasks.get(taskId) ?? null;
 
+  const requireVisibleList = (listId: string) => {
+    const list = lists.get(listId);
+    if (!list) {
+      throw new Error(`List not found: ${listId}`);
+    }
+    if (list.deletedAt !== null) {
+      throw new Error(`Cannot change tasks in deleted list: ${listId}`);
+    }
+    return list;
+  };
+
   const exportWorkspace = (): WorkspaceData => ({
     lists: [...lists.values()].map(clone), tasks: [...tasks.values()].map(clone),
     activity: clone(activity), templates: clone(templates),
@@ -201,6 +212,9 @@ export function createMemoryTodoRepository(seed: WorkspaceData, options: { onCha
     },
 
     async listTasks(listId) {
+      if (lists.get(listId)?.deletedAt !== null) {
+        return [];
+      }
       return sortTasksByOrder([...tasks.values()].filter((task) => task.listId === listId && task.deletedAt === null)).map(clone);
     },
 
@@ -210,6 +224,7 @@ export function createMemoryTodoRepository(seed: WorkspaceData, options: { onCha
     },
 
     async createTask(input: TodoTaskInput) {
+      requireVisibleList(input.listId);
       const timestamp = nowIso();
       const task: TodoItem = {
         id: createId('task'),
@@ -245,6 +260,7 @@ export function createMemoryTodoRepository(seed: WorkspaceData, options: { onCha
       if (!task) {
         throw new Error(`Task not found: ${taskId}`);
       }
+      requireVisibleList(task.listId);
       if (typeof input.title === 'string') {
         task.title = input.title.trim();
       }
@@ -283,6 +299,7 @@ export function createMemoryTodoRepository(seed: WorkspaceData, options: { onCha
       if (!task) {
         throw new Error(`Task not found: ${taskId}`);
       }
+      requireVisibleList(task.listId);
       task.status = isComplete ? 'done' : 'todo';
       task.completedAt = isComplete ? nowIso() : null;
       task.updatedAt = nowIso();
@@ -304,6 +321,7 @@ export function createMemoryTodoRepository(seed: WorkspaceData, options: { onCha
       if (!task) {
         throw new Error(`Task not found: ${taskId}`);
       }
+      requireVisibleList(task.listId);
       task.status = 'deleted';
       task.deletedAt = nowIso();
       task.updatedAt = task.deletedAt;

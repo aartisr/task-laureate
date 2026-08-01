@@ -153,6 +153,23 @@ describe('List and Task CRUD Operations', () => {
       expect(summary).toMatchObject({ taskCount: 2, completedCount: 1, activeCount: 1 });
       expect(getDashboardCompletionPercent(summary)).toBe(50);
     });
+
+    it('hides a deleted list consistently and prevents stale task mutations', async () => {
+      const list = await repository.createList({ title: 'Hidden list' });
+      const task = await repository.createTask({ listId: list.id, title: 'Must not leak' });
+      await repository.deleteList(list.id);
+
+      expect(await repository.listTasks(list.id)).toEqual([]);
+      expect((await repository.search({ query: 'leak' })).results).toEqual([]);
+      await expect(repository.createTask({ listId: list.id, title: 'Late task' }))
+        .rejects.toThrow('Cannot change tasks in deleted list');
+      await expect(repository.completeTask(task.id, true))
+        .rejects.toThrow('Cannot change tasks in deleted list');
+
+      await repository.restoreList(list.id);
+      expect((await repository.listTasks(list.id)).map((item) => item.id)).toEqual([task.id]);
+      expect((await repository.search({ query: 'leak' })).results).toHaveLength(1);
+    });
   });
 
   describe('Task CRUD', () => {
@@ -286,7 +303,7 @@ describe('List and Task CRUD Operations', () => {
 
   describe('Error Handling', () => {
     it('should throw when updating non-existent list', async () => {
-      expect(async () => {
+      await expect(async () => {
         await repository.updateList('non-existent-id', { title: 'New Title' });
       }).rejects.toThrow();
     });
@@ -297,7 +314,7 @@ describe('List and Task CRUD Operations', () => {
     });
 
     it('should throw when deleting non-existent list', async () => {
-      expect(async () => {
+      await expect(async () => {
         await repository.deleteList('non-existent-id');
       }).rejects.toThrow();
     });

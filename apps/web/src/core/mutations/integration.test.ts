@@ -208,17 +208,16 @@ describe('Integration: Full Workflow', () => {
 
     it('should gracefully handle invalid operations', async () => {
       // Try to update non-existent list
-      expect(async () => {
+      await expect(async () => {
         await repository.updateList('non-existent', { title: 'New Title' });
       }).rejects.toThrow();
 
-      // Try to create task without list ID
+      // Tasks must always belong to a visible list; orphan data would corrupt workspace totals.
       const listId = 'non-existent-list';
-      const task = await repository.createTask({
+      await expect(repository.createTask({
         listId,
         title: 'Orphan Task',
-      });
-      expect(task).toBeDefined();
+      })).rejects.toThrow(`List not found: ${listId}`);
     });
 
     it('should support rollback after failed operations', async () => {
@@ -320,8 +319,8 @@ describe('Integration: Full Workflow', () => {
       // Only active (non-deleted) lists should be in dashboard
       expect(dashboard.lists.length).toBe(1);
       expect(dashboard.summary.listCount).toBe(1); // Only active lists in summary
-      expect(dashboard.summary.taskCount).toBe(3);
-      expect(dashboard.summary.completedCount).toBe(2);
+      expect(dashboard.summary.taskCount).toBe(2);
+      expect(dashboard.summary.completedCount).toBe(1);
       expect(dashboard.summary.activeCount).toBe(1);
     });
   });
