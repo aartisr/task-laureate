@@ -118,6 +118,23 @@ describe('List and Task CRUD Operations', () => {
       // The filtering happens in listLists()
       expect(retrieved?.status).toBe('deleted');
     });
+
+    it('excludes tasks in a deleted list from the dashboard and restores them with the list', async () => {
+      const list = await repository.createList({ title: 'Temporary list' });
+      await repository.createTask({ listId: list.id, title: 'Preserved for undo' });
+
+      expect((await repository.getDashboard()).summary.taskCount).toBe(1);
+
+      await repository.deleteList(list.id);
+      expect((await repository.getDashboard()).summary).toMatchObject({
+        listCount: 0,
+        taskCount: 0,
+        activeCount: 0,
+      });
+
+      await repository.restoreList(list.id);
+      expect((await repository.getDashboard()).summary.taskCount).toBe(1);
+    });
   });
 
   describe('Task CRUD', () => {

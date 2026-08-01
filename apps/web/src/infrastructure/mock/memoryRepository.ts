@@ -14,7 +14,7 @@ import type {
   TodoTaskInput,
   TodoTaskUpdateInput,
 } from '../../core/contracts/repository';
-import { computeDashboardSummary, computeListCompletion, sortTasksByOrder } from '../../core/domain/logic';
+import { computeDashboardSummary, computeListCompletion, getVisibleTasks, sortTasksByOrder } from '../../core/domain/logic';
 import { createId } from '../../core/utils/ids';
 import type { WorkspaceData } from '../persistence/workspace';
 
@@ -352,7 +352,7 @@ export function createMemoryTodoRepository(seed: WorkspaceData, options: { onCha
     async search(input: SearchInput) {
       const query = input.query.trim().toLowerCase();
       const allLists = [...lists.values()].filter((list) => list.deletedAt === null);
-      const allTasks = [...tasks.values()].filter((task) => task.deletedAt === null);
+      const allTasks = getVisibleTasks([...lists.values()], [...tasks.values()]);
 
       if (query.length === 0) {
         return { query: input.query, results: [] };
