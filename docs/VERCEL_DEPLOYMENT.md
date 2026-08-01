@@ -12,10 +12,10 @@ The repository is an npm-workspaces monorepo. The Vercel project is rooted at th
 | Framework Preset | Vite (or auto-detected Vite) |
 | Install Command | `npm install --include=optional` |
 | Build Command | `npm run build` |
-| Output Directory | `apps/web/dist` |
+| Output Directory | `dist` |
 | Node.js | 20.19+ |
 
-These settings are committed in [`vercel.json`](../vercel.json). The build runs the web-workspace typecheck and Vite production build. The output directory is Vite's generated static site; it contains no server-side secrets.
+These settings are committed in [`vercel.json`](../vercel.json). The build runs the web-workspace typecheck and Vite production build. It writes Vite's normal `apps/web/dist` output, then mirrors that static site to the repository-root `dist` directory for Vercel's monorepo output resolver. The published output contains no server-side secrets.
 
 `vercel.json` also preserves direct navigation to client routes such as `/settings` and `/lists/<id>`. Requests for actual files keep their normal behavior; application routes are rewritten to `index.html` and TanStack Router renders the route in the browser.
 
