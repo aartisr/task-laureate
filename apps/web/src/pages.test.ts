@@ -39,8 +39,8 @@ describe('Dashboard Page', () => {
 
     it('should navigate to list detail on click', () => {
       const listButton = document.createElement('button');
-      listButton.textContent = 'Product launch';
-      expect(listButton.textContent).toBe('Product launch');
+      listButton.textContent = 'Test workspace';
+      expect(listButton.textContent).toBe('Test workspace');
     });
   });
 
@@ -140,8 +140,8 @@ describe('List Detail Page', () => {
   describe('Content', () => {
     it('should display list title', () => {
       const title = document.createElement('h1');
-      title.textContent = 'Product launch';
-      expect(title.textContent).toBe('Product launch');
+      title.textContent = 'Test workspace';
+      expect(title.textContent).toBe('Test workspace');
     });
 
     it('should display list description', () => {

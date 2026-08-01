@@ -11,7 +11,7 @@ Task-Laureate does **not** write anonymously. A list is saved remotely only when
 3. The user is signed in from **Settings → Private cloud sync**.
 4. Supabase accepts the authenticated user’s JWT under the table’s RLS policies.
 
-If any condition is false, the application preserves the list in browser-local storage and surfaces a cloud-sync status/error instead of risking an unauthorized write. The starter `.env.local` deliberately contains placeholders, so it cannot create a remote row until you replace them.
+If there is no authenticated session, the application starts with an empty in-memory workspace and does not display or persist another account’s data. If Supabase is unavailable after authentication, only that authenticated user’s scoped offline cache may be used. The starter `.env.local` deliberately contains placeholders, so it cannot create a remote row until you replace them.
 
 ## Expected behavior
 
@@ -26,7 +26,7 @@ payload:      { lists: [...], tasks: [...], activity: [...], templates: [...] }
 
 The row is **not** named only `main`. The app appends the signed-in user ID to prevent one user’s workspace from colliding with another user’s primary key.
 
-On first sign-in, the current local workspace is uploaded if no remote row exists. Later list/task edits are coalesced for 300 ms and sent as a PostgREST upsert. The browser console records each attempt with a `[Task-Laureate persistence]` prefix.
+On first sign-in, a user begins with their own empty workspace unless they have that same account’s offline cache. Later list/task edits are coalesced for 300 ms and sent as a PostgREST upsert. The browser console records each attempt with a `[Task-Laureate persistence]` prefix.
 
 ## Step 1 — configure the exact project the app will use
 
@@ -135,7 +135,7 @@ If the account is created but the user is not signed in immediately, this is exp
 4. The app sends the credentials to Supabase Auth over HTTPS. It receives a short-lived access token and a rotating refresh token; neither is written to `.env.local`.
 5. The app stores the session only in browser local storage under `task-laureate.supabase-auth`, schedules a refresh before the access token expires, and emits an internal auth-change event.
 6. The persistence runtime reconnects using the authenticated user’s JWT. It looks for `<workspace-name>_<user-id>`:
-   - If no row exists, it uploads the local workspace.
+   - If no row exists, it starts empty or restores only that account’s offline cache.
    - If a row exists, it loads that user’s remote workspace as the source of truth.
 7. The Settings panel changes to the signed-in email, and the app marks persistence as connected. Every later edit is queued for an upsert.
 
@@ -144,10 +144,10 @@ Supabase Auth uses a JWT access token plus a refresh token for sessions; access 
 #### Sign out and account switching
 
 1. Select **Sign out** in **Settings → Private cloud sync**.
-2. The app removes its browser session and switches future changes to local-only persistence on that device.
+2. The app removes its browser session, queued writes, and current account’s browser cache, then returns to an empty workspace.
 3. To use a different account, sign in with the other account from the same panel. The app derives a different workspace ID from that account’s user ID and loads that account’s remote snapshot.
 
-Do not share a browser profile between users who should not see the same local fallback data. For shared machines, use separate browser profiles or clear browser site data after signing out.
+Separate browser profiles remain a sensible additional safeguard for shared machines, but Task-Laureate also clears the current account’s browser cache on sign-out.
 
 ### Required Supabase dashboard settings for sign-in
 

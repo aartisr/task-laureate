@@ -15,6 +15,10 @@ export interface WorkspaceExport {
   data: WorkspaceData;
 }
 
+export function createEmptyWorkspace(): WorkspaceData {
+  return { lists: [], tasks: [], activity: [], templates: [] };
+}
+
 /** Implement this tiny interface for Postgres, SQLite, IndexedDB, S3, an API, or any other store. */
 export interface WorkspacePersistenceAdapter {
   load(): Promise<WorkspaceExport | null>;
@@ -50,12 +54,14 @@ export function createBufferedPersistence(adapter: WorkspacePersistenceAdapter, 
   let latest: WorkspaceExport | null = null;
   let timer: ReturnType<typeof setTimeout> | undefined;
   let flushing: Promise<void> | null = null;
+  let disposed = false;
 
   const reportError = (error: unknown, attempt: number) => {
     options.onSaveError?.(error, attempt);
   };
 
   const scheduleFlush = (delay: number) => {
+    if (disposed) return;
     if (timer) clearTimeout(timer);
     timer = setTimeout(() => {
       // flush reports the error itself and schedules the next retry. Swallow
@@ -79,11 +85,12 @@ export function createBufferedPersistence(adapter: WorkspacePersistenceAdapter, 
     }
   };
   const flush = async () => {
+    if (disposed) return;
     if (timer) clearTimeout(timer);
     timer = undefined;
     if (flushing) return flushing;
     flushing = (async () => {
-      while (latest) {
+      while (latest && !disposed) {
         const next = latest;
         latest = null;
         options.onSaveStart?.();
@@ -104,10 +111,17 @@ export function createBufferedPersistence(adapter: WorkspacePersistenceAdapter, 
   };
   return {
     schedule(data: WorkspaceData) {
+      if (disposed) return;
       latest = createWorkspaceExport(data);
       scheduleFlush(debounceMs);
     },
     flush,
+    dispose() {
+      disposed = true;
+      if (timer) clearTimeout(timer);
+      timer = undefined;
+      latest = null;
+    },
   };
 }
 
@@ -141,23 +155,32 @@ export function parseWorkspaceExport(serialized: string | unknown): WorkspaceExp
   return createWorkspaceExport({ lists, tasks, activity, templates });
 }
 
-const STORAGE_KEY = 'task-laureate.workspace.v1';
+export const LEGACY_BROWSER_WORKSPACE_KEY = 'task-laureate.workspace.v1';
 
-export function loadBrowserWorkspace(fallback: WorkspaceData): WorkspaceData {
+export function browserWorkspaceKeyForUser(userId: string) {
+  if (!userId) throw new Error('A user ID is required for browser workspace storage.');
+  return `${LEGACY_BROWSER_WORKSPACE_KEY}.${encodeURIComponent(userId)}`;
+}
+
+export function loadBrowserWorkspace(fallback: WorkspaceData, key = LEGACY_BROWSER_WORKSPACE_KEY): WorkspaceData {
   if (typeof window === 'undefined') return clone(fallback);
   try {
-    const serialized = window.localStorage.getItem(STORAGE_KEY);
+    const serialized = window.localStorage.getItem(key);
     return serialized ? parseWorkspaceExport(serialized).data : clone(fallback);
   } catch {
     return clone(fallback);
   }
 }
 
-export function saveBrowserWorkspace(data: WorkspaceData) {
-  if (typeof window !== 'undefined') window.localStorage.setItem(STORAGE_KEY, JSON.stringify(createWorkspaceExport(data)));
+export function saveBrowserWorkspace(data: WorkspaceData, key = LEGACY_BROWSER_WORKSPACE_KEY) {
+  if (typeof window !== 'undefined') window.localStorage.setItem(key, JSON.stringify(createWorkspaceExport(data)));
 }
 
-export function createLocalStorageAdapter(key = STORAGE_KEY): WorkspacePersistenceAdapter {
+export function clearBrowserWorkspace(key = LEGACY_BROWSER_WORKSPACE_KEY) {
+  if (typeof window !== 'undefined') window.localStorage.removeItem(key);
+}
+
+export function createLocalStorageAdapter(key = LEGACY_BROWSER_WORKSPACE_KEY): WorkspacePersistenceAdapter {
   return {
     async load() {
       if (typeof window === 'undefined') return null;

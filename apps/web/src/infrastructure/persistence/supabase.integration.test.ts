@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { persistenceConfig } from '../../config/persistence.config';
-import { seedData } from '../mock/seed';
+import { createTestWorkspace } from '../../test/fixtures/workspace';
 import { createSupabaseWorkspaceAdapter } from './supabase';
 import { createWorkspaceExport } from './workspace';
 
@@ -83,7 +83,8 @@ describe.runIf(enabled)('Supabase production-readiness integration', () => {
     assertConfigured();
     const adapter = createSupabaseWorkspaceAdapter({ ...supabase, workspaceId, getAccessToken: () => testToken! });
 
-    const initial = createWorkspaceExport(seedData);
+    const initialWorkspace = createTestWorkspace();
+    const initial = createWorkspaceExport(initialWorkspace);
     await adapter.save(initial); // CREATE
     const first = await adapter.load(); // READ through the app adapter
     expect(first?.data).toEqual(initial.data);
@@ -96,7 +97,7 @@ describe.runIf(enabled)('Supabase production-readiness integration', () => {
     expect(Number.isNaN(Date.parse(rowsAfterCreate[0].created_at))).toBe(false);
     expect(Number.isNaN(Date.parse(rowsAfterCreate[0].updated_at))).toBe(false);
 
-    const updated = createWorkspaceExport({ ...seedData, lists: [...seedData.lists, { ...seedData.lists[0], id: 'supabase-integration-list', title: 'Updated by Supabase integration test' }] });
+    const updated = createWorkspaceExport({ ...initialWorkspace, lists: [...initialWorkspace.lists, { ...initialWorkspace.lists[0], id: 'supabase-integration-list', title: 'Updated by Supabase integration test' }] });
     await adapter.save(updated); // UPDATE via the workspace_id upsert
     const rowsAfterUpdate = await selectTestRow();
     expect(rowsAfterUpdate).toHaveLength(1);

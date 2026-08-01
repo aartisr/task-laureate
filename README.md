@@ -9,7 +9,7 @@ Task-Laureate is a fast, keyboard-friendly task workspace for planning lists, tr
 - Theme system and responsive, accessible UI primitives
 - Versioned workspace export/import format
 - Local browser persistence and an optional Supabase workspace adapter
-- Buffered remote writes, retries, and local fallback when Supabase is unavailable
+- Buffered remote writes, retries, and an account-scoped offline cache
 
 ## Tech stack
 
@@ -34,7 +34,7 @@ Open the local URL printed by Vite (normally <http://localhost:5173>). Run `npm 
 
 ## Persistence
 
-The app keeps a portable, versioned workspace snapshot. The persistence switchboard is [`apps/web/src/config/persistence.config.ts`](apps/web/src/config/persistence.config.ts): it can use browser-local storage or Supabase. With the Supabase driver, local data remains the safe fallback if remote initialization fails.
+The app keeps a portable, versioned workspace snapshot. The persistence switchboard is [`apps/web/src/config/persistence.config.ts`](apps/web/src/config/persistence.config.ts). With the Supabase driver, every workspace is private to an authenticated account. Its offline cache is keyed to that account, never read while signed out, and cleared on sign-out.
 
 ### Supabase setup
 

@@ -75,7 +75,7 @@ Global shortcuts:
 
 ### List Information ✅
 At the top of the page:
-- **List Title** - "Product launch"
+- **List Title** - Choose a clear project name, such as "Website refresh"
 - **Description** - "Track launch planning..."
 - **Statistics** - "2 Total Tasks, 1 Completed"
 - **Completion %** - "50%"

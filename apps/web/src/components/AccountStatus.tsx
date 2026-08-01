@@ -9,7 +9,7 @@ interface AccountStatusProps {
 }
 
 function statusLabel(status: PersistenceStatus, isSignedIn: boolean) {
-  if (!isSignedIn) return status.phase === 'error' ? 'Sync needs attention' : 'Local workspace';
+  if (!isSignedIn) return status.phase === 'error' ? 'Sync needs attention' : 'Sign in required';
   if (status.phase === 'synced') return 'Cloud sync on';
   if (status.phase === 'saving') return 'Saving changes';
   if (status.phase === 'connecting') return 'Connecting';

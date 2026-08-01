@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { seedData } from '../mock/seed';
+import { createTestWorkspace } from '../../test/fixtures/workspace';
 import { createWorkspaceExport } from './workspace';
 import { createSupabaseWorkspaceAdapter } from './supabase';
 
@@ -13,7 +13,7 @@ describe('Supabase workspace adapter', () => {
       return new Response('', { status: 201 });
     };
     const adapter = createSupabaseWorkspaceAdapter({ ...config, getAccessToken: () => 'user-jwt' }, request as typeof fetch);
-    await adapter.save(createWorkspaceExport(seedData));
+    await adapter.save(createWorkspaceExport(createTestWorkspace()));
     expect(requests[0].url).toContain('on_conflict=workspace_id');
     expect(requests[0].init?.method).toBe('POST');
     expect(new Headers(requests[0].init?.headers).get('Authorization')).toBe('Bearer user-jwt');
@@ -21,7 +21,7 @@ describe('Supabase workspace adapter', () => {
   });
 
   it('validates snapshots loaded from the database', async () => {
-    const adapter = createSupabaseWorkspaceAdapter({ ...config, getAccessToken: () => 'user-jwt' }, async () => new Response(JSON.stringify([{ workspace_id: 'main', version: 1, payload: seedData, updated_at: '2026-01-01T00:00:00.000Z' }])) as Response);
+    const adapter = createSupabaseWorkspaceAdapter({ ...config, getAccessToken: () => 'user-jwt' }, async () => new Response(JSON.stringify([{ workspace_id: 'main', version: 1, payload: createTestWorkspace(), updated_at: '2026-01-01T00:00:00.000Z' }])) as Response);
     await expect(adapter.load()).resolves.toMatchObject({ format: 'task-laureate/workspace', version: 1 });
   });
 });

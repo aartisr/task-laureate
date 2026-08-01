@@ -1,6 +1,6 @@
 # Supabase persistence
 
-Task-Laureate stores one versioned JSONB workspace snapshot per authenticated user. A workspace mutation updates the in-memory repository immediately, writes a local browser mirror, then coalesces and upserts the newest remote snapshot. This keeps the domain model portable while making remote persistence atomic and low-chatter.
+Task-Laureate stores one versioned JSONB workspace snapshot per authenticated user. A workspace mutation updates the in-memory repository immediately, writes an offline browser mirror scoped to that user ID, then coalesces and upserts the newest remote snapshot. This keeps the domain model portable while making remote persistence atomic and low-chatter without exposing data across account switches.
 
 ## What is stored
 
@@ -88,9 +88,10 @@ To use another identity system, implement `PasswordAuthProvider` and replace `au
 
 - Remote writes are debounced (300 ms by default), ordered, and retried with exponential backoff.
 - If all immediate retries fail, the newest unsaved snapshot stays in memory and is retried automatically every five seconds.
-- The app always keeps a local browser mirror. If Supabase cannot start, it continues locally and shows a visible alert explaining that cloud sync is unavailable.
+- The app keeps an offline browser mirror only under an authenticated user-specific key. If Supabase cannot start, only that signed-in user’s cache may be shown; signed-out visitors receive an empty in-memory workspace.
 - Browser console logs use the `[Task-Laureate persistence]` and `[Task-Laureate auth]` prefixes. They record operation type, workspace identifier, response status, and safe error details—never keys or tokens.
-- On a first successful sign-in with no remote row, the current local workspace is uploaded. An existing remote workspace remains the source of truth.
+- On first sign-in with no remote row, the workspace starts empty unless that same authenticated user has a prior offline cache. A different user’s browser data is never migrated or uploaded.
+- Signing out disposes queued writes, clears the in-memory/query state, and removes that account’s browser cache.
 
 ## Troubleshooting
 

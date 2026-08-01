@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { seedData } from '../mock/seed';
+import { createTestWorkspace } from '../../test/fixtures/workspace';
 import { createBufferedPersistence, type WorkspacePersistenceAdapter } from './workspace';
 
 describe('buffered workspace persistence failure handling', () => {
@@ -23,7 +23,7 @@ describe('buffered workspace persistence failure handling', () => {
       onSaveError: (error) => errors.push(error),
     });
 
-    buffer.schedule(seedData);
+    buffer.schedule(createTestWorkspace());
     await vi.advanceTimersByTimeAsync(10);
     expect(errors).toHaveLength(1);
     expect(attempts).toBe(1);

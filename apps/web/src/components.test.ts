@@ -128,8 +128,8 @@ describe('SearchBar Component', () => {
 
     it('should navigate on result click', () => {
       const resultButton = document.createElement('button');
-      resultButton.textContent = 'Product launch';
-      expect(resultButton.textContent).toBe('Product launch');
+      resultButton.textContent = 'Test workspace';
+      expect(resultButton.textContent).toBe('Test workspace');
     });
   });
 
