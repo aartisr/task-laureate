@@ -5,7 +5,7 @@
   "buildCommand": "npm run verify:public-registry && npm run build",
   "outputDirectory": "dist",
   "rewrites": [
-    { "source": "/((?!api|_next|.*\\.[^/]+$).*)", "destination": "/index.html" }
+    { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [
     {
