@@ -29,7 +29,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     applyTheme(theme);
   };
 
-  const isDark = currentTheme === 'dark-pro' || currentTheme === 'warm-community';
+  const isDark = currentTheme === 'dark-pro';
 
   // Apply theme to document on mount and change
   useEffect(() => {
@@ -57,6 +57,8 @@ export function useTheme(): ThemeContextType {
 function applyTheme(themeName: ThemeName) {
   const theme = THEMES[themeName];
   const root = document.documentElement;
+  const isDarkTheme = themeName === 'dark-pro';
+  root.style.colorScheme = isDarkTheme ? 'dark' : 'light';
 
   // Background colors
   root.style.setProperty('--color-bg-primary', theme.colors.bg.primary);
@@ -70,6 +72,7 @@ function applyTheme(themeName: ThemeName) {
   root.style.setProperty('--color-text-secondary', theme.colors.text.secondary);
   root.style.setProperty('--color-text-tertiary', theme.colors.text.tertiary);
   root.style.setProperty('--color-text-inverse', theme.colors.text.inverse);
+  root.style.setProperty('--color-text-on-action', theme.colors.text.onAction);
 
   // Action colors
   root.style.setProperty('--color-action-primary', theme.colors.action.primary);
@@ -111,5 +114,5 @@ function applyTheme(themeName: ThemeName) {
   root.style.setProperty('--shadow-lg', theme.shadows.lg);
 
   // Update Tailwind's color scheme if needed
-  document.documentElement.classList.toggle('dark', ['dark-pro', 'warm-community'].includes(themeName));
+  root.classList.toggle('dark', isDarkTheme);
 }

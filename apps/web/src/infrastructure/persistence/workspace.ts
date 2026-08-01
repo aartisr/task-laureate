@@ -35,6 +35,82 @@ export function persistWorkspace(adapter: WorkspacePersistenceAdapter) {
   return (data: WorkspaceData) => { void adapter.save(createWorkspaceExport(data)); };
 }
 
+/** Lossless write-behind queue: bursts are coalesced, writes stay ordered, and the newest snapshot always wins. */
+export function createBufferedPersistence(adapter: WorkspacePersistenceAdapter, options: {
+  debounceMs?: number;
+  maxRetries?: number;
+  retryDelayMs?: number;
+  onSaveStart?: () => void;
+  onSaveSuccess?: () => void;
+  onSaveError?: (error: unknown, attempt: number) => void;
+} = {}) {
+  const debounceMs = options.debounceMs ?? 250;
+  const maxRetries = options.maxRetries ?? 3;
+  const retryDelayMs = options.retryDelayMs ?? 5_000;
+  let latest: WorkspaceExport | null = null;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  let flushing: Promise<void> | null = null;
+
+  const reportError = (error: unknown, attempt: number) => {
+    options.onSaveError?.(error, attempt);
+  };
+
+  const scheduleFlush = (delay: number) => {
+    if (timer) clearTimeout(timer);
+    timer = setTimeout(() => {
+      // flush reports the error itself and schedules the next retry. Swallow
+      // here to avoid an unhandled rejection from a timer callback.
+      void flush().catch(() => undefined);
+    }, delay);
+  };
+
+  const saveWithRetry = async (workspace: WorkspaceExport) => {
+    let attempt = 0;
+    while (true) {
+      try {
+        await adapter.save(workspace);
+        return;
+      }
+      catch (error) {
+        attempt++;
+        if (attempt > maxRetries) throw error;
+        await new Promise((resolve) => setTimeout(resolve, Math.min(1_000, 100 * 2 ** (attempt - 1))));
+      }
+    }
+  };
+  const flush = async () => {
+    if (timer) clearTimeout(timer);
+    timer = undefined;
+    if (flushing) return flushing;
+    flushing = (async () => {
+      while (latest) {
+        const next = latest;
+        latest = null;
+        options.onSaveStart?.();
+        try {
+          await saveWithRetry(next);
+          options.onSaveSuccess?.();
+        } catch (error) {
+          // Keep the most recent snapshot in memory. A later mutation may have
+          // already replaced it, which is preferable to sending stale data.
+          latest ??= next;
+          reportError(error, maxRetries + 1);
+          scheduleFlush(retryDelayMs);
+          throw error;
+        }
+      }
+    })();
+    try { await flushing; } finally { flushing = null; }
+  };
+  return {
+    schedule(data: WorkspaceData) {
+      latest = createWorkspaceExport(data);
+      scheduleFlush(debounceMs);
+    },
+    flush,
+  };
+}
+
 function clone<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
 }

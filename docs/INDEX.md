@@ -8,6 +8,7 @@ A comprehensive guide to all Task-Laureate documentation organized by purpose.
 
 - **[QUICK_FEATURE_GUIDE.md](QUICK_FEATURE_GUIDE.md)** — User-friendly overview of all features and how to use them
 - **[TODO_IMPLEMENTATION_PLAN.md](TODO_IMPLEMENTATION_PLAN.md)** — Implementation roadmap and task breakdown
+- **[VERCEL_DEPLOYMENT.md](VERCEL_DEPLOYMENT.md)** — Plug-and-play Vercel deployment, Supabase, auth, and private-registry setup
 
 ---
 
@@ -50,6 +51,7 @@ A comprehensive guide to all Task-Laureate documentation organized by purpose.
 | THEMES_IMPLEMENTATION_SUMMARY.md | Theme system | Designers, developers |
 | REFACTORING_GUIDE.md | Code quality | Developers |
 | QA_AND_PRODUCTION_READINESS.md | Deployment | DevOps, team leads |
+| VERCEL_DEPLOYMENT.md | Vercel deployment | Developers, DevOps |
 | PERFORMANCE_MONITORING.md | System health | DevOps, monitoring teams |
 
 ---
@@ -60,3 +62,4 @@ A comprehensive guide to all Task-Laureate documentation organized by purpose.
 - Read **ARCHITECTURE_GUIDE.md** before making structural changes
 - Review **TEST_SUITE_SUMMARY.md** to understand testing strategy
 - Consult **QA_AND_PRODUCTION_READINESS.md** for deployment procedures
+- Follow **VERCEL_DEPLOYMENT.md** to configure a Vercel project and its deployment environments

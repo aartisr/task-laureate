@@ -3,6 +3,9 @@
   "private": true,
   "version": "0.1.0",
   "description": "A generic, extensible TanStack task-management platform.",
+  "engines": {
+    "node": ">=20.19.0"
+  },
   "workspaces": [
     "apps/*"
   ],
@@ -11,5 +14,8 @@
     "build": "npm run build -w apps/web",
     "test": "npm run test -w apps/web",
     "lint": "npm run lint -w apps/web"
+  },
+  "devDependencies": {
+    "supabase": "^2.110.0"
   }
 }

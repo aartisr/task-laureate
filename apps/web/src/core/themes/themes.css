@@ -23,6 +23,7 @@
   --color-text-secondary: #b3b3b3;
   --color-text-tertiary: #808080;
   --color-text-inverse: #000000;
+  --color-text-on-action: #000000;
   --color-text-muted: #595959;
 
   /* Interactive - vibrant, accessible */
@@ -221,10 +222,10 @@ html.dark {
 
 ::selection {
   background-color: var(--color-action-primary);
-  color: var(--color-text-inverse);
+  color: var(--color-text-on-action);
 }
 
 ::-moz-selection {
   background-color: var(--color-action-primary);
-  color: var(--color-text-inverse);
+  color: var(--color-text-on-action);
 }

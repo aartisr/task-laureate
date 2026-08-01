@@ -1,8 +1,9 @@
 {
-  "buildCommand": "npm run build && rm -rf .vercel-dist && mkdir -p .vercel-dist && if [ -d apps/web/dist ]; then cp -R apps/web/dist/. .vercel-dist/; elif [ -d dist ]; then cp -R dist/. .vercel-dist/; else echo 'No build output found' && exit 1; fi",
-  "outputDirectory": ".vercel-dist",
-  "installCommand": "npm install --include=optional",
-  "framework": null,
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "vite",
+  "installCommand": "npm ci --include=optional",
+  "buildCommand": "npm run build",
+  "outputDirectory": "apps/web/dist",
   "rewrites": [
     { "source": "/((?!api|_next|.*\\.[^/]+$).*)", "destination": "/index.html" }
   ],

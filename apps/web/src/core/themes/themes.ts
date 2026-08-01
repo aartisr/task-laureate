@@ -20,6 +20,8 @@ export interface ThemeColors {
     secondary: string;
     tertiary: string;
     inverse: string;
+    /** Foreground guaranteed to contrast with the theme's action surfaces. */
+    onAction: string;
   };
   // Interactive
   action: {
@@ -100,12 +102,13 @@ export const darkProTheme: Theme = {
       secondary: '#d1d5db',  // Light gray (WCAG AA: 9.2:1)
       tertiary: '#9ca3af',   // Medium gray (WCAG AA: 6.5:1)
       inverse: '#000000',
+      onAction: '#000000',   // #8b5cf6/#a78bfa action surfaces require dark text
     },
     action: {
-      primary: '#8b5cf6',    // Vibrant purple (bright enough for dark bg)
+      primary: '#a78bfa',    // AA as link text on every dark surface; black on-action text
       secondary: '#60a5fa',  // Bright blue
-      hover: '#a78bfa',      // Lighter purple
-      active: '#7c3aed',     // Darker purple
+      hover: '#c4b5fd',      // AA as link text on every dark surface
+      active: '#a78bfa',     // AA as action text on every dark surface
       disabled: '#6b7280',   // Gray
     },
     status: {
@@ -168,8 +171,9 @@ export const luxuryMinimalTheme: Theme = {
     text: {
       primary: '#111827',    // Very dark (WCAG AAA: 18:1)
       secondary: '#4b5563',  // Medium gray (WCAG AA: 7.2:1)
-      tertiary: '#6b7280',   // Light gray (WCAG AA: 5.8:1)
+      tertiary: '#5b6472',   // AA on white and tertiary surfaces
       inverse: '#ffffff',
+      onAction: '#ffffff',
     },
     action: {
       primary: '#1f2937',    // Jet dark gray (for better contrast on light bg)
@@ -179,10 +183,10 @@ export const luxuryMinimalTheme: Theme = {
       disabled: '#d1d5db',   // Light gray
     },
     status: {
-      success: '#059669',    // Forest green
-      warning: '#d97706',    // Burnt orange
-      error: '#dc2626',      // Deep red
-      info: '#0284c7',       // Deep blue
+      success: '#047857',    // AA on all light surfaces
+      warning: '#92400e',    // AA on all light surfaces
+      error: '#b91c1c',      // AA on all light surfaces
+      info: '#0369a1',       // AA on all light surfaces
     },
     border: {
       default: '#d1d5db',    // Medium gray
@@ -237,22 +241,23 @@ export const warmCommunityTheme: Theme = {
     },
     text: {
       primary: '#1a1410',    // Warm dark brown (WCAG AAA: 16.5:1)
-      secondary: '#6b6360',  // Warm gray (WCAG AA: 5.2:1)
-      tertiary: '#8b7b6b',   // Light warm gray (WCAG AA: 4.5:1)
+      secondary: '#5f564f',  // AA on warm tertiary surfaces
+      tertiary: '#766656',   // AA on warm tertiary surfaces
       inverse: '#ffffff',
+      onAction: '#ffffff',
     },
     action: {
-      primary: '#d94444',    // Darker red (better on light bg)
-      secondary: '#d97706',  // Warm orange
-      hover: '#e74c3c',      // Brighter red on hover
-      active: '#c0392b',     // Darker red
+      primary: '#b93835',    // AA as text on every warm background and with white foreground
+      secondary: '#92400e',  // AA as text on every warm background and with white foreground
+      hover: '#b93835',      // AA with white foreground
+      active: '#9f2b2b',     // AA with white foreground
       disabled: '#ddd9d1',   // Light gray
     },
     status: {
-      success: '#16a34a',    // Bright green
-      warning: '#ea8c15',    // Bright orange
-      error: '#dc2626',      // Bright red
-      info: '#0369a1',       // Bright blue
+      success: '#166534',    // AA on all warm surfaces
+      warning: '#92400e',    // AA on all warm surfaces
+      error: '#b91c1c',      // AA on all warm surfaces
+      info: '#075985',       // AA on all warm surfaces
     },
     border: {
       default: '#ddd9d1',    // Warm light

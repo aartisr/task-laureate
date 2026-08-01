@@ -1,0 +1,27 @@
+import type { PersistenceConfig } from '../infrastructure/persistence/config';
+import { supabaseAuthProvider } from '../infrastructure/persistence/supabaseAuth';
+
+/** Composition root: replace this adapter to use another identity provider. */
+export const authProvider = supabaseAuthProvider;
+
+/**
+ * The sole persistence switchboard. Keep credentials in Vite environment
+ * variables; never commit a service-role key to a browser application.
+ */
+export const persistenceConfig: PersistenceConfig = {
+  driver: 'supabase',
+  // driver: 'local',
+  local: { storageKey: 'task-laureate.workspace.v1' },
+  supabase: {
+    url: import.meta.env.VITE_SUPABASE_URL,
+    publishableKey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+    workspaceId: import.meta.env.VITE_SUPABASE_WORKSPACE_ID ?? 'default',
+    table: 'workspace_snapshots',
+    schema: 'public',
+    // Session storage and refresh are handled by Supabase Auth in the browser.
+    getAccessToken: async () => (await authProvider.getSession())?.accessToken ?? null,
+    requireAuth: true,
+    debounceMs: 300,
+    fallbackToLocal: true,
+  },
+};
