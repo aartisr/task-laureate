@@ -10,7 +10,7 @@ The repository is an npm-workspaces monorepo. The Vercel project is rooted at th
 | --- | --- |
 | Root Directory | `.` (repository root) |
 | Framework Preset | Vite (or auto-detected Vite) |
-| Install Command | `npm ci --include=optional` |
+| Install Command | `npm install --include=optional` |
 | Build Command | `npm run build` |
 | Output Directory | `apps/web/dist` |
 | Node.js | 20.19+ |
@@ -25,7 +25,7 @@ These settings are committed in [`vercel.json`](../vercel.json). The build runs 
 2. Confirm a clean production build locally:
 
    ```bash
-   npm ci --include=optional
+   npm install --include=optional
    npm run lint
    npm run build
    ```
@@ -59,17 +59,26 @@ After editing an environment variable, redeploy. Vite embeds `VITE_*` values dur
 
 ### Private or corporate npm registry
 
-Vercel build machines do not inherit a developer's local npm credentials. If your organization requires a private registry, use an organization-approved, read-only automation token and make the registry configuration available to the build. Never commit the token.
+Vercel build machines do not inherit a developer's local npm credentials. This repository's lockfile includes packages fetched from the approved Artifactory virtual registry, so Vercel must be given an Artifactory read token. Without it, npm can silently omit a platform-specific optional package (such as Rollup's Linux binary) and Vite then fails with `Cannot find module @rollup/rollup-linux-x64-gnu`.
 
-One portable pattern is a committed `.npmrc` containing only the registry endpoint and an environment-variable reference:
+In **Project Settings → Environment Variables**, set both values for every environment that builds (Production and Preview at minimum):
+
+| Variable | Value | Mark as secret |
+| --- | --- | --- |
+| `NPM_TOKEN` | An organization-approved, read-only Artifactory access token | Yes |
+| `NPM_RC` | The exact multiline configuration below | Yes |
+
+Use this value for `NPM_RC` (the `${NPM_TOKEN}` text is literal; do not substitute or commit the token):
 
 ```ini
-registry=https://registry.example.corp/artifactory/api/npm/company-virtual/
+registry=https://registry.npmjs.org/
 always-auth=true
-//registry.example.corp/artifactory/api/npm/company-virtual/:_authToken=${NPM_TOKEN}
+//edgeinternal1uhg.optum.com/artifactory/api/npm/tenant-compass-npm-vir/:_authToken=${NPM_TOKEN}
 ```
 
-Set `NPM_TOKEN` as an encrypted Vercel variable for the environment(s) that build. For scoped registries, use the scope-specific `@scope:registry=...` form instead. Validate this arrangement with a Preview deploy before changing the production registry. If your repository must remain installable from the public registry, keep its existing `.npmrc` and configure registry authentication through your organization’s Vercel integration or build environment instead.
+Vercel uses `NPM_RC` as the build's npm configuration. The public npm registry remains the default for Vercel’s own runtime packages, while the path-scoped token authorizes the Artifactory URLs recorded in the lockfile. For another organization, replace only the registry host/path with its approved endpoint and retain the path-scoped token line. Never use a write-capable personal token.
+
+The Vercel install command intentionally uses `npm install --include=optional` rather than a frozen `npm ci`: it allows npm to reconcile platform-specific optional packages for Vercel's Linux builder, avoiding the known npm optional-dependency lockfile issue. Validate the secrets with a new Preview deployment after saving them.
 
 ## Configure Supabase authentication for Vercel URLs
 
