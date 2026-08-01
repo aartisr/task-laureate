@@ -242,57 +242,6 @@ export function SupportPage() {
         </div>
       </section>
 
-      {/* ===== ABOUT THE CREATOR ===== */}
-      <section className="support-section creator-section" aria-labelledby="creator-heading">
-        <div className="creator-card">
-          <div className="creator-card__badge">Built with 🔥 by a high schooler</div>
-          <div className="creator-card__body">
-            <div className="creator-card__avatar" aria-hidden="true">
-              <span>A</span>
-              <div className="creator-card__avatar-ring" />
-            </div>
-            <div className="creator-card__info">
-              <h2 id="creator-heading" className="creator-card__name">Aarti S Ravikumar</h2>
-              <p className="creator-card__role">Developer · Designer · Student</p>
-              <div className="creator-card__school">
-                <span>🎓</span>
-                <a
-                  href="https://saugus.pioneercss.org"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="creator-card__school-link"
-                >
-                  Pioneer Charter School of Science II (PCSSII)
-                </a>
-              </div>
-              <blockquote className="creator-card__quote">
-                "I built Task-Laureate because I was a high school student drowning in chaos — competitions,
-                research, homework, ideas. I needed one tool that would stay calm when everything else wasn't.
-                I hope it does the same for you."
-              </blockquote>
-              <div className="creator-card__links">
-                <a
-                  href="https://ai-aarti.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="creator-link creator-link--primary"
-                >
-                  🌐 ai-aarti.com
-                </a>
-                <a
-                  href="https://github.com/aartisr"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="creator-link"
-                >
-                  GitHub
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* ===== FOOTER CTA ===== */}
       <div className="support-footer-cta">
         <h2>Ready to take back your clarity?</h2>
@@ -302,7 +251,7 @@ export function SupportPage() {
           <Link to="/tasks" className="secondary-button">View all tasks</Link>
         </div>
         <p className="support-footer-cta__credit">
-          Made with obsession by{' '}
+          About Task-Laureate · created by{' '}
           <a href="https://ai-aarti.com" target="_blank" rel="noopener noreferrer">Aarti S Ravikumar</a>
           {' '}·{' '}
           <a href="https://saugus.pioneercss.org" target="_blank" rel="noopener noreferrer">PCSSII</a>

@@ -8,7 +8,7 @@ A comprehensive guide to all Task-Laureate documentation organized by purpose.
 
 - **[QUICK_FEATURE_GUIDE.md](QUICK_FEATURE_GUIDE.md)** — User-friendly overview of all features and how to use them
 - **[TODO_IMPLEMENTATION_PLAN.md](TODO_IMPLEMENTATION_PLAN.md)** — Implementation roadmap and task breakdown
-- **[VERCEL_DEPLOYMENT.md](VERCEL_DEPLOYMENT.md)** — Plug-and-play Vercel deployment, Supabase, auth, and private-registry setup
+- **[VERCEL_DEPLOYMENT.md](VERCEL_DEPLOYMENT.md)** — Plug-and-play Vercel deployment, Supabase, and auth setup
 
 ---
 

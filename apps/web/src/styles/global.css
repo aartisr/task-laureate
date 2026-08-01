@@ -2877,33 +2877,53 @@ select:focus {
   border-color: var(--color-border-default);
 }
 
-.sidebar-credit {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  margin-top: var(--spacing-4);
-  padding: var(--spacing-3) var(--spacing-4);
+.account-status {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--spacing-3);
+  width: 100%;
+  min-height: 56px;
+  margin-top: var(--spacing-2);
+  padding: var(--spacing-2) var(--spacing-3);
+  color: var(--color-text-primary);
+  text-decoration: none;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-default);
   border-radius: var(--radius-md);
-  background: linear-gradient(135deg, rgba(139,92,246,0.06), rgba(59,130,246,0.03));
-  border: 1px solid rgba(139,92,246,0.12);
+  transition: border-color var(--transition-base), background var(--transition-base), transform var(--transition-base);
 }
 
-.sidebar-credit__name {
-  font-size: 0.75rem;
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-text-secondary);
-  text-decoration: none;
-  transition: color var(--transition-base);
+.account-status:hover,
+.account-status:focus-visible {
+  background: var(--color-bg-tertiary);
+  border-color: var(--color-action-primary);
+  transform: translateY(-1px);
 }
-.sidebar-credit__name:hover { color: var(--color-action-primary); }
 
-.sidebar-credit__school {
-  font-size: 0.68rem;
-  color: var(--color-text-tertiary);
-  text-decoration: none;
-  transition: color var(--transition-base);
+.account-status__avatar {
+  display: inline-grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  color: var(--color-text-on-action);
+  background: var(--color-action-primary);
+  font-size: 0.85rem;
+  font-weight: var(--font-weight-bold);
 }
-.sidebar-credit__school:hover { color: var(--color-action-primary); }
+
+.account-status__content { display: grid; min-width: 0; gap: 2px; }
+.account-status__content strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.8rem; }
+.account-status__content small { display: flex; align-items: center; gap: 0.38rem; color: var(--color-text-tertiary); font-size: 0.72rem; }
+.account-status__indicator { width: 0.45rem; height: 0.45rem; border-radius: 50%; background: var(--color-text-tertiary); }
+.account-status.is-synced .account-status__indicator { background: var(--color-status-success); }
+.account-status.is-error .account-status__indicator { background: var(--color-status-error); }
+.account-status__chevron { color: var(--color-text-tertiary); font-size: 1.25rem; }
+
+@media (max-width: 767px) {
+  .mobile-navigation__items > .account-status { margin: 0 0 var(--spacing-3); }
+}
 
 /* ===== SUPPORT PAGE ===== */
 

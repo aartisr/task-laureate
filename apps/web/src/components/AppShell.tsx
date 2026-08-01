@@ -4,6 +4,8 @@ import { Link, Outlet, useRouterState } from '@tanstack/react-router';
 import { useTheme } from '../core/themes/ThemeProvider';
 import type { NavItem } from '../core/contracts/feature';
 import { UndoCenter } from './UndoCenter';
+import { AccountStatus } from './AccountStatus';
+import { authProvider } from '../config/persistence.config';
 
 interface AppShellProps {
   children?: ReactNode;
@@ -160,16 +162,7 @@ export function AppShell({ children, navItems }: AppShellProps) {
             <span className="sidebar-link__label">Help & Support</span>
             <span className="sidebar-link__badge">FAQs</span>
           </Link>
-
-          {/* Creator attribution */}
-          <div className="sidebar-credit">
-            <a href="https://ai-aarti.com" target="_blank" rel="noopener noreferrer" className="sidebar-credit__name">
-              Aarti S Ravikumar
-            </a>
-            <a href="https://saugus.pioneercss.org" target="_blank" rel="noopener noreferrer" className="sidebar-credit__school">
-              PCSSII
-            </a>
-          </div>
+          <AccountStatus provider={authProvider} />
 
         </div>
       </aside>
@@ -204,6 +197,7 @@ export function AppShell({ children, navItems }: AppShellProps) {
           </div>
 
           <div className="mobile-navigation__items">
+            <AccountStatus provider={authProvider} onNavigate={() => setIsMobileMenuOpen(false)} />
             {mobilePrimaryTabs.map((item) => (
               <Link
                 key={item.to}
