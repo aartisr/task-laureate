@@ -758,11 +758,28 @@ input {
 
 .sidebar-nav {
   display: grid;
-  gap: var(--spacing-3);
-  margin-top: var(--spacing-6);
-  flex: 1;
-  overflow-y: auto;
-  padding-right: var(--spacing-2);
+  gap: var(--spacing-2);
+  margin-top: var(--spacing-5);
+  flex: 0 0 auto;
+  overflow: visible;
+}
+
+.sidebar-nav__label {
+  margin: 0 0 var(--spacing-1);
+  padding: 0 var(--spacing-3);
+  color: var(--color-text-tertiary);
+  font-size: 0.68rem;
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.sidebar-nav__extensions {
+  display: grid;
+  gap: var(--spacing-2);
+  margin-top: var(--spacing-3);
+  padding-top: var(--spacing-4);
+  border-top: 1px solid var(--color-border-light);
 }
 
 .sidebar-nav a {
@@ -781,6 +798,10 @@ input {
   cursor: pointer;
   position: relative;
   overflow: hidden;
+}
+
+.sidebar-nav > a {
+  min-height: 48px;
 }
 
 .sidebar-nav a::before {

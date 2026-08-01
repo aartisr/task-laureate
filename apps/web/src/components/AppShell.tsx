@@ -28,6 +28,19 @@ export function AppShell({ children, navItems }: AppShellProps) {
     [navItems],
   );
 
+  const desktopNavigation = useMemo(() => {
+    const dashboard = { label: 'Dashboard', to: '/', icon: '📊', description: 'Your overview' };
+    const essentialPaths = new Set(['/', '/search', '/activity', '/settings']);
+    const essentials = [dashboard, ...['/search', '/activity', '/settings']
+      .map((path) => navItems.find((item) => item.to === path))
+      .filter((item): item is NavItem => Boolean(item))];
+
+    return {
+      essentials,
+      extensions: navItems.filter((item) => !essentialPaths.has(item.to)),
+    };
+  }, [navItems]);
+
   const currentSection = useMemo(
     () =>
       mobileNavItems.find((item) =>
@@ -118,16 +131,8 @@ export function AppShell({ children, navItems }: AppShellProps) {
           <small>Premium Tasks</small>
         </div>
         <nav className="sidebar-nav" aria-label="Primary Navigation">
-          <Link
-            to="/"
-            activeOptions={getLinkActiveOptions('/')}
-            activeProps={{ className: 'active' }}
-            className="sidebar-link"
-            aria-label="Dashboard"
-          >
-            📊 Dashboard
-          </Link>
-          {navItems.map((item) => (
+          <p className="sidebar-nav__label">Workspace</p>
+          {desktopNavigation.essentials.map((item) => (
             <Link
               key={item.to}
               to={item.to}
@@ -139,6 +144,23 @@ export function AppShell({ children, navItems }: AppShellProps) {
               {item.icon} {item.label}
             </Link>
           ))}
+          {desktopNavigation.extensions.length > 0 && (
+            <div className="sidebar-nav__extensions">
+              <p className="sidebar-nav__label">More</p>
+              {desktopNavigation.extensions.map((item) => (
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  activeOptions={getLinkActiveOptions(item.to)}
+                  activeProps={{ className: 'active' }}
+                  className="sidebar-link"
+                  aria-label={item.label}
+                >
+                  {item.icon} {item.label}
+                </Link>
+              ))}
+            </div>
+          )}
         </nav>
         <div className="sidebar-spacer" />
 
