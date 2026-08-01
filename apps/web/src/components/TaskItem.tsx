@@ -140,15 +140,15 @@ export function TaskItem({
 
   if (isDeleted) {
     return (
-      <article className="bg-gray-50 rounded-lg p-4 border border-gray-200 opacity-60" aria-label={`Deleted task: ${task.title}`}>
-        <div className="flex items-center justify-between">
-          <div className="flex-1">
-            <p className="text-gray-600 line-through">{task.title}</p>
-            <p className="text-xs text-gray-400 mt-1">Deleted</p>
+      <article className="task-item task-item--deleted" aria-label={`Deleted task: ${task.title}`}>
+        <div className="task-item__row">
+          <div className="task-item__content">
+            <p className="task-item__title">{task.title}</p>
+            <p className="task-item__deleted-label">Deleted</p>
           </div>
           <button
             onClick={() => onRestore()}
-            className="px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="secondary-button task-item__restore"
             aria-label={`Restore task: ${task.title}`}
           >
             Restore
@@ -160,16 +160,12 @@ export function TaskItem({
 
   return (
     <article
-      className={`rounded-lg border transition-all ${
-        isEditing
-          ? 'border-blue-400 bg-blue-50 shadow-md'
-          : 'border-gray-200 bg-white hover:shadow-md'
-      } ${isCompleted ? 'opacity-75' : ''}`}
+      className={`task-item ${isEditing ? 'task-item--editing' : ''} ${isCompleted ? 'task-item--completed' : ''}`}
       aria-label={`Task: ${task.title}${isCompleted ? ', completed' : ''}`}
     >
-      <div className="p-4">
+      <div className="task-item__body">
         {/* Main Task Row */}
-        <div className="flex items-start gap-3">
+        <div className="task-item__row">
           {/* Checkbox */}
           <button
             onClick={handleCompleteToggle}
@@ -177,17 +173,13 @@ export function TaskItem({
             aria-checked={isCompleted}
             aria-label={`Mark task ${isCompleted ? 'incomplete' : 'complete'}: ${task.title}`}
             role="checkbox"
-            className={`flex-shrink-0 w-6 h-6 rounded border-2 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-              isCompleted
-                ? 'bg-green-500 border-green-500'
-                : 'border-gray-300 hover:border-green-500'
-            }`}
+            className={`task-item__complete ${isCompleted ? 'is-completed' : ''}`}
           >
             {isCompleted && <span className="text-white text-sm flex items-center justify-center h-full" aria-hidden="true">✓</span>}
           </button>
 
           {/* Title and Priority */}
-          <div className="flex-1 min-w-0">
+          <div className="task-item__content">
             {isEditing ? (
               <div className="space-y-4 bg-white rounded-xl border-2 border-blue-500 p-5 shadow-lg animate-fadeIn">
                 {/* Header */}
@@ -353,34 +345,30 @@ export function TaskItem({
                 </div>
               </div>
             ) : (
-              <div onClick={onSelect} className="cursor-pointer">
-                <p
-                  className={`font-medium transition-all ${
-                    isCompleted ? 'text-gray-500 line-through' : 'text-gray-900'
-                  }`}
-                >
+              <button type="button" onClick={onSelect} className="task-item__open" aria-label={`Open task details: ${task.title}`}>
+                <p className="task-item__title">
                   {task.title}
                 </p>
                 {task.notes && (
-                  <p className="text-sm text-gray-600 mt-1 line-clamp-2">{task.notes}</p>
+                  <p className="task-item__notes">{task.notes}</p>
                 )}
-              </div>
+              </button>
             )}
           </div>
 
           {/* Priority Badge */}
-          <div className={`flex-shrink-0 px-2 py-1 rounded text-xs font-medium ${priorityConfig.color}`}>
+          <div className={`task-item__priority priority--${task.priority}`} aria-label={`Priority: ${task.priority}`}>
             {priorityConfig.label}
           </div>
         </div>
 
         {/* Tags */}
         {task.tags.length > 0 && (
-          <div className="flex gap-2 mt-3 flex-wrap">
+          <div className="task-item__tags">
             {task.tags.map((tag) => (
               <span
                 key={tag}
-                className="px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-700"
+                className="task-item__tag"
               >
                 #{tag}
               </span>
@@ -390,35 +378,36 @@ export function TaskItem({
 
         {/* Error Message */}
         {error && (
-          <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-700">
+          <div className="task-item__error" role="alert">
             {error}
           </div>
         )}
 
         {/* Due Date and Actions */}
-        <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100 text-xs text-gray-500">
-          <div>
+        <div className="task-item__footer">
+          <div className="task-item__dates">
             {task.dueDate && (
-              <span>
-                Due: {new Date(task.dueDate).toLocaleDateString('en-US', {
+              <span className={`task-item__due ${task.dueDate.slice(0, 10) < new Date().toISOString().slice(0, 10) && !isCompleted ? 'is-overdue' : ''}`}>
+                Due {new Date(task.dueDate).toLocaleDateString('en-US', {
                   month: 'short',
                   day: 'numeric',
                 })}
               </span>
             )}
             {task.completedAt && (
-              <span className="text-green-600 ml-2">
+              <span className="task-item__completed-date">
                 ✓ Completed {new Date(task.completedAt).toLocaleDateString()}
               </span>
             )}
           </div>
 
           {!isEditing && (
-            <div className="flex gap-1">
+            <div className="task-item__actions">
               <button
                 onClick={onSelect}
                 title="Edit"
-                className="p-1 hover:bg-gray-100 rounded transition-colors"
+                className="task-item__icon-button"
+                aria-label={`Edit task: ${task.title}`}
               >
                 ✏️
               </button>
@@ -427,14 +416,14 @@ export function TaskItem({
                   <button
                     onClick={handleDeleteClick}
                     disabled={isLoading}
-                    className="px-2 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 transition-colors disabled:opacity-50"
+                    className="task-item__delete-confirm"
                   >
                     Confirm
                   </button>
                   <button
                     onClick={() => setShowDeleteConfirm(false)}
                     disabled={isLoading}
-                    className="px-2 py-1 text-xs bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition-colors"
+                    className="task-item__icon-button"
                   >
                     Cancel
                   </button>
@@ -443,7 +432,8 @@ export function TaskItem({
                 <button
                   onClick={() => setShowDeleteConfirm(true)}
                   title="Delete"
-                  className="p-1 hover:bg-red-100 text-red-600 rounded transition-colors"
+                  className="task-item__icon-button task-item__icon-button--danger"
+                  aria-label={`Delete task: ${task.title}`}
                 >
                   🗑️
                 </button>

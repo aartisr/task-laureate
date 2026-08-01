@@ -9,6 +9,8 @@ import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 import { announceToScreenReader, createId } from '../lib/a11y';
 import { appServices } from '../app/runtime/appServices';
 import { usePageSEO, PAGE_SEO } from '../hooks/usePageSEO';
+import { ListComposer } from '../components/ListComposer';
+import type { TodoListInput } from '../core/contracts/repository';
 
 export function DashboardPage() {
   usePageSEO(PAGE_SEO.dashboard);
@@ -37,13 +39,10 @@ export function DashboardPage() {
     onFocusSearch: () => navigate({ to: '/search' }),
   });
 
-  const handleCreateList = async () => {
+  const handleCreateList = async (input: TodoListInput) => {
     try {
-      const result = await listMutations.createList.mutateAsync({
-        title: 'New List',
-        description: '',
-      });
-      announceToScreenReader('New list created');
+      const result = await listMutations.createList.mutateAsync(input);
+      announceToScreenReader(`List “${result.title}” created`);
       navigate({
         to: `/lists/${result.id}`,
       });
@@ -194,9 +193,10 @@ export function DashboardPage() {
       </Grid>
 
       {/* Quick Actions */}
+      {isCreatingList ? <ListComposer titleInputRef={listTitleInputRef} onCreate={handleCreateList} onCancel={() => setIsCreatingList(false)} /> : null}
       <div className="quick-actions-wrapper">
         <Grid columns={2} gap="normal">
-          <Card onClick={handleCreateList} ariaLabel="Create a new list">
+          <Card onClick={() => setIsCreatingList(true)} ariaLabel="Create a new list">
             <div className="text-4xl mb-4" aria-hidden="true">
               ➕
             </div>
@@ -279,7 +279,7 @@ export function DashboardPage() {
           description="Create your first list to get started organizing your tasks."
           action={{
             label: 'Create First List',
-            onClick: handleCreateList,
+            onClick: () => setIsCreatingList(true),
           }}
         />
       )}

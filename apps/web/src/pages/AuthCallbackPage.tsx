@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { authProvider } from '../config/persistence.config';
 import { consumeOAuthReturnTo } from '../infrastructure/persistence/supabaseAuth';
 import { supportsSocialAuth } from '../core/contracts/auth';
@@ -6,19 +6,20 @@ import { initializePersistence } from '../app/runtime/appServices';
 
 /** Completes a PKCE callback before returning the person to a safe in-app path. */
 export function AuthCallbackPage() {
-  const started = useRef(false);
   const [message, setMessage] = useState('Finishing secure sign-in…');
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
-    if (started.current) return;
-    started.current = true;
     if (!supportsSocialAuth(authProvider)) {
       setMessage('Social sign-in is not available in this deployment. Return to Settings and try another method.');
       setFailed(true);
       return;
     }
     let active = true;
+    // React Strict Mode intentionally mounts, cleans up, and mounts effects
+    // again in development. Do not block the second effect with a ref: the
+    // first handler has been deactivated by cleanup. The auth adapter safely
+    // coalesces duplicate calls into one in-flight code exchange instead.
     void authProvider.completeOAuthCallback()
       .then(async () => {
         if (!active) return;

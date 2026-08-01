@@ -7,6 +7,7 @@ import { useTaskMutations } from '../core/mutations/useTaskMutations';
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 import { announceToScreenReader, createId } from '../lib/a11y';
 import { TaskList } from '../components/TaskList';
+import { TaskComposer } from '../components/TaskComposer';
 import { appServices } from '../app/runtime/appServices';
 import { usePageSEO, PAGE_SEO } from '../hooks/usePageSEO';
 
@@ -18,7 +19,6 @@ export function ListDetailPage({ listId }: ListDetailPageProps) {
   const navigate = useNavigate();
   const repository = appServices.repository;
   const [isCreatingTask, setIsCreatingTask] = useState(false);
-  const [newTaskTitle, setNewTaskTitle] = useState('');
   const [editingTitle, setEditingTitle] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -95,17 +95,10 @@ export function ListDetailPage({ listId }: ListDetailPageProps) {
     );
   }
 
-  const handleCreateTask = async () => {
-    if (!newTaskTitle.trim()) return;
-
+  const handleCreateTask = async (input: Parameters<typeof taskMutations.createTask.mutateAsync>[0]) => {
     try {
-      await taskMutations.createTask.mutateAsync({
-        listId,
-        title: newTaskTitle.trim(),
-        priority: 'medium',
-      });
-      announceToScreenReader(`Task "${newTaskTitle.trim()}" created.`);
-      setNewTaskTitle('');
+      await taskMutations.createTask.mutateAsync(input);
+      announceToScreenReader(`Task "${input.title}" created.`);
       setIsCreatingTask(false);
     } catch (error) {
       console.error('Failed to create task:', error);
@@ -207,15 +200,29 @@ export function ListDetailPage({ listId }: ListDetailPageProps) {
                   </div>
                 </div>
               ) : (
-                <h1
-                  onClick={() => {
-                    setEditingTitle(true);
-                    setNewTitle(list.title);
-                  }}
-                  className="text-4xl font-bold text-gray-900 cursor-pointer hover:text-blue-600 transition-colors"
-                >
-                  {list.title}
-                </h1>
+                <div className="list-title-control">
+                  <h1
+                    onClick={() => {
+                      setEditingTitle(true);
+                      setNewTitle(list.title);
+                    }}
+                    className="text-4xl font-bold text-gray-900 cursor-pointer hover:text-blue-600 transition-colors"
+                    title="Click to edit list name"
+                  >
+                    {list.title}
+                  </h1>
+                  <button
+                    type="button"
+                    className="list-title-control__edit"
+                    onClick={() => {
+                      setEditingTitle(true);
+                      setNewTitle(list.title);
+                    }}
+                    aria-label={`Edit list name: ${list.title}`}
+                  >
+                    <span aria-hidden="true">✎</span> Edit name
+                  </button>
+                </div>
               )}
               {list.description && (
                 <p className="text-gray-600 mt-2">{list.description}</p>
@@ -296,53 +303,14 @@ export function ListDetailPage({ listId }: ListDetailPageProps) {
         {/* Create Task Section */}
         <section className="mb-8 bg-white rounded-lg shadow-md p-6" aria-label="Create new task">
           {isCreatingTask ? (
-            <div className="space-y-2">
-              <label htmlFor="task-input" className="sr-only">New task title</label>
-              <input
-                id="task-input"
-                ref={taskInputRef}
-                type="text"
-                placeholder="What needs to be done?"
-                value={newTaskTitle}
-                onChange={(e) => setNewTaskTitle(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') handleCreateTask();
-                  if (e.key === 'Escape') {
-                    setIsCreatingTask(false);
-                    setNewTaskTitle('');
-                  }
-                }}
-                className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                aria-label="Task title"
-              />
-              <div className="flex gap-2">
-                <button
-                  onClick={handleCreateTask}
-                  disabled={!newTaskTitle.trim()}
-                  className="px-4 py-2 bg-blue-600 text-white rounded font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  aria-label="Add new task"
-                >
-                  Add Task
-                </button>
-                <button
-                  onClick={() => {
-                    setIsCreatingTask(false);
-                    setNewTaskTitle('');
-                  }}
-                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded font-medium hover:bg-gray-400 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  aria-label="Cancel task creation"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
+            <TaskComposer listId={listId} onCreate={handleCreateTask} onCancel={() => setIsCreatingTask(false)} titleInputRef={taskInputRef} />
           ) : (
             <button
               onClick={() => setIsCreatingTask(true)}
               className="w-full text-left px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
               aria-label="Click to add a new task"
             >
-              <span className="text-2xl" aria-hidden="true">+</span> Add a new task
+              <span className="text-2xl" aria-hidden="true">+</span> Add a task <span className="text-sm">— include a due date, priority, or notes when useful</span>
             </button>
           )}
         </section>
