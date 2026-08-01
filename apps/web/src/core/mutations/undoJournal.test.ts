@@ -1,7 +1,21 @@
 import { describe, expect, it } from 'vitest';
-import { undoJournal } from './undoJournal';
+import { recoveryNeedsAttention, undoJournal } from './undoJournal';
 
 describe('undoJournal', () => {
+  it('only requests recovery attention for an actionable or failed recovery state', async () => {
+    undoJournal.clear();
+    expect(recoveryNeedsAttention(undoJournal.getSnapshot())).toBe(false);
+
+    undoJournal.record({ label: 'Change', undo: async () => undefined, redo: async () => undefined });
+    expect(recoveryNeedsAttention(undoJournal.getSnapshot())).toBe(true);
+
+    await undoJournal.undo();
+    expect(recoveryNeedsAttention(undoJournal.getSnapshot())).toBe(true);
+
+    undoJournal.clear();
+    expect(recoveryNeedsAttention(undoJournal.getSnapshot())).toBe(false);
+  });
+
   it('reverses commands in order, redoes them, and clears redo after a new change', async () => {
     undoJournal.clear();
     let value = 2;

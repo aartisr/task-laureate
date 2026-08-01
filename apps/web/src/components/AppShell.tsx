@@ -1,11 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import type { ReactNode } from 'react';
 import { Link, Outlet, useRouterState } from '@tanstack/react-router';
 import { useTheme } from '../core/themes/ThemeProvider';
 import type { NavItem } from '../core/contracts/feature';
-import { UndoCenter } from './UndoCenter';
 import { AccountStatus } from './AccountStatus';
 import { authProvider } from '../config/persistence.config';
+import { recoveryNeedsAttention, undoJournal } from '../core/mutations/undoJournal';
 
 interface AppShellProps {
   children?: ReactNode;
@@ -17,6 +17,9 @@ export function AppShell({ children, navItems }: AppShellProps) {
   const isDarkTheme = currentTheme !== 'luxury-minimal';
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const currentPath = useRouterState({ select: (state) => state.location.pathname });
+  const recoveryAvailable = recoveryNeedsAttention(
+    useSyncExternalStore(undoJournal.subscribe, undoJournal.getSnapshot, undoJournal.getSnapshot),
+  );
 
   const mobileNavItems = useMemo(
     () =>
@@ -132,18 +135,22 @@ export function AppShell({ children, navItems }: AppShellProps) {
         </div>
         <nav className="sidebar-nav" aria-label="Primary Navigation">
           <p className="sidebar-nav__label">Workspace</p>
-          {desktopNavigation.essentials.map((item) => (
-            <Link
-              key={item.to}
-              to={item.to}
-              activeOptions={getLinkActiveOptions(item.to)}
-              activeProps={{ className: 'active' }}
-              className="sidebar-link"
-              aria-label={item.label}
-            >
-              {item.icon} {item.label}
-            </Link>
-          ))}
+          {desktopNavigation.essentials.map((item) => {
+            const hasRecovery = item.to === '/settings' && recoveryAvailable;
+            return (
+              <Link
+                key={item.to}
+                to={item.to}
+                activeOptions={getLinkActiveOptions(item.to)}
+                activeProps={{ className: 'active' }}
+                className="sidebar-link"
+                aria-label={hasRecovery ? 'Settings — recent changes available' : item.label}
+              >
+                {item.icon} {item.label}
+                {hasRecovery ? <span className="sidebar-link__badge sidebar-link__badge--attention">Review</span> : null}
+              </Link>
+            );
+          })}
           {desktopNavigation.extensions.length > 0 && (
             <div className="sidebar-nav__extensions">
               <p className="sidebar-nav__label">More</p>
@@ -220,14 +227,16 @@ export function AppShell({ children, navItems }: AppShellProps) {
 
           <div className="mobile-navigation__items">
             <AccountStatus provider={authProvider} onNavigate={() => setIsMobileMenuOpen(false)} />
-            {mobilePrimaryTabs.map((item) => (
+            {mobilePrimaryTabs.map((item) => {
+              const hasRecovery = item.to === '/settings' && recoveryAvailable;
+              return (
               <Link
                 key={item.to}
                 to={item.to}
                 activeOptions={getLinkActiveOptions(item.to)}
                 activeProps={{ className: 'active' }}
                 className="mobile-navigation__link"
-                aria-label={item.label}
+                aria-label={hasRecovery ? 'Settings — recent changes available' : item.label}
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 <span className="mobile-navigation__icon" aria-hidden="true">
@@ -237,8 +246,10 @@ export function AppShell({ children, navItems }: AppShellProps) {
                   <strong>{item.label}</strong>
                   <small>{item.description ?? 'Open section'}</small>
                 </span>
+                {hasRecovery ? <span className="mobile-navigation__attention">Review</span> : null}
               </Link>
-            ))}
+              );
+            })}
           </div>
           {mobileSecondaryItems.length > 0 ? (
             <div className="mobile-navigation__secondary">
@@ -271,23 +282,26 @@ export function AppShell({ children, navItems }: AppShellProps) {
       <main className="workspace" role="main">
         {children ?? <Outlet />}
       </main>
-      <UndoCenter />
       <nav className="mobile-bottom-nav" aria-label="Quick Navigation">
-        {mobilePrimaryTabs.map((item) => (
-          <Link
-            key={item.to}
-            to={item.to}
-            activeOptions={getLinkActiveOptions(item.to)}
-            activeProps={{ className: 'active' }}
-            className="mobile-bottom-nav__link"
-            aria-label={item.mobileLabel ?? item.label}
-          >
-            <span className="mobile-bottom-nav__icon" aria-hidden="true">
-              {item.icon ?? '•'}
-            </span>
-            <span className="mobile-bottom-nav__label">{item.mobileLabel ?? item.label}</span>
-          </Link>
-        ))}
+        {mobilePrimaryTabs.map((item) => {
+          const hasRecovery = item.to === '/settings' && recoveryAvailable;
+          return (
+            <Link
+              key={item.to}
+              to={item.to}
+              activeOptions={getLinkActiveOptions(item.to)}
+              activeProps={{ className: 'active' }}
+              className="mobile-bottom-nav__link"
+              aria-label={hasRecovery ? 'Settings — recent changes available' : item.mobileLabel ?? item.label}
+            >
+              <span className="mobile-bottom-nav__icon" aria-hidden="true">
+                {item.icon ?? '•'}
+              </span>
+              <span className="mobile-bottom-nav__label">{item.mobileLabel ?? item.label}</span>
+              {hasRecovery ? <span className="mobile-bottom-nav__attention" aria-hidden="true" /> : null}
+            </Link>
+          );
+        })}
         <button
           type="button"
           className={`mobile-bottom-nav__link mobile-bottom-nav__button ${isMobileMenuOpen ? 'active' : ''}`}

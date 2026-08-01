@@ -21,6 +21,14 @@ export interface UndoJournalState {
   error: string | null;
 }
 
+/**
+ * Recovery is deliberately opt-in in the interface: it is useful only after
+ * there is a reversible action or a recovery failure to resolve.
+ */
+export function recoveryNeedsAttention(journal: UndoJournalState): boolean {
+  return journal.undo.length > 0 || journal.redo.length > 0 || journal.error !== null;
+}
+
 const MAX_HISTORY = 100;
 let state: UndoJournalState = { undo: [], redo: [], busy: false, error: null };
 const listeners = new Set<() => void>();

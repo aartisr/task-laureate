@@ -1,41 +1,48 @@
-import { useEffect, useSyncExternalStore } from 'react';
-import { undoJournal } from '../core/mutations/undoJournal';
+import { useSyncExternalStore } from 'react';
+import { recoveryNeedsAttention, undoJournal } from '../core/mutations/undoJournal';
 
 export function UndoCenter() {
   const journal = useSyncExternalStore(undoJournal.subscribe, undoJournal.getSnapshot, undoJournal.getSnapshot);
   const latest = journal.undo.at(-1);
 
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      const modifier = event.metaKey || event.ctrlKey;
-      if (!modifier || event.key.toLowerCase() !== 'z') return;
-      event.preventDefault();
-      void (event.shiftKey ? undoJournal.redo() : undoJournal.undo());
-    };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, []);
+  if (!recoveryNeedsAttention(journal)) return null;
+
+  const title = journal.error
+    ? 'A recent change needs attention'
+    : journal.undo.length > 0
+      ? 'Restore a recent change'
+      : 'Redo a recent change';
+  const description = journal.error
+    ? journal.error
+    : latest
+      ? `${latest.label}. You can restore it from here.`
+      : `${journal.redo.length} reverted ${journal.redo.length === 1 ? 'change is' : 'changes are'} available to redo.`;
 
   return (
-    <section className="undo-center" aria-label="Change recovery">
-      <div className="undo-center__summary" aria-live="polite">
-        <span className="undo-center__eyebrow">Recovery</span>
-        <span>{latest ? `${latest.label} · ${journal.undo.length} recoverable` : 'All changes are safe'}</span>
+    <section className="recovery-panel" aria-labelledby="recovery-title" aria-live={journal.error ? 'assertive' : 'polite'}>
+      <div className="recovery-panel__copy">
+        <p className="recovery-panel__eyebrow">Recent changes</p>
+        <h2 id="recovery-title">{title}</h2>
+        <p>{description}</p>
       </div>
-      <div className="undo-center__actions">
-        <button type="button" className="undo-center__button" onClick={() => void undoJournal.undo()} disabled={!latest || journal.busy} title="Undo (⌘/Ctrl + Z)">
-          ↶ Undo
-        </button>
-        <button type="button" className="undo-center__button" onClick={() => void undoJournal.redo()} disabled={journal.redo.length === 0 || journal.busy} title="Redo (⌘/Ctrl + Shift + Z)">
-          ↷ Redo
-        </button>
-        {journal.undo.length > 1 ? (
-          <button type="button" className="undo-center__button undo-center__button--all" onClick={() => void undoJournal.undoAll()} disabled={journal.busy} title={`Undo all ${journal.undo.length} recent changes`}>
-            Undo all
+      <div className="recovery-panel__actions">
+        {latest ? (
+          <button type="button" className="recovery-panel__button recovery-panel__button--primary" onClick={() => void undoJournal.undo()} disabled={journal.busy}>
+            Restore latest
           </button>
         ) : null}
+        <button type="button" className="recovery-panel__button" onClick={() => void undoJournal.redo()} disabled={journal.redo.length === 0 || journal.busy}>
+          Redo
+        </button>
+        {journal.undo.length > 1 ? (
+          <button type="button" className="recovery-panel__button" onClick={() => void undoJournal.undoAll()} disabled={journal.busy}>
+            Restore all ({journal.undo.length})
+          </button>
+        ) : null}
+        <button type="button" className="recovery-panel__button recovery-panel__button--quiet" onClick={() => undoJournal.clear()} disabled={journal.busy}>
+          Dismiss
+        </button>
       </div>
-      {journal.error ? <p className="undo-center__error" role="alert">{journal.error}</p> : null}
     </section>
   );
 }

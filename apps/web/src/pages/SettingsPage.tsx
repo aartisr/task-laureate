@@ -5,6 +5,7 @@ import { THEME_OPTIONS } from '../core/themes/themes';
 import { usePageSEO, PAGE_SEO } from '../hooks/usePageSEO';
 import { WorkspaceDataPanel } from '../components/WorkspaceDataPanel';
 import { CloudSyncAuthPanel } from '../components/CloudSyncAuthPanel';
+import { UndoCenter } from '../components/UndoCenter';
 import { authProvider } from '../config/persistence.config';
 
 /**
@@ -30,6 +31,8 @@ export function SettingsPage() {
       maxWidth="lg"
     >
       <div style={{ display: 'grid', gap: 'var(--spacing-12)', maxWidth: '100%' }}>
+        <UndoCenter />
+
         {/* Appearance Section */}
         <section style={{ display: 'grid', gap: 'var(--spacing-8)' }}>
           <div style={{ display: 'grid', gap: 'var(--spacing-3)' }}>
