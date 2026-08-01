@@ -13,7 +13,8 @@
     "dev": "npm run dev -w apps/web",
     "build": "npm run build -w apps/web",
     "test": "npm run test -w apps/web",
-    "lint": "npm run lint -w apps/web"
+    "lint": "npm run lint -w apps/web",
+    "verify:public-registry": "node scripts/verify-public-registry.mjs"
   },
   "devDependencies": {
     "supabase": "^2.110.0"
