@@ -27,6 +27,13 @@ export function computeDashboardSummary(lists: TodoList[], tasks: TodoItem[]): D
   };
 }
 
+/** Uses the same visible task population as the Tasks and Completed dashboard tiles. */
+export function getDashboardCompletionPercent(summary: DashboardSummary) {
+  return summary.taskCount === 0
+    ? 0
+    : Math.round((summary.completedCount / summary.taskCount) * 100);
+}
+
 export function computeListCompletion(tasks: TodoItem[]) {
   const visibleTasks = tasks.filter((task) => task.deletedAt === null);
   if (visibleTasks.length === 0) {

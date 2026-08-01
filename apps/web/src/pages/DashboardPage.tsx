@@ -3,6 +3,7 @@ import { useSuspenseQuery } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
 import { PageContainer, EmptyState, LoadingState, Grid, Card, Section } from '../components/layouts';
 import { queryKeys } from '../core/contracts/queryKeys';
+import { getDashboardCompletionPercent } from '../core/domain/logic';
 import { useListMutations } from '../core/mutations/useListMutations';
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 import { announceToScreenReader, createId } from '../lib/a11y';
@@ -55,9 +56,7 @@ export function DashboardPage() {
   const stats = useMemo(() => {
     if (!dashboard) return null;
     const { summary } = dashboard;
-    const completionPercent = summary.taskCount > 0 
-      ? Math.round((summary.completedCount / summary.taskCount) * 100)
-      : 0;
+    const completionPercent = getDashboardCompletionPercent(summary);
     
     return {
       totalLists: summary.listCount,

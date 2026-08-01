@@ -3,6 +3,7 @@ import { QueryClient } from '@tanstack/react-query';
 import type { TodoList, TodoItem } from '../contracts/domain';
 import type { TodoRepository, TodoListInput, TodoTaskInput } from '../contracts/repository';
 import { createMemoryTodoRepository } from '../../infrastructure/mock/memoryRepository';
+import { getDashboardCompletionPercent } from '../domain/logic';
 
 describe('List and Task CRUD Operations', () => {
   let repository: TodoRepository;
@@ -134,6 +135,23 @@ describe('List and Task CRUD Operations', () => {
 
       await repository.restoreList(list.id);
       expect((await repository.getDashboard()).summary.taskCount).toBe(1);
+    });
+
+    it('keeps Tasks, Completed, and Progress dashboard tiles aligned with visible lists', async () => {
+      const visibleList = await repository.createList({ title: 'Visible' });
+      const completedVisibleTask = await repository.createTask({ listId: visibleList.id, title: 'Done' });
+      await repository.completeTask(completedVisibleTask.id, true);
+      await repository.createTask({ listId: visibleList.id, title: 'Remaining' });
+
+      const deletedList = await repository.createList({ title: 'Deleted' });
+      const completedDeletedTask = await repository.createTask({ listId: deletedList.id, title: 'Hidden done task' });
+      await repository.completeTask(completedDeletedTask.id, true);
+      await repository.createTask({ listId: deletedList.id, title: 'Hidden remaining task' });
+      await repository.deleteList(deletedList.id);
+
+      const { summary } = await repository.getDashboard();
+      expect(summary).toMatchObject({ taskCount: 2, completedCount: 1, activeCount: 1 });
+      expect(getDashboardCompletionPercent(summary)).toBe(50);
     });
   });
 
