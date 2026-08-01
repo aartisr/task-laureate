@@ -51,34 +51,16 @@ Add these values in **Project Settings → Environment Variables**. Configure ea
 | `VITE_SUPABASE_URL` | Yes for cloud sync | Yes | Supabase project URL, for example `https://project-ref.supabase.co` |
 | `VITE_SUPABASE_PUBLISHABLE_KEY` | Yes for cloud sync | Yes | Supabase publishable key (or legacy anon key) |
 | `VITE_SUPABASE_WORKSPACE_ID` | Recommended | Yes | Logical workspace namespace, e.g. `production` or `preview`; the app otherwise uses `default` |
-| `NPM_TOKEN` | Only for a private registry | No | Read-only package-registry token used during the install step |
 
 Do not add `VITE_SUPABASE_ACCESS_TOKEN`. This app signs the user in in the browser, stores the user session locally, and refreshes it. Do not add a Supabase service-role key, database password, private npm token, or any other secret with a `VITE_` prefix.
 
 After editing an environment variable, redeploy. Vite embeds `VITE_*` values during the build; changing the Vercel variable alone cannot alter an already-created deployment.
 
-### Private or corporate npm registry
+### Public npm registry
 
-Vercel build machines do not inherit a developer's local npm credentials. This repository's lockfile includes packages fetched from the approved Artifactory virtual registry, so Vercel must be given an Artifactory read token. Without it, npm can silently omit a platform-specific optional package (such as Rollup's Linux binary) and Vite then fails with `Cannot find module @rollup/rollup-linux-x64-gnu`.
+This project is configured to install entirely from the public npm registry. No package-registry credentials or package-registry secrets are required in Vercel.
 
-In **Project Settings → Environment Variables**, set both values for every environment that builds (Production and Preview at minimum):
-
-| Variable | Value | Mark as secret |
-| --- | --- | --- |
-| `NPM_TOKEN` | An organization-approved, read-only Artifactory access token | Yes |
-| `NPM_RC` | The exact multiline configuration below | Yes |
-
-Use this value for `NPM_RC` (the `${NPM_TOKEN}` text is literal; do not substitute or commit the token):
-
-```ini
-registry=https://registry.npmjs.org/
-always-auth=true
-//edgeinternal1uhg.optum.com/artifactory/api/npm/tenant-compass-npm-vir/:_authToken=${NPM_TOKEN}
-```
-
-Vercel uses `NPM_RC` as the build's npm configuration. The public npm registry remains the default for Vercel’s own runtime packages, while the path-scoped token authorizes the Artifactory URLs recorded in the lockfile. For another organization, replace only the registry host/path with its approved endpoint and retain the path-scoped token line. Never use a write-capable personal token.
-
-The Vercel install command intentionally uses `npm install --include=optional` rather than a frozen `npm ci`: it allows npm to reconcile platform-specific optional packages for Vercel's Linux builder, avoiding the known npm optional-dependency lockfile issue. Validate the secrets with a new Preview deployment after saving them.
+The Vercel install command uses `npm install --include=optional` so npm installs the Linux-specific Rollup package required by Vite's production build. The committed lockfile resolves those packages from `registry.npmjs.org`.
 
 ## Configure Supabase authentication for Vercel URLs
 
@@ -124,7 +106,7 @@ The test user must be an `authenticated` user and the token must never be a serv
 
 | Symptom | Likely cause | Resolution |
 | --- | --- | --- |
-| Vercel build cannot install packages | Registry needs credentials or uses a different endpoint | Configure a read-only `NPM_TOKEN` and your approved registry configuration; retry a Preview build. |
+| Vercel build cannot install packages | Dependency cache is stale or an npm install was interrupted | Redeploy with **Use existing Build Cache** disabled; the public-registry install will restore the required optional packages. |
 | Build passes but cloud sync is unavailable | One or both `VITE_SUPABASE_*` values were absent when built | Add variables to the correct Vercel target and redeploy. |
 | Sign-up confirmation opens an error page | Supabase does not allow the deployed origin | Add the exact production URL or the constrained Vercel preview wildcard to Redirect URLs. |
 | `/settings` returns 404 on refresh | SPA fallback is overridden | Keep the `vercel.json` rewrite and remove conflicting dashboard rewrites. |
