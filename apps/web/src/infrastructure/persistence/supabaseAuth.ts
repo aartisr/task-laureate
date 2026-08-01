@@ -1,166 +1,252 @@
-import type { AuthSession, PasswordAuthProvider } from '../../core/contracts/auth';
+import { createClient, type Provider, type Session, type SupabaseClient } from '@supabase/supabase-js';
+import type { AuthIdentity, AuthProvider, AuthSession, PasswordAuthProvider, SocialAuthProvider, SocialProviderId } from '../../core/contracts/auth';
 
 const url = import.meta.env.VITE_SUPABASE_URL;
 const publishableKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 const storageKey = 'task-laureate.supabase-auth';
+const callbackPath = '/auth/callback';
+const returnToStorageKey = 'task-laureate.auth-return-to';
+const authRequestTimeoutMs = 15_000;
+const authCallbackTimeoutMs = 20_000;
+// A control in a browser can reliably end this browser's session.  Global
+// revocation also requires a live, valid server-side session and can fail for
+// an already-expired or otherwise stale token, leaving a person unable to
+// leave the app on a shared device.
+const deviceSignOutScope = 'local' as const;
+let oauthCallbackInFlight: Promise<AuthSession> | null = null;
 
-export interface SupabaseSession {
-  access_token: string;
-  refresh_token: string;
-  expires_at: number;
-  user: { id: string; email?: string | null };
+/**
+ * Supabase Auth v2 can select Navigator LockManager automatically. A browser
+ * can retain one of those locks after a suspended/crashed tab, leaving client
+ * initialization and `getSession()` pending forever. This application has one
+ * module-singleton client and bounded network requests, so an in-process lock
+ * is both sufficient here and avoids that browser-specific deadlock path.
+ */
+async function singleClientAuthLock<T>(_name: string, _acquireTimeout: number, operation: () => Promise<T>): Promise<T> {
+  return operation();
 }
 
-type AuthListener = (session: SupabaseSession | null) => void;
-let refreshTimer: ReturnType<typeof setTimeout> | undefined;
-let refreshInFlight: Promise<SupabaseSession | null> | null = null;
-const listeners = new Set<AuthListener>();
+/** Give a person a useful recovery path even if a browser extension or SDK stalls. */
+async function settleAuthOperation<T>(operation: Promise<T>, timeoutMessage: string): Promise<T> {
+  let timeout: number | undefined;
+  try {
+    return await Promise.race([
+      operation,
+      new Promise<never>((_, reject) => {
+        timeout = window.setTimeout(() => reject(new Error(timeoutMessage)), authCallbackTimeoutMs);
+      }),
+    ]);
+  } finally {
+    if (timeout !== undefined) window.clearTimeout(timeout);
+  }
+}
 
 export const isSupabaseAuthConfigured = Boolean(url && publishableKey && !url.includes('your-project') && publishableKey !== 'your_publishable_key');
 
-function endpoint(path: string) {
-  if (!isSupabaseAuthConfigured) throw new Error('Supabase Auth is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY.');
-  return `${url!.replace(/\/$/, '')}/auth/v1${path}`;
-}
+const browserStorage = {
+  getItem: (key: string) => typeof window === 'undefined' ? null : window.localStorage.getItem(key),
+  setItem: (key: string, value: string) => { if (typeof window !== 'undefined') window.localStorage.setItem(key, value); },
+  removeItem: (key: string) => { if (typeof window !== 'undefined') window.localStorage.removeItem(key); },
+};
 
-function readSession(): SupabaseSession | null {
+/** Abort stalled Auth requests instead of leaving a person on a permanent spinner. */
+async function fetchWithTimeout(input: RequestInfo | URL, init?: RequestInit) {
+  const controller = new AbortController();
+  const timer = window.setTimeout(() => controller.abort(), authRequestTimeoutMs);
+  const upstreamSignal = init?.signal;
+  const abortFromUpstream = () => controller.abort();
+  upstreamSignal?.addEventListener('abort', abortFromUpstream, { once: true });
   try {
-    const raw = window.localStorage.getItem(storageKey);
-    if (!raw) return null;
-    const value = JSON.parse(raw) as Partial<SupabaseSession>;
-    if (!value.access_token || !value.refresh_token || !value.expires_at || !value.user?.id) return null;
-    return value as SupabaseSession;
-  } catch {
-    return null;
-  }
-}
-
-function emit(session: SupabaseSession | null) {
-  listeners.forEach((listener) => listener(session));
-}
-
-function scheduleRefresh(session: SupabaseSession) {
-  if (refreshTimer) clearTimeout(refreshTimer);
-  // Refresh before expiry so an in-flight workspace save never starts with a stale JWT.
-  const delay = Math.max(1_000, session.expires_at * 1_000 - Date.now() - 60_000);
-  refreshTimer = setTimeout(() => { void refreshSession().catch((error) => console.error('[Task-Laureate auth] Session refresh failed.', error)); }, delay);
-}
-
-function saveSession(session: SupabaseSession | null, notify = true) {
-  if (refreshTimer) clearTimeout(refreshTimer);
-  refreshTimer = undefined;
-  try {
-    if (session) {
-      window.localStorage.setItem(storageKey, JSON.stringify(session));
-      scheduleRefresh(session);
-    } else {
-      window.localStorage.removeItem(storageKey);
-    }
-  } catch (error) {
-    console.error('[Task-Laureate auth] Could not persist the browser session.', error);
-  }
-  if (notify) emit(session);
-}
-
-async function importSessionFromRedirect(): Promise<SupabaseSession | null> {
-  if (typeof window === 'undefined' || !window.location.hash.includes('access_token=')) return null;
-  const parameters = new URLSearchParams(window.location.hash.slice(1));
-  const accessToken = parameters.get('access_token');
-  const refreshToken = parameters.get('refresh_token');
-  if (!accessToken || !refreshToken) return null;
-  const response = await fetch(endpoint('/user'), { headers: { apikey: publishableKey!, Authorization: `Bearer ${accessToken}` } });
-  if (!response.ok) throw new Error('The confirmation link did not produce a valid Supabase session. Please sign in again.');
-  const user = await response.json() as SupabaseSession['user'];
-  const session: SupabaseSession = {
-    access_token: accessToken,
-    refresh_token: refreshToken,
-    expires_at: Number(parameters.get('expires_at')) || Math.floor(Date.now() / 1_000) + Number(parameters.get('expires_in') ?? 3_600),
-    user,
-  };
-  window.history.replaceState({}, document.title, `${window.location.pathname}${window.location.search}`);
-  saveSession(session);
-  return session;
-}
-
-async function requestSession(path: string, body: Record<string, unknown>): Promise<SupabaseSession | null> {
-  const response = await fetch(endpoint(path), {
-    method: 'POST',
-    headers: { apikey: publishableKey!, Authorization: `Bearer ${publishableKey!}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  });
-  const data = await response.json() as Partial<SupabaseSession> & { message?: string; error_description?: string };
-  if (!response.ok) throw new Error(data.error_description ?? data.message ?? `Supabase Auth failed (HTTP ${response.status}).`);
-  if (!data.access_token || !data.refresh_token || !data.user?.id) return null; // Email confirmation may defer the session.
-  const session: SupabaseSession = {
-    access_token: data.access_token,
-    refresh_token: data.refresh_token,
-    expires_at: data.expires_at ?? Math.floor(Date.now() / 1_000) + 3_600,
-    user: data.user,
-  };
-  saveSession(session);
-  return session;
-}
-
-export async function refreshSession(): Promise<SupabaseSession | null> {
-  if (refreshInFlight) return refreshInFlight;
-  const existing = readSession();
-  if (!existing) return null;
-  refreshInFlight = requestSession('/token?grant_type=refresh_token', { refresh_token: existing.refresh_token })
-    .catch((error) => {
-      saveSession(null);
-      throw error;
-    })
-    .finally(() => { refreshInFlight = null; });
-  return refreshInFlight;
-}
-
-export async function getSupabaseSession(): Promise<SupabaseSession | null> {
-  const redirectedSession = await importSessionFromRedirect();
-  if (redirectedSession) return redirectedSession;
-  const session = readSession();
-  if (!session) return null;
-  if (session.expires_at * 1_000 <= Date.now() + 60_000) return refreshSession();
-  scheduleRefresh(session);
-  return session;
-}
-
-export async function signInWithPassword(email: string, password: string) {
-  return requestSession('/token?grant_type=password', { email, password });
-}
-
-export async function signUp(email: string, password: string) {
-  return requestSession('/signup', { email, password, data: {}, email_redirect_to: window.location.origin });
-}
-
-export async function signOut() {
-  const session = readSession();
-  try {
-    if (session) await fetch(endpoint('/logout'), { method: 'POST', headers: { apikey: publishableKey!, Authorization: `Bearer ${session.access_token}` } });
+    return await fetch(input, { ...init, signal: controller.signal });
   } finally {
-    saveSession(null);
+    window.clearTimeout(timer);
+    upstreamSignal?.removeEventListener('abort', abortFromUpstream);
   }
 }
 
-export function subscribeToSupabaseAuth(listener: AuthListener) {
-  listeners.add(listener);
-  return () => { listeners.delete(listener); };
+const client: SupabaseClient | null = isSupabaseAuthConfigured
+  ? createClient(url!, publishableKey!, {
+      auth: {
+        storage: browserStorage,
+        storageKey,
+        persistSession: true,
+        autoRefreshToken: true,
+        // The dedicated callback route explicitly exchanges the one-time PKCE
+        // code. This prevents a competing automatic exchange and gives the UI
+        // a single, observable completion path.
+        detectSessionInUrl: false,
+        flowType: 'pkce',
+        lock: singleClientAuthLock,
+      },
+      global: { fetch: fetchWithTimeout },
+    })
+  : null;
+
+function requireClient(): SupabaseClient {
+  if (!client) throw new Error('Supabase Auth is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY.');
+  return client;
 }
 
-/**
- * Supabase implementation of the app's generic auth contract. To use another
- * identity system, replace this adapter at the composition root only.
- */
-function toAuthSession(session: SupabaseSession | null): AuthSession | null {
-  return session && { user: session.user, accessToken: session.access_token };
+function toAuthSession(session: Session | null): AuthSession | null {
+  if (!session?.user?.id) return null;
+  return {
+    user: {
+      id: session.user.id,
+      email: session.user.email,
+      provider: typeof session.user.app_metadata.provider === 'string' ? session.user.app_metadata.provider : null,
+    },
+    accessToken: session.access_token,
+  };
 }
 
-export const supabaseAuthProvider: PasswordAuthProvider = {
+function callbackUrl() {
+  if (typeof window === 'undefined') throw new Error('OAuth sign-in must start in a browser.');
+  return `${window.location.origin}${callbackPath}`;
+}
+
+function callbackCodeFromLocation(): string {
+  if (typeof window === 'undefined') throw new Error('OAuth callback must complete in a browser.');
+  const parameters = new URL(window.location.href).searchParams;
+  const providerError = parameters.get('error_description') ?? parameters.get('error');
+  if (providerError) throw new Error(`Sign-in was cancelled or rejected: ${providerError}`);
+  const code = parameters.get('code');
+  if (!code) throw new Error('This sign-in link is missing its one-time code. Return to Settings and try again.');
+  return code;
+}
+
+function removeOAuthCodeFromAddressBar() {
+  if (typeof window === 'undefined') return;
+  const next = new URL(window.location.href);
+  next.searchParams.delete('code');
+  next.searchParams.delete('error');
+  next.searchParams.delete('error_description');
+  window.history.replaceState(window.history.state, '', `${next.pathname}${next.search}${next.hash}`);
+}
+
+export function normalizeOAuthReturnTo(candidate?: string | null): string {
+  if (!candidate || !candidate.startsWith('/') || candidate.startsWith('//')) return '/';
+  return candidate;
+}
+
+function persistReturnTo(returnTo?: string) {
+  if (typeof window === 'undefined') return;
+  window.sessionStorage.setItem(returnToStorageKey, normalizeOAuthReturnTo(returnTo ?? `${window.location.pathname}${window.location.search}`));
+}
+
+export function consumeOAuthReturnTo() {
+  if (typeof window === 'undefined') return '/';
+  const returnTo = normalizeOAuthReturnTo(window.sessionStorage.getItem(returnToStorageKey));
+  window.sessionStorage.removeItem(returnToStorageKey);
+  return returnTo;
+}
+
+const baseProvider: AuthProvider = {
   configured: isSupabaseAuthConfigured,
-  getSession: async () => toAuthSession(await getSupabaseSession()),
-  signIn: async ({ email, password }) => toAuthSession(await signInWithPassword(email, password)),
-  signUp: async ({ email, password }) => toAuthSession(await signUp(email, password)),
-  signOut,
-  subscribe(listener) {
-    return subscribeToSupabaseAuth((session) => listener(toAuthSession(session)));
+  async getSession() {
+    const { data, error } = await requireClient().auth.getSession();
+    if (error) throw error;
+    return toAuthSession(data.session);
   },
+  async signOut() {
+    // This app's sign-out control is intentionally "this device", not
+    // "every device".  Local sign-out clears Supabase's browser session and
+    // emits SIGNED_OUT without depending on a remote token-revocation call.
+    // That makes it safe and dependable even if a prior session is stale.
+    const { error } = await requireClient().auth.signOut({ scope: deviceSignOutScope });
+    if (error) throw error;
+  },
+  subscribe(listener) {
+    if (!client) return () => undefined;
+    const { data } = client.auth.onAuthStateChange((_event, session) => listener(toAuthSession(session)));
+    return () => data.subscription.unsubscribe();
+  },
+};
+
+const passwordCapability: PasswordAuthProvider = {
+  ...baseProvider,
+  async signIn({ email, password }) {
+    const { data, error } = await requireClient().auth.signInWithPassword({ email, password });
+    if (error) throw error;
+    return toAuthSession(data.session);
+  },
+  async signUp({ email, password }) {
+    const { data, error } = await requireClient().auth.signUp({ email, password, options: { emailRedirectTo: callbackUrl() } });
+    if (error) throw error;
+    return toAuthSession(data.session);
+  },
+};
+
+const socialCapability: SocialAuthProvider = {
+  ...baseProvider,
+  async signInWithOAuth({ provider, returnTo }) {
+    persistReturnTo(returnTo);
+    const { error } = await requireClient().auth.signInWithOAuth({
+      provider: provider as Provider,
+      options: { redirectTo: callbackUrl() },
+    });
+    if (error) {
+      if (typeof window !== 'undefined') window.sessionStorage.removeItem(returnToStorageKey);
+      throw error;
+    }
+  },
+  async completeOAuthCallback() {
+    if (oauthCallbackInFlight) return oauthCallbackInFlight;
+    oauthCallbackInFlight = (async () => {
+      if (typeof window === 'undefined') throw new Error('OAuth callback must complete in a browser.');
+      try {
+        const code = callbackCodeFromLocation();
+        console.info('[Task-Laureate auth] Exchanging the OAuth callback code.');
+        const { data, error } = await settleAuthOperation(
+          requireClient().auth.exchangeCodeForSession(code),
+          'Sign-in did not finish in time. Return to Settings and try again.',
+        );
+        if (error) throw error;
+        if (!data.session) throw new Error('Sign-in was not completed. Please return to Settings and try again.');
+        removeOAuthCodeFromAddressBar();
+        console.info('[Task-Laureate auth] OAuth callback session is ready.');
+        return toAuthSession(data.session)!;
+      } catch (error) {
+        if ((error instanceof DOMException && error.name === 'AbortError') || (error instanceof Error && /did not finish in time/.test(error.message))) {
+          console.warn('[Task-Laureate auth] OAuth callback exchange timed out after 15 seconds.');
+          throw new Error('Sign-in took too long. Check your connection, then return to Settings and try again.');
+        }
+        console.error('[Task-Laureate auth] OAuth callback exchange failed.', { message: error instanceof Error ? error.message : String(error) });
+        throw error;
+      }
+    })().finally(() => { oauthCallbackInFlight = null; });
+    return oauthCallbackInFlight;
+  },
+  async getIdentities(): Promise<AuthIdentity[]> {
+    const { data, error } = await requireClient().auth.getUserIdentities();
+    if (error) throw error;
+    return (data.identities ?? []).map((identity) => ({
+      id: identity.id,
+      provider: identity.provider,
+      email: identity.identity_data?.email as string | undefined,
+      createdAt: identity.created_at,
+      lastSignInAt: identity.last_sign_in_at,
+    }));
+  },
+  async linkIdentity(provider) {
+    const { error } = await requireClient().auth.linkIdentity({ provider: provider as Provider, options: { redirectTo: callbackUrl() } });
+    if (error) throw error;
+  },
+  async unlinkIdentity(identityId) {
+    const identities = await this.getIdentities();
+    const identity = identities.find((candidate) => candidate.id === identityId);
+    if (!identity) throw new Error('That sign-in method is no longer available. Refresh and try again.');
+    if (identities.length < 2) throw new Error('Add another sign-in method before removing your only way to access this account.');
+    const { data, error } = await requireClient().auth.getUserIdentities();
+    if (error) throw error;
+    const supabaseIdentity = data.identities?.find((candidate) => candidate.id === identityId);
+    if (!supabaseIdentity) throw new Error('That sign-in method is no longer available. Refresh and try again.');
+    const { error: unlinkError } = await requireClient().auth.unlinkIdentity(supabaseIdentity);
+    if (unlinkError) throw unlinkError;
+  },
+};
+
+/** A single adapter offering optional password and OAuth/OIDC capabilities. */
+export const supabaseAuthProvider: PasswordAuthProvider & SocialAuthProvider = {
+  ...passwordCapability,
+  ...socialCapability,
 };

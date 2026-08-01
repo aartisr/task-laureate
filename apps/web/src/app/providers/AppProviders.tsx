@@ -4,14 +4,17 @@ import { appServices } from '../runtime/appServices';
 import { router } from '../router';
 import { ThemeProvider } from '../../core/themes/ThemeProvider';
 import { ErrorBoundary } from '../../components/ErrorBoundary';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { initializePersistence } from '../runtime/appServices';
 import { getPersistenceStatus, subscribeToPersistenceStatus, type PersistenceStatus } from '../../infrastructure/persistence/status';
+import { authProvider } from '../../config/persistence.config';
+import { shouldReinitializeForAuthChange } from '../../core/auth/sessionTransitions';
 
 export function AppProviders() {
   const [ready, setReady] = useState(false);
   const [startupError, setStartupError] = useState<Error | null>(null);
   const [persistenceStatus, setPersistenceStatus] = useState<PersistenceStatus>(getPersistenceStatus);
+  const observedAuthUserId = useRef<string | null | undefined>(undefined);
 
   useEffect(() => {
     void initializePersistence().then(() => setReady(true)).catch((error) => setStartupError(error instanceof Error ? error : new Error(String(error))));
@@ -26,8 +29,23 @@ export function AppProviders() {
         .then(() => setReady(true))
         .catch((error) => setStartupError(error instanceof Error ? error : new Error(String(error))));
     };
-    window.addEventListener('task-laureate:auth-changed', reconnect);
-    return () => window.removeEventListener('task-laureate:auth-changed', reconnect);
+
+    // Supabase always emits INITIAL_SESSION after subscribing. That establishes
+    // the baseline; it must not be treated as a new login. Refreshes for the
+    // same account likewise do not need to rebuild the workspace.
+    return authProvider.subscribe((session) => {
+      const nextUserId = session?.user.id ?? null;
+      if (observedAuthUserId.current === undefined) {
+        observedAuthUserId.current = nextUserId;
+        return;
+      }
+      if (!shouldReinitializeForAuthChange(observedAuthUserId.current, nextUserId, window.location.pathname)) {
+        observedAuthUserId.current = nextUserId;
+        return;
+      }
+      observedAuthUserId.current = nextUserId;
+      reconnect();
+    });
   }, []);
 
   if (startupError) throw startupError;

@@ -41,6 +41,8 @@ Create `apps/web/.env.local` (it is Git-ignored):
 VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_PUBLISHABLE_KEY=your_publishable_key
 VITE_SUPABASE_WORKSPACE_ID=main
+# Optional, public list of Supabase providers that are already enabled:
+VITE_AUTH_PROVIDERS=google,azure,github,custom:yahoo
 ```
 
 Restart Vite after changing environment variables.
@@ -49,13 +51,23 @@ These are the only Supabase values the browser needs. Do **not** set `VITE_SUPAB
 
 ### 3. Configure Supabase Auth
 
-Task-Laureate includes an email/password auth panel at **Settings → Private cloud sync**. It obtains the session at sign-in, keeps it in browser storage, refreshes the access token before expiry, and clears it on sign-out.
+Task-Laureate includes a provider-neutral sign-in panel at **Settings → Private cloud sync**. It supports email/password as an optional fallback and OAuth/OIDC for existing accounts. `VITE_AUTH_PROVIDERS` controls only which already-enabled provider buttons are shown; it is not a secret and does not configure the provider at Supabase.
 
 In **Supabase Dashboard**:
 
 1. Enable the **Email** provider under **Authentication → Providers**.
 2. Under **Authentication → URL Configuration**, set the Site URL and add every callback origin to the redirect allow list. For local development, add `http://localhost:5173`; add your exact production origin before deploying.
 3. Keep email confirmation enabled for production. A new user receives a confirmation link and is returned to the allowed application URL.
+
+### Existing-account sign-in (OAuth/OIDC)
+
+1. In **Authentication → Providers**, configure and enable each provider (Google, Microsoft/Azure, Apple, GitHub, or another supported provider). Keep provider client secrets in Supabase—never in a `VITE_` variable.
+2. Add `http://localhost:5173/auth/callback` and the exact production callback route (for example `https://app.example.com/auth/callback`) to **Authentication → URL Configuration → Redirect URLs**.
+3. Register the exact Supabase callback URL shown for each provider in that provider’s developer console. Do not reconstruct or wildcard it.
+4. Add only the configured provider identifiers to `VITE_AUTH_PROVIDERS` and restart/redeploy. Example: `VITE_AUTH_PROVIDERS=google,azure,github`.
+5. For Yahoo or another standards-compliant provider, create a Supabase custom OIDC provider with a `custom:` identifier (for example `custom:yahoo`) and use that same identifier in `VITE_AUTH_PROVIDERS`.
+
+The browser uses Supabase’s PKCE OAuth flow and exchanges the callback code at `/auth/callback`; provider passwords and client secrets never enter Task-Laureate. See the full [OIDC and social sign-in plan](OIDC_SOCIAL_SIGN_IN_IMPLEMENTATION_PLAN.md).
 
 Supabase sessions are short-lived by design; the app refreshes them instead of requiring a copied JWT. See the official [Supabase Auth sessions guide](https://supabase.com/docs/guides/auth/sessions) and [email/password sign-up guide](https://supabase.com/docs/reference/javascript/auth-signup).
 
@@ -66,9 +78,9 @@ The integration is deliberately adapter-based:
 ```text
 CloudSyncAuthPanel (provider-neutral UI)
         │
-PasswordAuthProvider contract
+AuthProvider capability contracts (password and OAuth/OIDC)
         │
-supabaseAuthProvider (Supabase implementation) ──► Supabase Auth REST API
+supabaseAuthProvider (Supabase implementation) ──► Supabase Auth JavaScript client
         │
 persistence.config.ts (composition root)
         │
@@ -82,7 +94,7 @@ createSupabaseWorkspaceAdapter ────────────────�
 - [`infrastructure/persistence/supabaseAuth.ts`](../apps/web/src/infrastructure/persistence/supabaseAuth.ts) is the Supabase auth adapter.
 - [`infrastructure/persistence/supabase.ts`](../apps/web/src/infrastructure/persistence/supabase.ts) is the Supabase workspace adapter.
 
-To use another identity system, implement `PasswordAuthProvider` and replace `authProvider` in the composition root. To use another data store, implement `WorkspacePersistenceAdapter`; no component or domain mutation needs to change.
+To use another identity system, implement `AuthProvider` and whichever optional capabilities it supports, then replace `authProvider` in the composition root. To use another data store, implement `WorkspacePersistenceAdapter`; no component or domain mutation needs to change.
 
 ## Sync behavior and observability
 

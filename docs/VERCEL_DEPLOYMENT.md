@@ -51,6 +51,7 @@ Add these values in **Project Settings → Environment Variables**. Configure ea
 | `VITE_SUPABASE_URL` | Yes for cloud sync | Yes | Supabase project URL, for example `https://project-ref.supabase.co` |
 | `VITE_SUPABASE_PUBLISHABLE_KEY` | Yes for cloud sync | Yes | Supabase publishable key (or legacy anon key) |
 | `VITE_SUPABASE_WORKSPACE_ID` | Recommended | Yes | Logical workspace namespace, e.g. `production` or `preview`; the app otherwise uses `default` |
+| `VITE_AUTH_PROVIDERS` | Optional | Yes | Comma-separated, already-enabled Supabase OAuth/OIDC identifiers, e.g. `google,azure,github,custom:yahoo` |
 
 Do not add `VITE_SUPABASE_ACCESS_TOKEN`. This app signs the user in in the browser, stores the user session locally, and refreshes it. Do not add a Supabase service-role key, database password, private npm token, or any other secret with a `VITE_` prefix.
 
@@ -64,13 +65,13 @@ The Vercel install command uses `npm install --include=optional` so npm installs
 
 ## Configure Supabase authentication for Vercel URLs
 
-The Supabase client uses email/password authentication from **Settings → Private cloud sync**. Authentication works only if Supabase allows the URLs that receive confirmation and recovery links.
+The Supabase client supports email/password and existing-account OAuth/OIDC sign-in from **Settings → Private cloud sync**. Authentication works only if Supabase allows the app callback URL and each provider is configured in Supabase.
 
 In **Supabase Dashboard → Authentication → URL Configuration**:
 
 1. Set **Site URL** to the canonical production URL, preferably the final custom domain, for example `https://tasks.example.com`.
-2. Add the exact production URL to **Redirect URLs**.
-3. Add local development: `http://localhost:5173`.
+2. Add the exact production callback URL to **Redirect URLs**: `https://tasks.example.com/auth/callback`.
+3. Add local development callback: `http://localhost:5173/auth/callback`.
 4. For Vercel previews, add the team-scoped wildcard recommended by Supabase, replacing the placeholder with the actual Vercel team or account slug:
 
    ```text
@@ -78,6 +79,8 @@ In **Supabase Dashboard → Authentication → URL Configuration**:
    ```
 
 5. If using a custom preview domain, add its narrowest valid pattern as well.
+
+For every enabled social provider, register the exact Supabase callback URL displayed under **Authentication → Providers** in the provider’s developer console. Provider client secrets remain in Supabase; `VITE_AUTH_PROVIDERS` merely decides which configured buttons are visible. See the [OIDC implementation plan](OIDC_SOCIAL_SIGN_IN_IMPLEMENTATION_PLAN.md) for the provider runbook.
 
 Keep the production Site URL exact. Wildcards are appropriate only where necessary for preview URLs. Once the custom production domain is live, ensure it is present in both the Vercel project and Supabase Redirect URLs before enabling email confirmation.
 
@@ -90,8 +93,9 @@ Before promoting a deployment, verify:
 - [ ] The Vercel deployment build completed using Node 20.19+.
 - [ ] Production and Preview each have the intended Supabase URL, publishable key, and workspace ID.
 - [ ] All Supabase migrations have been applied to every selected Supabase project.
-- [ ] Supabase Site URL and Redirect URLs include the final production URL, local URL, and the correctly scoped preview wildcard.
-- [ ] A new user can sign up or sign in at **Settings → Private cloud sync**.
+- [ ] Supabase Site URL and Redirect URLs include the final production callback URL, local callback URL, and the correctly scoped preview wildcard.
+- [ ] Each visible OAuth/OIDC provider is enabled in Supabase and has its exact Supabase callback registered with the provider.
+- [ ] A new user can continue with an existing account (or email fallback) at **Settings → Private cloud sync**.
 - [ ] Create a list, refresh the page, and confirm it reloads. Verify the `workspace_snapshots` row is visible in the intended Supabase project.
 - [ ] Open a deep link such as `/settings` in a new browser tab; it renders instead of returning a 404.
 - [ ] Run the opt-in authenticated CRUD test against a non-production test user before a major release.

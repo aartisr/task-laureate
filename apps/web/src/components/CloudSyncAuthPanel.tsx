@@ -1,21 +1,35 @@
-import { FormEvent, useEffect, useState } from 'react';
-import type { AuthSession, PasswordAuthProvider } from '../core/contracts/auth';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
+import type { AuthProvider, AuthSession, SocialProviderId } from '../core/contracts/auth';
+import { supportsPasswordAuth, supportsSocialAuth } from '../core/contracts/auth';
+import { getEnabledSocialProviders } from '../config/authProviders';
 
-/** Provider-neutral account UI. It can render any PasswordAuthProvider. */
-export function CloudSyncAuthPanel({ provider }: { provider: PasswordAuthProvider }) {
+function friendlyAuthError(error: unknown) {
+  const detail = error instanceof Error ? error.message : '';
+  if (/network|fetch|offline/i.test(detail)) return 'We could not reach secure sign-in. Check your connection and try again.';
+  if (/provider|unsupported/i.test(detail)) return 'That sign-in option is not available right now. Choose another option or try again later.';
+  return 'We could not complete sign-in. Please try again or choose another method.';
+}
+
+/**
+ * Provider-neutral account UI. It knows only capabilities and public provider
+ * display data; Supabase/client-secret/protocol details remain in the adapter.
+ */
+export function CloudSyncAuthPanel({ provider, returnTo }: { provider: AuthProvider; returnTo?: string }) {
   const [session, setSession] = useState<AuthSession | null>(null);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [mode, setMode] = useState<'sign-in' | 'sign-up'>('sign-in');
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState<SocialProviderId | 'password' | null>(null);
   const [message, setMessage] = useState('');
+  const enabledProviders = useMemo(() => getEnabledSocialProviders(), []);
+  const recommendedProviders = enabledProviders.filter((candidate) => candidate.category === 'recommended');
+  const moreProviders = enabledProviders.filter((candidate) => candidate.category === 'more');
 
   useEffect(() => {
     if (!provider.configured) return;
-    void provider.getSession().then(setSession).catch((error) => setMessage(error instanceof Error ? error.message : String(error)));
+    void provider.getSession().then(setSession).catch(() => setMessage('We could not check your sign-in status. Please refresh and try again.'));
     return provider.subscribe((nextSession) => {
       setSession(nextSession);
-      window.dispatchEvent(new Event('task-laureate:auth-changed'));
     });
   }, [provider]);
 
@@ -24,9 +38,23 @@ export function CloudSyncAuthPanel({ provider }: { provider: PasswordAuthProvide
     <p>Add your Supabase URL and publishable key to <code>apps/web/.env.local</code>, then restart the app.</p>
   </section>;
 
+  const signInWithProvider = async (socialProvider: SocialProviderId) => {
+    if (!supportsSocialAuth(provider)) return;
+    setBusy(socialProvider);
+    setMessage('');
+    try {
+      await provider.signInWithOAuth({ provider: socialProvider, returnTo });
+    } catch (error) {
+      console.error('[Task-Laureate auth] OAuth sign-in could not start.', { provider: socialProvider });
+      setMessage(friendlyAuthError(error));
+      setBusy(null);
+    }
+  };
+
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setBusy(true);
+    if (!supportsPasswordAuth(provider)) return;
+    setBusy('password');
     setMessage('');
     try {
       const nextSession = mode === 'sign-in'
@@ -37,35 +65,53 @@ export function CloudSyncAuthPanel({ provider }: { provider: PasswordAuthProvide
         ? 'Check your email to confirm your account, then return here to sign in.'
         : 'Signed in. Connecting your private workspace…');
     } catch (error) {
-      const detail = error instanceof Error ? error.message : String(error);
-      console.error('[Task-Laureate auth] Authentication failed.', { detail });
-      setMessage(detail);
-    } finally { setBusy(false); }
+      console.error('[Task-Laureate auth] Password authentication failed.');
+      setMessage(friendlyAuthError(error));
+    } finally { setBusy(null); }
   };
 
   const signOut = async () => {
-    setBusy(true);
+    setBusy('password');
     try {
       await provider.signOut();
       setMessage('Signed out. Cloud sync has stopped on this device.');
     } catch (error) {
-      const detail = error instanceof Error ? error.message : String(error);
-      console.error('[Task-Laureate auth] Sign-out failed.', { detail });
-      setMessage(detail);
-    } finally { setBusy(false); }
+      console.error('[Task-Laureate auth] Sign-out failed.');
+      setMessage('We could not sign you out on this device. Please try again.');
+    } finally { setBusy(null); }
   };
 
   return <section className="supabase-auth-panel" aria-labelledby="cloud-sync-title">
     <h2 id="cloud-sync-title">Private cloud sync</h2>
-    {session ? <><p>Signed in as <strong>{session.user.email ?? session.user.id}</strong>. Your session refreshes automatically.</p>
-      <button className="secondary-button" type="button" onClick={() => void signOut()} disabled={busy}>Sign out</button></> : <>
-      <p>Sign in to save this workspace to your private account. No access token needs to be copied or stored in an environment file.</p>
-      <form className="supabase-auth-form" onSubmit={(event) => void submit(event)}>
-        <label>Email<input type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} required /></label>
-        <label>Password<input type="password" autoComplete={mode === 'sign-in' ? 'current-password' : 'new-password'} value={password} onChange={(event) => setPassword(event.target.value)} minLength={6} required /></label>
-        <div className="supabase-auth-actions"><button className="primary-button" type="submit" disabled={busy}>{busy ? 'Please wait…' : mode === 'sign-in' ? 'Sign in and sync' : 'Create account'}</button>
-          <button className="secondary-button" type="button" onClick={() => setMode(mode === 'sign-in' ? 'sign-up' : 'sign-in')} disabled={busy}>{mode === 'sign-in' ? 'Create an account' : 'I already have an account'}</button></div>
-      </form>
+    {session ? <><p>Signed in as <strong>{session.user.email ?? session.user.id}</strong>{session.user.provider ? ` with ${session.user.provider}` : ''}. Your session refreshes automatically.</p>
+      <button className="secondary-button" type="button" onClick={() => void signOut()} disabled={busy !== null}>Sign out</button></> : <>
+      <p>Continue with an account you already use. Task-Laureate never receives your provider password.</p>
+      {supportsSocialAuth(provider) && enabledProviders.length > 0 ? <div className="social-auth-options" aria-label="Sign in with an existing account">
+        {recommendedProviders.map((socialProvider) => (
+          <button key={socialProvider.id} type="button" className="social-auth-options__button" onClick={() => void signInWithProvider(socialProvider.id)} disabled={busy !== null}>
+            Continue with {socialProvider.label}
+          </button>
+        ))}
+        {moreProviders.length > 0 ? <details className="social-auth-options__more">
+          <summary>More ways to continue</summary>
+          <div className="social-auth-options__more-list">
+            {moreProviders.map((socialProvider) => (
+              <button key={socialProvider.id} type="button" className="social-auth-options__button" onClick={() => void signInWithProvider(socialProvider.id)} disabled={busy !== null}>
+                Continue with {socialProvider.label}
+              </button>
+            ))}
+          </div>
+        </details> : null}
+      </div> : null}
+      {supportsPasswordAuth(provider) ? <details className="supabase-auth-email-fallback">
+        <summary>Continue with email instead</summary>
+        <form className="supabase-auth-form" onSubmit={(event) => void submit(event)}>
+          <label>Email<input type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} required /></label>
+          <label>Password<input type="password" autoComplete={mode === 'sign-in' ? 'current-password' : 'new-password'} value={password} onChange={(event) => setPassword(event.target.value)} minLength={6} required /></label>
+          <div className="supabase-auth-actions"><button className="primary-button" type="submit" disabled={busy !== null}>{busy === 'password' ? 'Please wait…' : mode === 'sign-in' ? 'Sign in and sync' : 'Create account'}</button>
+            <button className="secondary-button" type="button" onClick={() => setMode(mode === 'sign-in' ? 'sign-up' : 'sign-in')} disabled={busy !== null}>{mode === 'sign-in' ? 'Create an account' : 'I already have an account'}</button></div>
+        </form>
+      </details> : null}
     </>}
     {message && <p className="supabase-auth-message" role="status">{message}</p>}
   </section>;

@@ -1,15 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from '@tanstack/react-router';
-import type { AuthSession, PasswordAuthProvider } from '../core/contracts/auth';
+import type { AuthProvider, AuthSession } from '../core/contracts/auth';
 import { getPersistenceStatus, subscribeToPersistenceStatus, type PersistenceStatus } from '../infrastructure/persistence/status';
 
 interface AccountStatusProps {
-  provider: PasswordAuthProvider;
+  provider: AuthProvider;
   onNavigate?: () => void;
 }
 
 function statusLabel(status: PersistenceStatus, isSignedIn: boolean) {
-  if (!isSignedIn) return status.phase === 'error' ? 'Sync needs attention' : 'Sign in required';
+  if (!isSignedIn) return status.phase === 'error' ? 'Sync needs attention' : 'Sign in to sync';
   if (status.phase === 'synced') return 'Cloud sync on';
   if (status.phase === 'saving') return 'Saving changes';
   if (status.phase === 'connecting') return 'Connecting';
@@ -42,12 +42,15 @@ export function AccountStatus({ provider, onNavigate }: AccountStatusProps) {
     [persistence, provider.configured, signedIn],
   );
   const stateClass = persistence.phase === 'error' ? 'is-error' : signedIn && persistence.phase === 'synced' ? 'is-synced' : '';
+  const destination = signedIn ? '/settings' : '/sign-in';
 
   return (
     <Link
-      to="/settings"
+      to={destination}
       className={`account-status ${stateClass}`}
-      aria-label={`${identity}. ${syncLabel}. Open account and cloud sync settings.`}
+      aria-label={signedIn
+        ? `${identity}. ${syncLabel}. Open account and cloud sync settings.`
+        : `${syncLabel}. Open sign-in.`}
       onClick={onNavigate}
     >
       <span className="account-status__avatar" aria-hidden="true">{accountInitial(session)}</span>

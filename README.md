@@ -47,9 +47,11 @@ Follow the complete [Supabase persistence guide](docs/SUPABASE_PERSISTENCE.md). 
    VITE_SUPABASE_URL=https://your-project.supabase.co
    VITE_SUPABASE_PUBLISHABLE_KEY=your_publishable_key
    VITE_SUPABASE_WORKSPACE_ID=main
+   # Optional public display registry; enable only providers already configured in Supabase.
+   VITE_AUTH_PROVIDERS=google,azure,github,custom:yahoo
    ```
 
-3. Start the app, then open **Settings → Private cloud sync** to sign in or create an account. The app manages the browser session and token refresh itself; do not create `VITE_SUPABASE_ACCESS_TOKEN`.
+3. Configure the matching Supabase Auth providers, then start the app and open **Settings → Private cloud sync** to continue with an existing account. The app manages the browser session and token refresh itself; do not create `VITE_SUPABASE_ACCESS_TOKEN`.
 4. In **Supabase Dashboard → Authentication → URL Configuration**, allow your local Vite URL (normally `http://localhost:5173`) and your production URL for email-confirmation redirects.
 
 Use only a Supabase publishable/anon key in the browser—never a service-role key. For Supabase project and authentication guidance, see the [Supabase JavaScript documentation](https://supabase.com/docs/reference/javascript/introduction).
@@ -80,6 +82,8 @@ docs/                     Architecture, feature, QA, and setup documentation
 ## Documentation
 
 - [Supabase persistence and readiness test](docs/SUPABASE_PERSISTENCE.md)
+- [OIDC and social sign-in implementation plan](docs/OIDC_SOCIAL_SIGN_IN_IMPLEMENTATION_PLAN.md)
+- [Step-by-step login configuration](docs/CONFIGURING_LOGIN.md)
 - [Vercel deployment and configuration](docs/VERCEL_DEPLOYMENT.md)
 - [Architecture guide](docs/ARCHITECTURE_GUIDE.md)
 - [Feature guide](docs/QUICK_FEATURE_GUIDE.md)

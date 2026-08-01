@@ -143,7 +143,7 @@ Supabase Auth uses a JWT access token plus a refresh token for sessions; access 
 
 #### Sign out and account switching
 
-1. Select **Sign out** in **Settings → Private cloud sync**.
+1. Select **Sign out** in **Settings → Private cloud sync**. This ends the session on the current browser/device; it does not try to revoke sessions on every other device.
 2. The app removes its browser session, queued writes, and current account’s browser cache, then returns to an empty workspace.
 3. To use a different account, sign in with the other account from the same panel. The app derives a different workspace ID from that account’s user ID and loads that account’s remote snapshot.
 

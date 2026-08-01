@@ -9,6 +9,8 @@ A comprehensive guide to all Task-Laureate documentation organized by purpose.
 - **[QUICK_FEATURE_GUIDE.md](QUICK_FEATURE_GUIDE.md)** — User-friendly overview of all features and how to use them
 - **[TODO_IMPLEMENTATION_PLAN.md](TODO_IMPLEMENTATION_PLAN.md)** — Implementation roadmap and task breakdown
 - **[VERCEL_DEPLOYMENT.md](VERCEL_DEPLOYMENT.md)** — Plug-and-play Vercel deployment, Supabase, and auth setup
+- **[OIDC_SOCIAL_SIGN_IN_IMPLEMENTATION_PLAN.md](OIDC_SOCIAL_SIGN_IN_IMPLEMENTATION_PLAN.md)** — Provider-neutral OAuth/OIDC sign-in setup and operations guide
+- **[CONFIGURING_LOGIN.md](CONFIGURING_LOGIN.md)** — Step-by-step Supabase, identity-provider, local, and Vercel login configuration
 
 ---
 
@@ -52,6 +54,8 @@ A comprehensive guide to all Task-Laureate documentation organized by purpose.
 | REFACTORING_GUIDE.md | Code quality | Developers |
 | QA_AND_PRODUCTION_READINESS.md | Deployment | DevOps, team leads |
 | VERCEL_DEPLOYMENT.md | Vercel deployment | Developers, DevOps |
+| OIDC_SOCIAL_SIGN_IN_IMPLEMENTATION_PLAN.md | Social sign-in and OIDC | Developers, DevOps |
+| CONFIGURING_LOGIN.md | Login configuration runbook | Operators, DevOps |
 | PERFORMANCE_MONITORING.md | System health | DevOps, monitoring teams |
 
 ---

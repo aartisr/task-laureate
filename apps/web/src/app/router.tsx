@@ -4,6 +4,7 @@ import {
   createRoute,
   createRouter,
   useParams,
+  useRouterState,
 } from '@tanstack/react-router';
 import { appServices } from './runtime/appServices';
 import { AppShell } from '../components/AppShell';
@@ -17,6 +18,8 @@ import { ProgressPage } from '../pages/ProgressPage';
 import { SearchPage } from '../pages/SearchPage';
 import { SettingsPage } from '../pages/SettingsPage';
 import { SupportPage } from '../pages/SupportPage';
+import { AuthCallbackPage } from '../pages/AuthCallbackPage';
+import { SignInPage } from '../pages/SignInPage';
 import { listQueryOptions, listTasksQueryOptions, dashboardQueryOptions, activityQueryOptions, searchQueryOptions } from '../core/contracts/queryKeys';
 
 const rootRoute = createRootRouteWithContext<{
@@ -26,6 +29,10 @@ const rootRoute = createRootRouteWithContext<{
 });
 
 function RootLayout() {
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+  // OAuth callbacks are deliberately free of navigation chrome so the person
+  // sees one unambiguous completion state while the session is exchanged.
+  if (pathname === '/auth/callback' || pathname === '/sign-in') return <Outlet />;
   return (
     <AppShell navItems={appServices.registry.getNavItems()}>
       <Outlet />
@@ -120,6 +127,18 @@ const supportRoute = createRoute({
   component: () => <SupportPage />,
 });
 
+const authCallbackRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: 'auth/callback',
+  component: AuthCallbackPage,
+});
+
+const signInRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: 'sign-in',
+  component: SignInPage,
+});
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   listRoute,
@@ -131,6 +150,8 @@ const routeTree = rootRoute.addChildren([
   completedRoute,
   progressRoute,
   supportRoute,
+  authCallbackRoute,
+  signInRoute,
 ]);
 
 export const router = createRouter({

@@ -3380,6 +3380,44 @@ select:focus {
 
 .supabase-auth-actions { display: flex; flex-wrap: wrap; gap: var(--spacing-3); }
 .supabase-auth-message { font-size: 0.875rem; }
+.social-auth-options { display: grid; gap: var(--spacing-3); max-width: 28rem; }
+.social-auth-options__button {
+  width: 100%;
+  min-height: 2.75rem;
+  padding: .65rem 1rem;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-md);
+  color: var(--color-text-primary);
+  background: var(--color-bg-primary);
+  cursor: pointer;
+  font: inherit;
+  font-weight: var(--font-weight-semibold);
+  text-align: left;
+}
+.social-auth-options__button:hover:not(:disabled) { border-color: var(--color-action-primary); background: var(--color-bg-tertiary); }
+.social-auth-options__button:focus-visible,
+.social-auth-options__more > summary:focus-visible,
+.supabase-auth-email-fallback > summary:focus-visible { outline: 3px solid var(--color-action-primary); outline-offset: 2px; }
+.social-auth-options__button:disabled { opacity: .55; cursor: not-allowed; }
+.social-auth-options__more,
+.supabase-auth-email-fallback { display: grid; gap: var(--spacing-3); color: var(--color-text-secondary); }
+.social-auth-options__more > summary,
+.supabase-auth-email-fallback > summary { width: max-content; max-width: 100%; cursor: pointer; color: var(--color-action-primary); font-weight: var(--font-weight-semibold); }
+.social-auth-options__more-list { display: grid; gap: var(--spacing-3); padding-top: var(--spacing-1); }
+.auth-callback-page { display: grid; min-height: 100vh; place-items: center; padding: var(--spacing-6); background: var(--color-bg-primary); }
+.auth-callback-page__card { display: grid; gap: var(--spacing-3); width: min(100%, 32rem); padding: var(--spacing-8); border: 1px solid var(--color-border-default); border-radius: var(--radius-xl); background: var(--color-bg-secondary); }
+.auth-callback-page__card h1, .auth-callback-page__card p { margin: 0; }
+.auth-callback-page__card h1 { color: var(--color-text-primary); font-size: clamp(1.5rem, 5vw, 2rem); }
+.auth-callback-page__card p { color: var(--color-text-secondary); line-height: var(--line-height-relaxed); }
+.auth-callback-page__eyebrow { color: var(--color-action-primary) !important; font-size: .75rem; font-weight: var(--font-weight-bold); letter-spacing: .1em; text-transform: uppercase; }
+.sign-in-page { display: grid; min-height: 100vh; place-items: center; padding: var(--spacing-6); background: radial-gradient(circle at top, var(--color-bg-secondary), var(--color-bg-primary) 55%); }
+.sign-in-page__card { display: grid; gap: var(--spacing-6); width: min(100%, 34rem); }
+.sign-in-page__intro { display: grid; gap: var(--spacing-3); text-align: center; }
+.sign-in-page__intro h1, .sign-in-page__intro p { margin: 0; }
+.sign-in-page__intro h1 { color: var(--color-text-primary); font-size: clamp(2rem, 6vw, 3rem); line-height: var(--line-height-tight); }
+.sign-in-page__intro p { color: var(--color-text-secondary); line-height: var(--line-height-relaxed); }
+.sign-in-page__eyebrow { margin: 0; color: var(--color-action-primary) !important; font-size: .75rem; font-weight: var(--font-weight-bold); letter-spacing: .1em; text-transform: uppercase; }
+.sign-in-page__reassurance { margin: 0; color: var(--color-text-tertiary); font-size: .78rem; line-height: var(--line-height-relaxed); text-align: center; }
 
 /* Theme-safe controls: labels wrap instead of overflowing narrow viewports. */
 button,
