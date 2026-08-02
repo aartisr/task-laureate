@@ -55,6 +55,10 @@ Add these values in **Project Settings → Environment Variables**. Configure ea
 | `SUPABASE_URL` | Required for daily in-app notifications | No | Server-only Supabase project URL used by the cron |
 | `SUPABASE_SERVICE_ROLE_KEY` | Required for daily in-app notifications | No | Server-only Supabase service-role key used by the cron |
 | `CRON_SECRET` | Required for daily in-app notifications | No | Long random server-only value that authenticates Vercel Cron |
+| `VITE_VAPID_PUBLIC_KEY` | Optional for browser push | Yes | Browser-safe half of a stable VAPID key pair |
+| `VAPID_PUBLIC_KEY` | Required when browser push is enabled | No | Same VAPID public key for the server-side signature |
+| `VAPID_PRIVATE_KEY` | Required when browser push is enabled | No | Server-only VAPID private key |
+| `VAPID_SUBJECT` | Required when browser push is enabled | No | Contact URI such as `mailto:you@example.com` |
 
 Do not add `VITE_SUPABASE_ACCESS_TOKEN`. This app signs the user in in the browser, stores the user session locally, and refreshes it. Do not add a Supabase service-role key, database password, private npm token, or any other secret with a `VITE_` prefix. Set the three server-only notification values only in Vercel—never in `.env.local` or source control.
 
@@ -99,7 +103,8 @@ Before promoting a deployment, verify:
 - [ ] Supabase Site URL and Redirect URLs include the final production callback URL, local callback URL, and the correctly scoped preview wildcard.
 - [ ] Each visible OAuth/OIDC provider is enabled in Supabase and has its exact Supabase callback registered with the provider.
 - [ ] A new user can continue with an existing account (or email fallback) at **Settings → Private cloud sync**.
-- [ ] If in-app notifications are enabled, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and a 32-byte-or-longer `CRON_SECRET` are set only for Production, and the notification migration has been applied.
+- [ ] If in-app notifications are enabled, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and a 32-byte-or-longer `CRON_SECRET` are set only for Production, and the notification migrations have been applied.
+- [ ] If browser push is enabled, one stable VAPID key pair is configured: only `VITE_VAPID_PUBLIC_KEY` is browser-safe; `VAPID_PRIVATE_KEY` remains server-only. Follow [the Hobby notification guide](VERCEL_HOBBY_NOTIFICATIONS.md#enable-free-browser-push).
 - [ ] Create a list, refresh the page, and confirm it reloads. Verify the `workspace_snapshots` row is visible in the intended Supabase project.
 - [ ] Open a deep link such as `/settings` in a new browser tab; it renders instead of returning a 404.
 - [ ] Run the opt-in authenticated CRUD test against a non-production test user before a major release.

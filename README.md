@@ -85,6 +85,7 @@ docs/                     Architecture, feature, QA, and setup documentation
 - [OIDC and social sign-in implementation plan](docs/OIDC_SOCIAL_SIGN_IN_IMPLEMENTATION_PLAN.md)
 - [Step-by-step login configuration](docs/CONFIGURING_LOGIN.md)
 - [Vercel deployment and configuration](docs/VERCEL_DEPLOYMENT.md)
+- [Free Vercel Hobby in-app and browser notifications](docs/VERCEL_HOBBY_NOTIFICATIONS.md)
 - [Architecture guide](docs/ARCHITECTURE_GUIDE.md)
 - [Feature guide](docs/QUICK_FEATURE_GUIDE.md)
 - [Documentation index](docs/INDEX.md)

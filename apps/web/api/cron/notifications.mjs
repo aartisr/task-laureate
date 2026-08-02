@@ -1,4 +1,7 @@
+import { sendWebPush } from './webPush.mjs';
+
 const jsonHeaders = { 'Content-Type': 'application/json', Accept: 'application/json' };
+export const maxDuration = 60;
 
 function utcDate(offsetDays = 0) {
   const date = new Date();
@@ -20,6 +23,30 @@ async function rest(path, options = {}) {
 
 function toTasks(payload) {
   return Array.isArray(payload?.tasks) ? payload.tasks : [];
+}
+
+async function deleteSubscription(id) {
+  await rest(`push_subscriptions?id=eq.${encodeURIComponent(id)}`, { method: 'DELETE', headers: { Prefer: 'return=minimal' } });
+}
+
+async function sendBrowserPushes(events) {
+  const publicKey = process.env.VAPID_PUBLIC_KEY;
+  const privateKey = process.env.VAPID_PRIVATE_KEY;
+  const subject = process.env.VAPID_SUBJECT;
+  if (!events.length || !publicKey || !privateKey || !subject) return { sent: 0, skipped: events.length };
+  const subscriptionsResponse = await rest('push_subscriptions?select=id,owner_id,endpoint,p256dh,auth');
+  const subscriptions = await subscriptionsResponse.json();
+  const eventByOwner = new Map(events.map((event) => [event.owner_id, event]));
+  // Hobby functions have limited execution time. The durable inbox contains every
+  // event; this cap keeps best-effort push delivery from delaying the cron.
+  const deliveries = subscriptions.filter((subscription) => eventByOwner.has(subscription.owner_id)).slice(0, 40);
+  const results = await Promise.allSettled(deliveries.map((subscription) => {
+    const event = eventByOwner.get(subscription.owner_id);
+    return sendWebPush({ endpoint: subscription.endpoint, keys: { p256dh: subscription.p256dh, auth: subscription.auth } }, JSON.stringify({ title: event.title, body: event.body, eventId: event.id, url: '/settings' }), { subject, publicKey, privateKey });
+  }));
+  const expired = results.flatMap((result, index) => result.status === 'rejected' && [404, 410].includes(result.reason?.statusCode) ? [deliveries[index].id] : []);
+  await Promise.all(expired.map((id) => deleteSubscription(id)));
+  return { sent: results.filter((result) => result.status === 'fulfilled').length, skipped: events.length - deliveries.length, removedExpired: expired.length };
 }
 
 export default async function handler(request, response) {
@@ -55,10 +82,20 @@ export default async function handler(request, response) {
       }
     }
 
-    if (events.length > 0) await rest('notification_events?on_conflict=owner_id,event_key', {
-      method: 'POST', headers: { Prefer: 'resolution=ignore-duplicates,return=minimal' }, body: JSON.stringify(events),
-    });
-    return response.status(200).json({ scannedAt: new Date().toISOString(), createdOrRetained: events.length });
+    let created = [];
+    if (events.length > 0) {
+      const inserted = await rest('notification_events?on_conflict=owner_id,event_key', {
+        method: 'POST', headers: { Prefer: 'resolution=ignore-duplicates,return=representation' }, body: JSON.stringify(events),
+      });
+      created = await inserted.json();
+    }
+    let push;
+    try { push = await sendBrowserPushes(created); }
+    catch (pushError) {
+      console.error('[Task-Laureate notifications] Browser push delivery failed; in-app inbox remains available.', { message: pushError instanceof Error ? pushError.message : String(pushError) });
+      push = { sent: 0, skipped: created.length, error: 'Browser push delivery failed.' };
+    }
+    return response.status(200).json({ scannedAt: new Date().toISOString(), createdOrRetained: events.length, created: created.length, push });
   } catch (error) {
     console.error('[Task-Laureate notifications] Daily notification job failed.', { message: error instanceof Error ? error.message : String(error) });
     return response.status(500).json({ error: 'Notification job failed.' });

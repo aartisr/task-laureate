@@ -8,7 +8,7 @@ This design is intentionally honest about what it delivers:
 - An opt-in weekly digest on Sunday.
 - Notices visible in **Settings → Your inbox**.
 
-It does **not** send email, SMS, browser push, task-assignment, or task-completion notifications. Those require additional delivery infrastructure or data that this application does not have. Turning off a preference stops future notices; it does not delete existing inbox history.
+It does **not** send email, SMS, task-assignment, or task-completion notifications. Browser push is available as an explicit per-device opt-in once its VAPID values are configured. Turning off an inbox preference stops future notices; it does not delete existing inbox history.
 
 ## Why this fits Hobby
 
@@ -43,6 +43,9 @@ In **Project Settings → Environment Variables**, set these values for **Produc
 | `SUPABASE_URL` | The project URL, e.g. `https://example.supabase.co` | Server only |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase service-role key for that same project | Server only; secret |
 | `CRON_SECRET` | A long random value (at least 32 random bytes) | Server only; secret |
+| `VAPID_PUBLIC_KEY` | Same stable VAPID public key exposed to the browser | Server only |
+| `VAPID_PRIVATE_KEY` | Stable VAPID private key | Server only; secret |
+| `VAPID_SUBJECT` | Contact URI, e.g. `mailto:you@example.com` | Server only |
 
 Keep `SUPABASE_SERVICE_ROLE_KEY` and `CRON_SECRET` out of `.env.local`, browser code, git, and every `VITE_*` variable. The serverless function is the only process that may use the service-role key; it bypasses RLS solely to create notifications for all owners.
 
@@ -52,6 +55,7 @@ The existing browser-safe variables remain necessary for cloud sync and sign-in:
 | --- | --- |
 | `VITE_SUPABASE_URL` | Browser connection to Supabase |
 | `VITE_SUPABASE_PUBLISHABLE_KEY` | Browser publishable/anon key |
+| `VITE_VAPID_PUBLIC_KEY` | Browser-safe VAPID public key for optional browser push |
 
 Use separate Supabase projects and separate secrets for Preview and Production where possible. Do not configure the cron secrets in Preview unless preview notifications are intentionally required.
 
@@ -60,6 +64,20 @@ Generate a secret locally without recording it in the repository:
 ```bash
 openssl rand -base64 48
 ```
+
+### Enable free browser push
+
+Browser push uses the standard Web Push protocol and VAPID keys; it does not require Firebase, a commercial push provider, or a paid Vercel feature. Generate the VAPID key pair **once**, then retain it: changing the pair invalidates every existing browser subscription.
+
+```bash
+npm run generate:vapid
+```
+
+Add the generated public key twice—once as browser-safe `VITE_VAPID_PUBLIC_KEY`, and again as server-only `VAPID_PUBLIC_KEY`. Add the private key only as `VAPID_PRIVATE_KEY`; set `VAPID_SUBJECT` to a valid contact URI such as `mailto:you@example.com`. Redeploy after adding the browser-safe public key because Vite embeds `VITE_*` variables at build time.
+
+After deployment, a signed-in person can choose **Settings → Your inbox → Enable browser alerts**. The browser permission prompt appears only after that person chooses the action. A subscription is tied to one browser/device, can be turned off from the same screen, and is removed automatically when a push service reports it expired.
+
+Browser support and operating-system rules still apply. In particular, iPhone and iPad users must add the app to the Home Screen before enabling web push. The in-app inbox remains the reliable source of truth: Hobby cron is daily and approximate, and Vercel does not retry a failed cron invocation automatically.
 
 After adding the variables, redeploy Production. Vercel adds `Authorization: Bearer <CRON_SECRET>` when it calls the configured cron path. The route rejects every request without that exact secret.
 
@@ -87,10 +105,12 @@ Expected response includes `scannedAt` and `createdOrRetained`. A `401` means th
 - This is an in-app inbox, not a real-time delivery system. A failed daily run can be retried manually and the next day’s run remains safe because inserts are deduplicated.
 - A task that remains due today/tomorrow creates at most one reminder for that due date. Changing its due date creates a new relevant reminder.
 - The inbox keeps the latest 12 notices in the UI, while Supabase retains history until an explicit retention policy is added.
-- Adding browser push later can use the same `notification_events` table as the source of truth, but needs a service worker, VAPID keys, permission UX, and a delivery worker. It should not be presented as enabled until those components exist.
+- Browser push is best-effort delivery for new durable inbox events. It never replaces the in-app inbox, email, or a real-time notification system.
 
 ## References
 
 - [Vercel Cron Jobs: usage and pricing](https://vercel.com/docs/cron-jobs/usage-and-pricing)
 - [Vercel Cron Jobs: configuration and management](https://vercel.com/docs/cron-jobs/manage-cron-jobs)
 - [Supabase: Row Level Security](https://supabase.com/docs/guides/database/postgres/row-level-security)
+- [MDN: Service Worker API](https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API)
+- [web-push: VAPID usage](https://github.com/web-push-libs/web-push)
