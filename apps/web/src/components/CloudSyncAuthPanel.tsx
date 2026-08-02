@@ -31,7 +31,7 @@ function SocialProviderButton({ provider, busy, onSelect }: {
  * Provider-neutral account UI. It knows only capabilities and public provider
  * display data; Supabase/client-secret/protocol details remain in the adapter.
  */
-export function CloudSyncAuthPanel({ provider, returnTo }: { provider: AuthProvider; returnTo?: string }) {
+export function CloudSyncAuthPanel({ provider, returnTo, presentation = 'default' }: { provider: AuthProvider; returnTo?: string; presentation?: 'default' | 'embedded' }) {
   const [session, setSession] = useState<AuthSession | null>(null);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -101,11 +101,11 @@ export function CloudSyncAuthPanel({ provider, returnTo }: { provider: AuthProvi
     } finally { setBusy(null); }
   };
 
-  return <section className="supabase-auth-panel" aria-labelledby="cloud-sync-title">
-    <h2 id="cloud-sync-title">Private cloud sync</h2>
+  return <section className="supabase-auth-panel" aria-labelledby={presentation === 'default' ? 'cloud-sync-title' : undefined} aria-label={presentation === 'embedded' ? 'Sign-in options' : undefined}>
+    {presentation === 'default' ? <h2 id="cloud-sync-title">Private cloud sync</h2> : null}
     {session ? <><p>Signed in as <strong>{session.user.email ?? session.user.id}</strong>{session.user.provider ? ` with ${session.user.provider}` : ''}. Your session refreshes automatically.</p>
       <button className="secondary-button" type="button" onClick={() => void signOut()} disabled={busy !== null}>Sign out</button></> : <>
-      <p>Continue with an account you already use. Task-Laureate never receives your provider password.</p>
+      {presentation === 'default' ? <p>Continue with an account you already use. Task-Laureate never receives your provider password.</p> : null}
       {supportsSocialAuth(provider) && enabledProviders.length > 0 ? <div className="social-auth-options" aria-label="Sign in with an existing account">
         {primaryProviders.length > 0 ? <div className="social-auth-options__primary">
           {primaryProviders.map((socialProvider) => <SocialProviderButton key={socialProvider.id} provider={socialProvider} busy={busy} onSelect={(id) => void signInWithProvider(id)} />)}
