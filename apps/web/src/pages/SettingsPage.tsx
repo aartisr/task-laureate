@@ -7,13 +7,14 @@ import { WorkspaceDataPanel } from '../components/WorkspaceDataPanel';
 import { CloudSyncAuthPanel } from '../components/CloudSyncAuthPanel';
 import { UndoCenter } from '../components/UndoCenter';
 import { authProvider } from '../config/persistence.config';
+import { NotificationInbox } from '../components/NotificationInbox';
 
 /**
  * Premium Settings Page
  * 
  * Allows users to configure app settings including:
  * - Beautiful theme selection and real-time preview
- * - Notification preferences with toggle controls
+ * - Durable, user-owned in-app notification preferences
  * - All changes apply instantly without reload
  */
 export function SettingsPage() {
@@ -185,123 +186,8 @@ export function SettingsPage() {
           borderTop: '1px solid var(--color-border-light)',
         }} />
 
-        {/* Notifications Section */}
-        <section style={{ display: 'grid', gap: 'var(--spacing-8)' }}>
-          <div style={{ display: 'grid', gap: 'var(--spacing-3)' }}>
-            <h2 style={{
-              fontSize: 'clamp(1.5rem, 5vw, 2rem)',
-              fontWeight: 'var(--font-weight-extrabold)',
-              color: 'var(--color-text-primary)',
-              margin: 0,
-              lineHeight: 'var(--line-height-tight)',
-            }}>
-              🔔 Notifications
-            </h2>
-            <p style={{
-              fontSize: 'clamp(0.95rem, 2vw, 1.05rem)',
-              color: 'var(--color-text-secondary)',
-              lineHeight: 'var(--line-height-relaxed)',
-              margin: 0,
-            }}>
-              Stay informed with curated notifications. Choose which events trigger alerts.
-            </p>
-          </div>
+        <NotificationInbox />
 
-          <div style={{
-            backgroundColor: 'var(--color-bg-secondary)',
-            padding: 'var(--spacing-6)',
-            borderRadius: 'var(--radius-xl)',
-            border: '1px solid var(--color-border-default)',
-            display: 'grid',
-            gap: 'var(--spacing-4)',
-          }}>
-            {[
-              { 
-                id: 'task-due',
-                label: 'Task due soon',
-                description: 'Get notified when tasks are due within the next 24 hours',
-                defaultChecked: true,
-                icon: '⏰'
-              },
-              { 
-                id: 'task-completed',
-                label: 'Task completed',
-                description: 'Celebrate when tasks are marked as complete',
-                defaultChecked: true,
-                icon: '✅'
-              },
-              { 
-                id: 'task-assigned',
-                label: 'Task assigned',
-                description: 'Get notified when tasks are assigned to you',
-                defaultChecked: true,
-                icon: '👤'
-              },
-              { 
-                id: 'weekly-digest',
-                label: 'Weekly digest',
-                description: 'Receive a summary of your week every Sunday',
-                defaultChecked: false,
-                icon: '📧'
-              },
-            ].map((notif) => (
-              <label key={notif.id} style={{
-                display: 'flex',
-                alignItems: 'flex-start',
-                gap: 'var(--spacing-4)',
-                padding: 'var(--spacing-3)',
-                borderRadius: 'var(--radius-lg)',
-                cursor: 'pointer',
-                transition: 'background-color var(--transition-base)',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = 'var(--color-bg-tertiary)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'transparent';
-              }}>
-                <input
-                  type="checkbox"
-                  id={notif.id}
-                  defaultChecked={notif.defaultChecked}
-                  style={{
-                    width: '1.25rem',
-                    height: '1.25rem',
-                    borderRadius: 'var(--radius-sm)',
-                    marginTop: '0.125rem',
-                    border: '1px solid var(--color-border-default)',
-                    accentColor: 'var(--color-action-primary)',
-                    cursor: 'pointer',
-                  }}
-                />
-                <div style={{ flex: 1 }}>
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 'var(--spacing-2)',
-                  }}>
-                    <span style={{ fontSize: '1rem' }}>{notif.icon}</span>
-                    <span style={{
-                      fontWeight: 'var(--font-weight-semibold)',
-                      color: 'var(--color-text-primary)',
-                    }}>
-                      {notif.label}
-                    </span>
-                  </div>
-                  <p style={{
-                    fontSize: '0.75rem',
-                    color: 'var(--color-text-secondary)',
-                    margin: 'var(--spacing-1) 0 0 0',
-                  }}>
-                    {notif.description}
-                  </p>
-                </div>
-              </label>
-            ))}
-          </div>
-        </section>
-
-        {/* Divider */}
         <div style={{
           borderTop: '1px solid var(--color-border-light)',
         }} />
