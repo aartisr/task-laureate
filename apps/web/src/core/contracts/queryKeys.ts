@@ -4,10 +4,13 @@ import type { TodoRepository } from './repository';
 export const queryKeys = {
   dashboard: ['dashboard'] as const,
   lists: ['lists'] as const,
+  listsPage: (input: { cursor: string | null; limit: number; status?: string; query?: string; sort?: string }) =>
+    ['lists', 'page', input] as const,
   list: (listId: string) => ['lists', listId] as const,
   tasks: (listId: string) => ['lists', listId, 'tasks'] as const,
   search: (query: string) => ['search', query] as const,
   activity: ['activity'] as const,
+  activityPage: (cursor: string | null, limit: number) => ['activity', 'page', cursor, limit] as const,
 } as const;
 
 export function dashboardQueryOptions(repository: TodoRepository) {

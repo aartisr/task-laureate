@@ -44,9 +44,32 @@ export interface SearchInput {
   query: string;
 }
 
+/**
+ * Transport-neutral keyset page. `nextCursor` is deliberately opaque: callers
+ * must return it unchanged, which lets a database replace the in-memory store
+ * without changing the UI or public repository contract.
+ */
+export interface CursorPageInput {
+  cursor?: string | null;
+  limit?: number;
+}
+
+export interface CursorPage<T> {
+  items: T[];
+  nextCursor: string | null;
+  total: number;
+}
+
+export interface ListPageInput extends CursorPageInput {
+  status?: TodoListStatus;
+  query?: string;
+  sort?: 'title' | 'progress' | 'tasks' | 'created';
+}
+
 export interface TodoRepository {
   getDashboard(): Promise<{ summary: DashboardSummary; lists: TodoList[] }>;
   listLists(): Promise<TodoList[]>;
+  listListsPage(input?: ListPageInput): Promise<CursorPage<TodoList>>;
   getList(listId: string): Promise<TodoList | null>;
   createList(input: TodoListInput): Promise<TodoList>;
   updateList(listId: string, input: TodoListUpdateInput): Promise<TodoList>;
@@ -61,6 +84,9 @@ export interface TodoRepository {
   deleteTask(taskId: string): Promise<TodoItem>;
   restoreTask(taskId: string): Promise<TodoItem>;
   listActivity(): Promise<ActivityEvent[]>;
+  listActivityPage(input?: CursorPageInput): Promise<CursorPage<ActivityEvent>>;
+  /** Removes the signed-in user's audit timeline, never lists or tasks. */
+  clearActivity(): Promise<void>;
   listTemplates(): Promise<ListTemplate[]>;
   search(input: SearchInput): Promise<{ query: string; results: SearchResult[] }>;
 }

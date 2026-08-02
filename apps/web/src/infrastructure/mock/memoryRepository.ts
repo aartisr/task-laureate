@@ -16,6 +16,7 @@ import type {
 } from '../../core/contracts/repository';
 import { computeDashboardSummary, computeListCompletion, getVisibleTasks, sortTasksByOrder } from '../../core/domain/logic';
 import { createId } from '../../core/utils/ids';
+import { createCursorPage } from '../../core/domain/cursorPage';
 import type { WorkspaceData } from '../persistence/workspace';
 
 function clone<T>(value: T): T {
@@ -41,6 +42,37 @@ export function createMemoryTodoRepository(seed: WorkspaceData, options: { onCha
     activity.unshift(clone(event));
   };
 
+  /**
+   * Older workspaces predate the completed-list status. Repair their derived
+   * state on load, silently: a migration must never fabricate user activity.
+   */
+  const reconcilePersistedListLifecycle = () => {
+    let changed = false;
+    for (const list of lists.values()) {
+      if (list.status === 'archived' || list.status === 'deleted') continue;
+      const listTasks = [...tasks.values()].filter((task) => task.listId === list.id && task.deletedAt === null);
+      const taskCount = listTasks.length;
+      const completedTaskCount = listTasks.filter((task) => task.status === 'done').length;
+      const completionPercent = computeListCompletion(listTasks);
+      if (list.taskCount !== taskCount) { list.taskCount = taskCount; changed = true; }
+      if (list.completedTaskCount !== completedTaskCount) { list.completedTaskCount = completedTaskCount; changed = true; }
+      if (list.completionPercent !== completionPercent) { list.completionPercent = completionPercent; changed = true; }
+      const allDone = taskCount > 0 && taskCount === completedTaskCount;
+      if (allDone && list.status !== 'completed') {
+        list.status = 'completed';
+        list.completedAt ??= listTasks.map((task) => task.completedAt).filter((value): value is string => Boolean(value)).sort().at(-1) ?? list.updatedAt;
+        changed = true;
+      } else if (!allDone && list.status === 'completed') {
+        list.status = 'active';
+        list.completedAt = null;
+        changed = true;
+      }
+    }
+    return changed;
+  };
+
+  const repairedOnLoad = reconcilePersistedListLifecycle();
+
   const recalculateList = (listId: string) => {
     const list = lists.get(listId);
     if (!list) {
@@ -51,7 +83,22 @@ export function createMemoryTodoRepository(seed: WorkspaceData, options: { onCha
     list.taskCount = listTasks.filter((task) => task.deletedAt === null).length;
     list.completedTaskCount = listTasks.filter((task) => task.status === 'done' && task.deletedAt === null).length;
     list.completionPercent = computeListCompletion(listTasks);
-    list.updatedAt = nowIso();
+    const timestamp = nowIso();
+    // Do not auto-dispose success. Completion is an achievement state that
+    // becomes active again only when work is explicitly reopened.
+    if (list.status !== 'archived' && list.status !== 'deleted') {
+      const allDone = list.taskCount > 0 && list.completedTaskCount === list.taskCount;
+      if (allDone && list.status !== 'completed') {
+        list.status = 'completed';
+        list.completedAt = timestamp;
+        appendEvent({ id: createId('event'), entityType: 'list', entityId: list.id, action: 'completed', actor: 'system', timestamp, metadata: { taskCount: list.taskCount } });
+      } else if (!allDone && list.status === 'completed') {
+        list.status = 'active';
+        list.completedAt = null;
+        appendEvent({ id: createId('event'), entityType: 'list', entityId: list.id, action: 'restored', actor: 'system', timestamp, metadata: { reason: 'work_reopened' } });
+      }
+    }
+    list.updatedAt = timestamp;
     return list;
   };
 
@@ -64,6 +111,9 @@ export function createMemoryTodoRepository(seed: WorkspaceData, options: { onCha
     }
     if (list.deletedAt !== null) {
       throw new Error(`Cannot change tasks in deleted list: ${listId}`);
+    }
+    if (list.status === 'archived') {
+      throw new Error(`Restore this list before changing its tasks: ${listId}`);
     }
     return list;
   };
@@ -79,12 +129,29 @@ export function createMemoryTodoRepository(seed: WorkspaceData, options: { onCha
       const allTasks = [...tasks.values()];
       return {
         summary: computeDashboardSummary(allLists, allTasks),
-        lists: allLists.filter((list) => list.deletedAt === null).map(clone),
+        // Completed work is still meaningful workspace history. Only archived
+        // and deleted lists leave the dashboard's retained-work population.
+        lists: allLists.filter((list) => list.deletedAt === null && (list.status === 'active' || list.status === 'completed')).map(clone),
       };
     },
 
     async listLists() {
       return [...lists.values()].filter((list) => list.deletedAt === null).map(clone);
+    },
+
+    async listListsPage(input) {
+      const visible = [...lists.values()]
+        .filter((list) => list.deletedAt === null)
+        .filter((list) => !input?.status || list.status === input.status)
+        .filter((list) => !input?.query || `${list.title} ${list.description}`.toLowerCase().includes(input.query.trim().toLowerCase()))
+        .sort((a, b) => {
+          if (input?.sort === 'title') return a.title.localeCompare(b.title) || a.id.localeCompare(b.id);
+          if (input?.sort === 'progress') return b.completionPercent - a.completionPercent || b.id.localeCompare(a.id);
+          if (input?.sort === 'tasks') return b.taskCount - a.taskCount || b.id.localeCompare(a.id);
+          return b.createdAt.localeCompare(a.createdAt) || b.id.localeCompare(a.id);
+        });
+      const page = createCursorPage(visible, input);
+      return { ...page, items: page.items.map(clone) };
     },
 
     async getList(listId) {
@@ -103,6 +170,9 @@ export function createMemoryTodoRepository(seed: WorkspaceData, options: { onCha
         createdAt: timestamp,
         updatedAt: timestamp,
         archivedAt: null,
+        completedAt: null,
+        archivedFromStatus: null,
+        deletedFromStatus: null,
         deletedAt: null,
         completionPercent: 0,
         taskCount: 0,
@@ -135,6 +205,7 @@ export function createMemoryTodoRepository(seed: WorkspaceData, options: { onCha
       }
       if (input.status) {
         list.status = input.status;
+        if (input.status === 'active') list.completedAt = null;
       }
       list.updatedAt = nowIso();
       appendEvent({
@@ -154,9 +225,11 @@ export function createMemoryTodoRepository(seed: WorkspaceData, options: { onCha
       if (!list) {
         throw new Error(`List not found: ${listId}`);
       }
+      if (list.status === 'archived') return clone(list);
+      if (list.status === 'deleted') throw new Error(`Restore this list before archiving it: ${listId}`);
+      list.archivedFromStatus = list.status === 'completed' ? 'completed' : 'active';
       list.status = 'archived';
       list.archivedAt = nowIso();
-      list.deletedAt = list.archivedAt;
       list.updatedAt = list.archivedAt;
       appendEvent({
         id: createId('event'),
@@ -175,8 +248,11 @@ export function createMemoryTodoRepository(seed: WorkspaceData, options: { onCha
       if (!list) {
         throw new Error(`List not found: ${listId}`);
       }
-      list.status = 'active';
-      list.archivedAt = null;
+      if (list.status !== 'archived' && list.status !== 'deleted') return clone(list);
+      list.status = list.status === 'deleted' ? (list.deletedFromStatus ?? 'active') : (list.archivedFromStatus ?? 'active');
+      if (list.status !== 'archived') list.archivedAt = null;
+      list.archivedFromStatus = null;
+      list.deletedFromStatus = null;
       list.deletedAt = null;
       list.updatedAt = nowIso();
       appendEvent({
@@ -196,6 +272,8 @@ export function createMemoryTodoRepository(seed: WorkspaceData, options: { onCha
       if (!list) {
         throw new Error(`List not found: ${listId}`);
       }
+      if (list.status === 'deleted') return clone(list);
+      list.deletedFromStatus = list.status === 'completed' || list.status === 'archived' ? list.status : 'active';
       list.status = 'deleted';
       list.deletedAt = nowIso();
       list.updatedAt = list.deletedAt;
@@ -363,6 +441,16 @@ export function createMemoryTodoRepository(seed: WorkspaceData, options: { onCha
       return clone(activity);
     },
 
+    async listActivityPage(input) {
+      const ordered = [...activity].sort((a, b) => b.timestamp.localeCompare(a.timestamp) || b.id.localeCompare(a.id));
+      const page = createCursorPage(ordered, input);
+      return { ...page, items: page.items.map(clone) };
+    },
+
+    async clearActivity() {
+      activity.length = 0;
+    },
+
     async listTemplates() {
       return clone(templates);
     },
@@ -411,14 +499,15 @@ export function createMemoryTodoRepository(seed: WorkspaceData, options: { onCha
       workspace.tasks.forEach((task) => tasks.set(task.id, clone(task)));
       activity.push(...workspace.activity.map(clone));
       templates.push(...workspace.templates.map(clone));
+      reconcilePersistedListLifecycle();
     },
   };
 
   const mutations = new Set<keyof WorkspaceRepository>([
     'createList', 'updateList', 'archiveList', 'restoreList', 'deleteList',
-    'createTask', 'updateTask', 'completeTask', 'deleteTask', 'restoreTask', 'importWorkspace',
+    'createTask', 'updateTask', 'completeTask', 'deleteTask', 'restoreTask', 'clearActivity', 'importWorkspace',
   ]);
-  return new Proxy(repository, {
+  const proxiedRepository = new Proxy(repository, {
     get(target, property, receiver) {
       const value = Reflect.get(target, property, receiver);
       if (typeof property !== 'string' || !mutations.has(property as keyof WorkspaceRepository) || typeof value !== 'function') return value;
@@ -429,4 +518,8 @@ export function createMemoryTodoRepository(seed: WorkspaceData, options: { onCha
       };
     },
   });
+  // Persist the silent repair so the same legacy list does not need repair on
+  // every sign-in. This intentionally produces no user-facing activity event.
+  if (repairedOnLoad) options.onChange?.(exportWorkspace());
+  return proxiedRepository;
 }

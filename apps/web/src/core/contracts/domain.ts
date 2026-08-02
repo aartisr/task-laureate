@@ -1,6 +1,6 @@
 export type EntityId = string;
 
-export type TodoListStatus = 'active' | 'archived' | 'deleted';
+export type TodoListStatus = 'active' | 'completed' | 'archived' | 'deleted';
 export type TodoItemStatus = 'todo' | 'doing' | 'done' | 'blocked' | 'deleted';
 export type Priority = 'low' | 'medium' | 'high' | 'urgent';
 export type ActivityAction =
@@ -21,6 +21,11 @@ export interface TodoList {
   createdAt: string;
   updatedAt: string;
   archivedAt: string | null;
+  /** An outcome is separate from archive/delete lifecycle decisions. */
+  completedAt?: string | null;
+  /** Preserves the outcome when a list is archived then restored. */
+  archivedFromStatus?: 'active' | 'completed' | null;
+  deletedFromStatus?: 'active' | 'completed' | 'archived' | null;
   deletedAt: string | null;
   completionPercent: number;
   taskCount: number;
@@ -63,6 +68,8 @@ export interface ListTemplate {
 
 export interface DashboardSummary {
   listCount: number;
+  /** Completed lists remain a first-class outcome, separate from active work. */
+  completedListCount?: number;
   taskCount: number;
   completedCount: number;
   activeCount: number;

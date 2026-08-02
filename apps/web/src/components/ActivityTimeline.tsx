@@ -1,6 +1,7 @@
-import { useMemo } from 'react';
-import { useSuspenseQuery } from '@tanstack/react-query';
+import { useMemo, useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '../core/contracts/queryKeys';
+import { DEFAULT_PAGE_SIZE } from '../core/domain/cursorPage';
 import type { ActivityEvent } from '../core/contracts/domain';
 import type { TodoRepository } from '../core/contracts/repository';
 
@@ -29,17 +30,19 @@ const ACTION_LABELS: Record<string, string> = {
   archived: 'Archived',
 };
 
-export function ActivityTimeline({ repository, maxItems = 50 }: ActivityTimelineProps) {
-  const { data: activity = [], isLoading } = useSuspenseQuery({
-    queryKey: queryKeys.activity,
-    queryFn: () => repository.listActivity(),
+export function ActivityTimeline({ repository, maxItems = DEFAULT_PAGE_SIZE }: ActivityTimelineProps) {
+  const queryClient = useQueryClient();
+  const [cursor, setCursor] = useState<string | null>(null);
+  const [cursorHistory, setCursorHistory] = useState<Array<string | null>>([]);
+  const [confirmClear, setConfirmClear] = useState(false);
+  const { data: page, isLoading, isFetching } = useQuery({
+    queryKey: queryKeys.activityPage(cursor, maxItems),
+    queryFn: () => repository.listActivityPage({ cursor, limit: maxItems }),
     staleTime: 10000,
   });
+  const activity = page?.items ?? [];
 
-  const displayedActivity = useMemo(
-    () => activity.slice(0, maxItems),
-    [activity, maxItems]
-  );
+  const displayedActivity = activity;
 
   const groupedByDate = useMemo(() => {
     const groups: Record<string, ActivityEvent[]> = {};
@@ -80,6 +83,24 @@ export function ActivityTimeline({ repository, maxItems = 50 }: ActivityTimeline
 
   return (
     <div className="space-y-8">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-sm text-gray-600">{page?.total ?? 0} events · newest first</p>
+        {confirmClear ? (
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-red-700">Clear all activity?</span>
+            <button type="button" className="rounded bg-red-600 px-3 py-1 text-xs font-medium text-white" onClick={async () => {
+              await repository.clearActivity();
+              setConfirmClear(false);
+              setCursor(null);
+              setCursorHistory([]);
+              await queryClient.invalidateQueries({ queryKey: queryKeys.activity });
+            }}>Clear history</button>
+            <button type="button" className="rounded bg-gray-200 px-3 py-1 text-xs" onClick={() => setConfirmClear(false)}>Cancel</button>
+          </div>
+        ) : (
+          <button type="button" className="text-sm text-red-700 underline" onClick={() => setConfirmClear(true)}>Clear history</button>
+        )}
+      </div>
       {Object.entries(groupedByDate).map(([dateKey, events]) => (
         <div key={dateKey}>
           {/* Date Header */}
@@ -160,14 +181,18 @@ export function ActivityTimeline({ repository, maxItems = 50 }: ActivityTimeline
         </div>
       ))}
 
-      {/* Load More Hint */}
-      {activity.length > maxItems && (
-        <div className="text-center py-4 border-t border-gray-200">
-          <p className="text-sm text-gray-600">
-            Showing {displayedActivity.length} of {activity.length} events
-          </p>
-        </div>
-      )}
+      <nav className="flex items-center justify-between border-t border-gray-200 pt-4" aria-label="Activity pages">
+        <button type="button" className="rounded border px-3 py-2 text-sm disabled:opacity-50" disabled={cursorHistory.length === 0 || isFetching} onClick={() => {
+          const previous = cursorHistory.at(-1) ?? null;
+          setCursorHistory((history) => history.slice(0, -1));
+          setCursor(previous);
+        }}>Previous</button>
+        <span className="text-sm text-gray-600">Showing {displayedActivity.length} of {page?.total ?? 0}</span>
+        <button type="button" className="rounded border px-3 py-2 text-sm disabled:opacity-50" disabled={!page?.nextCursor || isFetching} onClick={() => {
+          setCursorHistory((history) => [...history, cursor]);
+          setCursor(page!.nextCursor);
+        }}>Next</button>
+      </nav>
     </div>
   );
 }

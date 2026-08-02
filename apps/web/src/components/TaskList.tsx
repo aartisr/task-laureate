@@ -13,6 +13,8 @@ export interface TaskListProps {
   onTaskComplete: (id: string) => Promise<void>;
   onTaskDelete: (id: string) => Promise<void>;
   onTaskRestore: (id: string) => Promise<void>;
+  /** Archived lists retain their history but must not look editable. */
+  readOnly?: boolean;
 }
 
 type SortOption = 'focus' | 'priority' | 'dueDate' | 'createdAt' | 'alphabetical';
@@ -42,7 +44,7 @@ function groupForTask(task: TodoItem, today: string): TaskGroup {
 
 const groupOrder: TaskGroup[] = ['Overdue', 'Due today', 'Upcoming', 'No due date', 'Completed'];
 
-export function TaskList({ tasks, isLoading, onTaskUpdate, onTaskComplete, onTaskDelete, onTaskRestore }: TaskListProps) {
+export function TaskList({ tasks, isLoading, onTaskUpdate, onTaskComplete, onTaskDelete, onTaskRestore, readOnly = false }: TaskListProps) {
   const [sortBy, setSortBy] = useState<SortOption>('focus');
   const [filterBy, setFilterBy] = useState<FilterOption>('active');
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -80,6 +82,11 @@ export function TaskList({ tasks, isLoading, onTaskUpdate, onTaskComplete, onTas
   const completionPercent = stats.total ? Math.round((stats.completed / stats.total) * 100) : 0;
 
   if (isLoading) return <section className="task-list task-list--loading" aria-busy="true" aria-live="polite"><p>Loading tasks…</p></section>;
+
+  if (readOnly) return <section id={regionId} className="task-list task-list--readonly" aria-label="Archived tasks">
+    <header className="task-list__header"><div><p className="task-list__eyebrow">Read-only record</p><h2>Tasks</h2><p>Restore the list to edit or add work.</p></div><div className="task-list__progress"><span>{completionPercent}% complete</span><div role="progressbar" aria-valuenow={completionPercent} aria-valuemin={0} aria-valuemax={100}><i style={{ width: `${completionPercent}%` }} /></div></div></header>
+    <div role="list" className="task-list__items">{tasks.map((task) => <article key={task.id} role="listitem" className={`task-item ${task.completedAt ? 'task-item--completed' : ''}`}><div className="task-item__row"><span aria-hidden="true" className="task-item__readonly-check">{task.completedAt ? '✓' : '○'}</span><div className="task-item__content"><p className="task-item__title">{task.title}</p>{task.notes && <p className="task-item__meta">{task.notes}</p>}</div></div></article>)}</div>
+  </section>;
 
   return <section id={regionId} className="task-list" aria-label="Tasks">
     <header className="task-list__header">

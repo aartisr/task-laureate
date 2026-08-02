@@ -2,7 +2,11 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import { useState } from 'react';
 import { appServices } from '../app/runtime/appServices';
-import { dashboardQueryOptions } from '../core/contracts/queryKeys';
+import { dashboardQueryOptions, queryKeys } from '../core/contracts/queryKeys';
+import { DEFAULT_PAGE_SIZE } from '../core/domain/cursorPage';
+import { useListMutations } from '../core/mutations/useListMutations';
+import { announceToScreenReader } from '../lib/a11y';
+import { isRecentlyCompleted, archiveRecommendation } from '../core/domain/listLifecycle';
 import type { TodoList, TodoListStatus } from '../core/contracts/domain';
 import { usePageSEO, PAGE_SEO } from '../hooks/usePageSEO';
 
@@ -35,6 +39,7 @@ function ProgressRing({ percent, size = 40 }: { percent: number; size?: number }
 function StatusBadge({ status }: { status: TodoListStatus }) {
   const map: Record<TodoListStatus, { label: string; cls: string }> = {
     active: { label: 'Active', cls: 'badge--active' },
+    completed: { label: 'Completed', cls: 'badge--completed' },
     archived: { label: 'Archived', cls: 'badge--archived' },
     deleted: { label: 'Deleted', cls: 'badge--deleted' },
   };
@@ -45,27 +50,39 @@ function StatusBadge({ status }: { status: TodoListStatus }) {
 export function ListsPage() {
   usePageSEO(PAGE_SEO.listsOverview);
   const { data } = useQuery(dashboardQueryOptions(appServices.repository));
-  const [filter, setFilter] = useState<FilterStatus>('all');
+  const [filter, setFilter] = useState<FilterStatus>('active');
   const [sort, setSort] = useState<SortKey>('created');
   const [search, setSearch] = useState('');
+  const [cursor, setCursor] = useState<string | null>(null);
+  const [cursorHistory, setCursorHistory] = useState<Array<string | null>>([]);
+  const pageInput = { cursor, limit: DEFAULT_PAGE_SIZE, status: filter === 'all' ? undefined : filter, query: search, sort };
+  const { data: page, isFetching } = useQuery({
+    queryKey: queryKeys.listsPage(pageInput),
+    queryFn: () => appServices.repository.listListsPage(pageInput),
+  });
+  const { data: completedPage } = useQuery({
+    queryKey: queryKeys.listsPage({ cursor: null, limit: 5, status: 'completed', sort: 'created' }),
+    queryFn: () => appServices.repository.listListsPage({ limit: 5, status: 'completed', sort: 'created' }),
+  });
+  const listMutations = useListMutations({ repository: appServices.repository, userId: 'user-1' });
+  const reuseList = async (source: TodoList) => {
+    const copy = await appServices.repository.createList({ title: `${source.title} (new run)`, description: source.description, templateId: source.templateId });
+    const tasks = await appServices.repository.listTasks(source.id);
+    await Promise.all(tasks.map((task) => appServices.repository.createTask({ listId: copy.id, title: task.title, notes: task.notes, priority: task.priority, tags: task.tags })));
+    await appServices.queryClient.invalidateQueries({ queryKey: queryKeys.lists });
+    announceToScreenReader(`Created a fresh run of “${source.title}” with ${tasks.length} tasks.`);
+  };
 
-  const lists = (data?.lists ?? [])
-    .filter((l) => filter === 'all' || l.status === filter)
-    .filter((l) => !search || l.title.toLowerCase().includes(search.toLowerCase()))
-    .slice()
-    .sort((a, b) => {
-      if (sort === 'title') return a.title.localeCompare(b.title);
-      if (sort === 'progress') return b.completionPercent - a.completionPercent;
-      if (sort === 'tasks') return b.taskCount - a.taskCount;
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-    });
+  const lists = page?.items ?? [];
+  const allLists = data?.lists ?? [];
 
-  const totalTasks = lists.reduce((s, l) => s + l.taskCount, 0);
+  const totalTasks = allLists.reduce((s, l) => s + l.taskCount, 0);
   const avgProgress =
     lists.length > 0
-      ? Math.round(lists.reduce((s, l) => s + l.completionPercent, 0) / lists.length)
+      ? Math.round(allLists.reduce((s, l) => s + l.completionPercent, 0) / allLists.length)
       : 0;
-  const doneCount = lists.filter((l) => l.completionPercent === 100).length;
+  const doneCount = allLists.filter((l) => l.completionPercent === 100).length;
+  const resetPage = () => { setCursor(null); setCursorHistory([]); };
 
   return (
     <section className="page-stack">
@@ -74,7 +91,7 @@ export function ListsPage() {
           <p className="eyebrow">Overview</p>
           <h1>All Lists</h1>
           <p className="lede">
-            {lists.length} list{lists.length !== 1 ? 's' : ''} · {totalTasks} tasks total · {avgProgress}% avg progress
+            {page?.total ?? 0} matching list{(page?.total ?? 0) !== 1 ? 's' : ''} · {totalTasks} tasks total · {avgProgress}% avg progress
           </p>
         </div>
         <div className="hero-actions">
@@ -85,8 +102,8 @@ export function ListsPage() {
       {/* Summary bar */}
       <div className="summary-row">
         <div className="summary-chip">
-          <span className="summary-chip__value">{lists.length}</span>
-          <span className="summary-chip__label">Total lists</span>
+          <span className="summary-chip__value">{page?.total ?? 0}</span>
+          <span className="summary-chip__label">Matching lists</span>
         </div>
         <div className="summary-chip">
           <span className="summary-chip__value">{totalTasks}</span>
@@ -109,17 +126,17 @@ export function ListsPage() {
           aria-label="Filter lists"
           placeholder="Filter lists…"
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => { setSearch(e.target.value); resetPage(); }}
         />
         <div className="filter-group">
-          {(['all', 'active', 'archived'] as FilterStatus[]).map((f) => (
+          {(['active', 'completed', 'archived', 'all'] as FilterStatus[]).map((f) => (
             <button
               key={f}
               type="button"
-              onClick={() => setFilter(f)}
+              onClick={() => { setFilter(f); resetPage(); }}
               className={`filter-pill ${filter === f ? 'filter-pill--active' : ''}`}
             >
-              {f.charAt(0).toUpperCase() + f.slice(1)}
+              {{ active: 'In progress', completed: 'Completed', archived: 'Archive', deleted: 'Deleted', all: 'All lists' }[f]}
             </button>
           ))}
         </div>
@@ -127,7 +144,7 @@ export function ListsPage() {
           className="sort-select"
           aria-label="Sort lists"
           value={sort}
-          onChange={(e) => setSort(e.target.value as SortKey)}
+          onChange={(e) => { setSort(e.target.value as SortKey); resetPage(); }}
         >
           <option value="created">Newest first</option>
           <option value="progress">By progress</option>
@@ -146,18 +163,43 @@ export function ListsPage() {
       ) : (
         <div className="lists-grid">
           {lists.map((list) => (
-            <ListCard key={list.id} list={list} />
+            <ListCard key={list.id} list={list} onDelete={async () => {
+              await listMutations.deleteList.mutateAsync(list.id);
+              announceToScreenReader(`List “${list.title}” moved to deleted items. You can undo this from the undo centre.`);
+            }} onArchive={async () => { await listMutations.archiveList.mutateAsync(list.id); announceToScreenReader(`List “${list.title}” archived. You can restore it at any time.`); }} onRestore={async () => { await listMutations.restoreList.mutateAsync(list.id); announceToScreenReader(`List “${list.title}” restored.`); }} onReuse={() => reuseList(list)} />
           ))}
         </div>
+      )}
+      {filter === 'active' && !search && (completedPage?.items ?? []).some((list) => isRecentlyCompleted(list)) && (
+        <section className="completed-shelf" aria-label="Completed recently">
+          <div className="completed-shelf__heading"><div><p className="eyebrow">A record of progress</p><h2>Completed recently</h2><p>Your finished work stays close for 30 days. Reopen, reuse, or archive when it no longer needs attention.</p></div><button type="button" className="text-sm font-medium text-green-900 underline" onClick={() => { setFilter('completed'); resetPage(); }}>View all completed</button></div>
+          <div className="lists-grid">{completedPage!.items.filter((list) => isRecentlyCompleted(list)).map((list) => <ListCard key={list.id} list={list} onDelete={async () => { await listMutations.deleteList.mutateAsync(list.id); }} onArchive={async () => { await listMutations.archiveList.mutateAsync(list.id); }} onRestore={async () => { await listMutations.restoreList.mutateAsync(list.id); }} onReuse={() => reuseList(list)} />)}</div>
+        </section>
+      )}
+      {lists.length > 0 && (
+        <nav className="flex items-center justify-between border-t border-gray-200 pt-5" aria-label="List pages">
+          <button type="button" className="secondary-button" disabled={cursorHistory.length === 0 || isFetching} onClick={() => { const previous = cursorHistory.at(-1) ?? null; setCursorHistory((history) => history.slice(0, -1)); setCursor(previous); }}>Previous</button>
+          <span className="text-sm text-gray-600">Showing {lists.length} of {page?.total ?? 0}</span>
+          <button type="button" className="secondary-button" disabled={!page?.nextCursor || isFetching} onClick={() => { setCursorHistory((history) => [...history, cursor]); setCursor(page!.nextCursor); }}>Next</button>
+        </nav>
       )}
     </section>
   );
 }
 
-function ListCard({ list }: { list: TodoList }) {
+function ListCard({ list, onDelete, onArchive, onRestore, onReuse }: { list: TodoList; onDelete: () => Promise<void>; onArchive: () => Promise<void>; onRestore: () => Promise<void>; onReuse: () => Promise<void> }) {
   const remaining = list.taskCount - list.completedTaskCount;
+  const [manageOpen, setManageOpen] = useState(false);
+  const [deleteArmed, setDeleteArmed] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const run = async (action: () => Promise<void>) => {
+    setIsSaving(true);
+    try { await action(); setManageOpen(false); setDeleteArmed(false); }
+    catch { announceToScreenReader('That change could not be saved. Please try again.', 'assertive'); }
+    finally { setIsSaving(false); }
+  };
   return (
-    <Link to="/lists/$listId" params={{ listId: list.id }} className="list-card">
+    <article className="list-card">
       <div className="list-card__header">
         <div className="list-card__meta">
           <StatusBadge status={list.status} />
@@ -177,6 +219,15 @@ function ListCard({ list }: { list: TodoList }) {
         {remaining > 0 && <span className="list-card__remaining">{remaining} remaining</span>}
         {list.completionPercent === 100 && <span className="list-card__done">✓ Done</span>}
       </div>
-    </Link>
+      <div className="list-card__actions">
+        <Link to="/lists/$listId" params={{ listId: list.id }} className="primary-button list-card__open">Open list <span aria-hidden="true">→</span></Link>
+        <button type="button" aria-expanded={manageOpen} className="secondary-button list-card__manage" onClick={() => setManageOpen((open) => !open)}>Manage</button>
+      </div>
+      {manageOpen && <div className="list-card__menu" aria-label={`Manage ${list.title}`}>
+        {list.status === 'completed' && <><p className="list-card__menu-copy">This run is complete. Its history is preserved.</p><button type="button" disabled={isSaving} onClick={() => void run(onReuse)}>↻ Start a fresh run</button></>}
+        {list.status === 'archived' ? <button type="button" disabled={isSaving} onClick={() => void run(onRestore)}>↩ Restore to {list.archivedFromStatus === 'completed' ? 'completed' : 'in progress'}</button> : <button type="button" disabled={isSaving} onClick={() => void run(onArchive)}>⌂ {archiveRecommendation(list) ? 'Archive recommended' : 'Archive from daily view'}</button>}
+        {deleteArmed ? <div className="list-card__danger"><span>Move to deleted items? You can undo this.</span><button type="button" disabled={isSaving} onClick={() => void run(onDelete)}>Yes, delete</button><button type="button" onClick={() => setDeleteArmed(false)}>Cancel</button></div> : <button type="button" className="list-card__delete" onClick={() => setDeleteArmed(true)}>Delete list…</button>}
+      </div>}
+    </article>
   );
 }

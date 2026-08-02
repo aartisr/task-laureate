@@ -63,7 +63,9 @@ export function DashboardPage() {
     const completionPercent = getDashboardCompletionPercent(summary);
     
     return {
-      totalLists: summary.listCount,
+      activeLists: summary.listCount,
+      completedLists: summary.completedListCount ?? 0,
+      totalLists: summary.listCount + (summary.completedListCount ?? 0),
       totalTasks: summary.taskCount,
       completedTasks: summary.completedCount,
       activeTasks: summary.activeCount,
@@ -122,11 +124,11 @@ export function DashboardPage() {
           </div>
           <p
             className="text-3xl font-bold text-[var(--color-text-primary)]"
-            aria-label={`Total lists: ${stats.totalLists}`}
+            aria-label={`${stats.activeLists} lists in progress and ${stats.completedLists} completed lists`}
           >
             {stats.totalLists}
           </p>
-          <p className="text-xs text-[var(--color-text-tertiary)] mt-2">View all lists →</p>
+          <p className="text-xs text-[var(--color-text-tertiary)] mt-2"><span className="font-medium text-[var(--color-text-primary)]">{stats.activeLists}</span> in progress · <span className="font-medium text-[var(--color-status-success)]">{stats.completedLists}</span> completed</p>
         </Card>
 
         <Card variant="elevated" ariaLabel="Tasks summary" onClick={() => navigate({ to: '/tasks' })}>
@@ -140,11 +142,11 @@ export function DashboardPage() {
           </div>
           <p
             className="text-3xl font-bold text-[var(--color-text-primary)]"
-            aria-label={`Total tasks: ${stats.totalTasks}`}
+            aria-label={`${stats.activeTasks} tasks remaining and ${stats.completedTasks} completed tasks`}
           >
             {stats.totalTasks}
           </p>
-          <p className="text-xs text-[var(--color-text-tertiary)] mt-2">View all tasks →</p>
+          <p className="text-xs text-[var(--color-text-tertiary)] mt-2"><span className="font-medium text-[var(--color-text-primary)]">{stats.activeTasks}</span> remaining · <span className="font-medium text-[var(--color-status-success)]">{stats.completedTasks}</span> completed</p>
         </Card>
 
         <Card variant="elevated" ariaLabel="Completed tasks summary" onClick={() => navigate({ to: '/completed' })}>

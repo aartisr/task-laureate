@@ -7,7 +7,7 @@ import type { DashboardSummary, TodoItem, TodoList } from '../contracts/domain';
  */
 export function getVisibleTasks(lists: TodoList[], tasks: TodoItem[]) {
   const visibleListIds = new Set(
-    lists.filter((list) => list.deletedAt === null).map((list) => list.id),
+    lists.filter((list) => list.deletedAt === null && (list.status === 'active' || list.status === 'completed')).map((list) => list.id),
   );
 
   return tasks.filter((task) => task.deletedAt === null && visibleListIds.has(task.listId));
@@ -20,7 +20,8 @@ export function computeDashboardSummary(lists: TodoList[], tasks: TodoItem[]): D
   const activeCount = visibleTasks.filter((task) => task.status !== 'done').length;
 
   return {
-    listCount: lists.filter((list) => list.deletedAt === null).length,
+    listCount: lists.filter((list) => list.deletedAt === null && list.status === 'active').length,
+    completedListCount: lists.filter((list) => list.deletedAt === null && list.status === 'completed').length,
     taskCount,
     completedCount,
     activeCount,

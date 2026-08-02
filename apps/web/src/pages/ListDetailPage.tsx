@@ -153,6 +153,26 @@ export function ListDetailPage({ listId }: ListDetailPageProps) {
     }
   };
 
+  const handleReopenList = async () => {
+    try {
+      await listMutations.updateList.mutateAsync({ listId, input: { status: 'active' } });
+      announceToScreenReader('List reopened. Add or reopen a task to continue work.');
+    } catch (error) {
+      console.error('Failed to reopen list:', error);
+      announceToScreenReader('Failed to reopen list. Please try again.', 'assertive');
+    }
+  };
+
+  const handleRestoreArchivedList = async () => {
+    try {
+      await listMutations.restoreList.mutateAsync(listId);
+      announceToScreenReader('List restored. You can continue working whenever you are ready.');
+    } catch (error) {
+      console.error('Failed to restore list:', error);
+      announceToScreenReader('Failed to restore list. Please try again.', 'assertive');
+    }
+  };
+
   return (
     <section className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 p-8" aria-label={`${list.title} list editor`}>
       <div className="max-w-4xl mx-auto">
@@ -276,6 +296,19 @@ export function ListDetailPage({ listId }: ListDetailPageProps) {
             </div>
           </div>
 
+          {list.status === 'completed' && (
+            <div className="mt-4 flex items-center justify-between gap-3 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-950" role="status">
+              <span>✓ Completed {list.completedAt ? new Date(list.completedAt).toLocaleDateString() : ''}. Keep it as a record, archive it when it no longer needs attention, or reopen it.</span>
+              <button type="button" onClick={handleReopenList} className="shrink-0 rounded border border-green-700 px-3 py-1 font-medium text-green-900">Reopen</button>
+            </div>
+          )}
+          {list.status === 'archived' && (
+            <div className="mt-4 flex items-center justify-between gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950" role="status">
+              <span>📦 Archived lists are safely preserved and read-only. Restore it to make changes.</span>
+              <button type="button" onClick={handleRestoreArchivedList} className="shrink-0 rounded border border-amber-700 px-3 py-1 font-medium text-amber-900">Restore list</button>
+            </div>
+          )}
+
           {/* Stats */}
           <div className="mt-6 bg-white rounded-lg p-4 border border-gray-200">
             <div className="flex items-center justify-between text-sm">
@@ -305,7 +338,7 @@ export function ListDetailPage({ listId }: ListDetailPageProps) {
         </header>
 
         {/* Create Task Section */}
-        <section className="mb-8 bg-white rounded-lg shadow-md p-6" aria-label="Create new task">
+        {list.status !== 'archived' && <section className="mb-8 bg-white rounded-lg shadow-md p-6" aria-label="Create new task">
           {isCreatingTask || pendingTask ? (
             <TaskComposer listId={listId} initialInput={pendingTask?.input} restoredDraft={Boolean(pendingTask)} onCreate={handleCreateTask} onCancel={() => { clearPendingSaveIntent(); setIsCreatingTask(false); }} titleInputRef={taskInputRef} />
           ) : (
@@ -318,7 +351,7 @@ export function ListDetailPage({ listId }: ListDetailPageProps) {
               <span className="text-2xl" aria-hidden="true">+</span> Add a task <span className="text-sm">— include a due date, priority, or notes when useful</span>
             </button>
           )}
-        </section>
+        </section>}
 
         {/* Tasks Section */}
         <section className="bg-white rounded-lg shadow-md p-6" aria-label="Tasks list">
@@ -349,6 +382,7 @@ export function ListDetailPage({ listId }: ListDetailPageProps) {
             onTaskRestore={async (id) => {
               await taskMutations.restoreTask.mutateAsync(id);
             }}
+            readOnly={list.status === 'archived'}
           />
         </section>
 
