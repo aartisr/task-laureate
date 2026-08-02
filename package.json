@@ -15,6 +15,7 @@
     "test": "npm run test -w apps/web",
     "lint": "npm run lint -w apps/web",
     "verify:public-registry": "node scripts/verify-public-registry.mjs",
+    "verify:production": "npm run verify:public-registry && node scripts/verify-production-config.mjs",
     "generate:vapid": "node scripts/generate-vapid-keys.mjs"
   },
   "devDependencies": {

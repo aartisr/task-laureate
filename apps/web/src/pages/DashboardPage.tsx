@@ -11,6 +11,7 @@ import { appServices } from '../app/runtime/appServices';
 import { usePageSEO, PAGE_SEO } from '../hooks/usePageSEO';
 import { ListComposer } from '../components/ListComposer';
 import type { TodoListInput } from '../core/contracts/repository';
+import { clearPendingSaveIntent, getPendingSaveIntent, requireSignInForSave } from '../core/auth/pendingSave';
 
 export function DashboardPage() {
   usePageSEO(PAGE_SEO.dashboard);
@@ -18,6 +19,8 @@ export function DashboardPage() {
   const repository = appServices.repository;
   const [isCreatingList, setIsCreatingList] = useState(false);
   const listTitleInputRef = useRef<HTMLInputElement>(null);
+  const pendingSave = getPendingSaveIntent();
+  const pendingList = pendingSave?.kind === 'list' && pendingSave.returnTo === '/' ? pendingSave : null;
 
   const { data: dashboard, isLoading } = useSuspenseQuery({
     queryKey: queryKeys.dashboard,
@@ -41,7 +44,9 @@ export function DashboardPage() {
 
   const handleCreateList = async (input: TodoListInput) => {
     try {
+      if (!await requireSignInForSave({ kind: 'list', input, returnTo: '/' })) return;
       const result = await listMutations.createList.mutateAsync(input);
+      clearPendingSaveIntent();
       announceToScreenReader(`List “${result.title}” created`);
       navigate({
         to: `/lists/${result.id}`,
@@ -193,10 +198,10 @@ export function DashboardPage() {
       </Grid>
 
       {/* Quick Actions */}
-      {isCreatingList ? <ListComposer titleInputRef={listTitleInputRef} onCreate={handleCreateList} onCancel={() => setIsCreatingList(false)} /> : null}
+      {(isCreatingList || pendingList) ? <ListComposer titleInputRef={listTitleInputRef} initialInput={pendingList?.input} restoredDraft={Boolean(pendingList)} onCreate={handleCreateList} onCancel={() => { clearPendingSaveIntent(); setIsCreatingList(false); }} /> : null}
       <div className="quick-actions-wrapper">
         <Grid columns={2} gap="normal">
-          <Card onClick={() => setIsCreatingList(true)} ariaLabel="Create a new list">
+          <Card onClick={() => { clearPendingSaveIntent(); setIsCreatingList(true); }} ariaLabel="Create a new list">
             <div className="text-4xl mb-4" aria-hidden="true">
               ➕
             </div>
@@ -279,7 +284,7 @@ export function DashboardPage() {
           description="Create your first list to get started organizing your tasks."
           action={{
             label: 'Create First List',
-            onClick: () => setIsCreatingList(true),
+            onClick: () => { clearPendingSaveIntent(); setIsCreatingList(true); },
           }}
         />
       )}

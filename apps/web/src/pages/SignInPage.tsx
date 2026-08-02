@@ -1,14 +1,18 @@
 import { Link } from '@tanstack/react-router';
 import { CloudSyncAuthPanel } from '../components/CloudSyncAuthPanel';
 import { authProvider } from '../config/persistence.config';
+import { getPendingSaveIntent, pendingSaveSummary } from '../core/auth/pendingSave';
+import { normalizeOAuthReturnTo } from '../infrastructure/persistence/supabaseAuth';
 
 /** A calm, reversible entry point to private cloud sync. */
 export function SignInPage() {
+  const returnTo = typeof window === 'undefined' ? '/' : normalizeOAuthReturnTo(new URLSearchParams(window.location.search).get('returnTo'));
+  const saveSummary = pendingSaveSummary(getPendingSaveIntent());
   const returnHomeAfterPasswordSignIn = () => {
     // Password authentication completes on this page (unlike OAuth, which has
     // its own callback route). Replace rather than push so Back never returns
     // a signed-in person to a stale sign-in form.
-    window.location.replace('/');
+    window.location.replace(returnTo);
   };
 
   return (
@@ -27,6 +31,7 @@ export function SignInPage() {
           <p className="sign-in-page__eyebrow">Private cloud sync</p>
           <h1 id="sign-in-title">Pick up your momentum, wherever you are.</h1>
           <p className="sign-in-page__lead">Sign in to keep your Lists and Tasks private, synced, and ready on every device you use.</p>
+          {saveSummary ? <p className="sign-in-page__saved-draft" role="status">{saveSummary} Nothing has been sent or saved yet.</p> : null}
           <ul className="sign-in-page__benefits" aria-label="What signing in enables">
             <li><span aria-hidden="true">↗</span><span><strong>Continue seamlessly</strong><small>Your workspace follows you across devices.</small></span></li>
             <li><span aria-hidden="true">◌</span><span><strong>Keep it personal</strong><small>Your Lists and Tasks stay separated by account.</small></span></li>
@@ -40,7 +45,7 @@ export function SignInPage() {
             <h2 id="sign-in-panel-title">Choose how to continue</h2>
             <p>Use an account you already trust. We never see or store its password.</p>
           </div>
-          <CloudSyncAuthPanel provider={authProvider} returnTo="/" presentation="embedded" onAuthenticated={returnHomeAfterPasswordSignIn} />
+          <CloudSyncAuthPanel provider={authProvider} returnTo={returnTo} presentation="embedded" onAuthenticated={returnHomeAfterPasswordSignIn} />
           <div className="sign-in-page__cancel">
             <Link to="/" className="sign-in-page__cancel-link">Cancel and return home</Link>
             <p>You can sign in anytime from the workspace menu.</p>

@@ -26,6 +26,7 @@ These settings are committed in [`apps/web/vercel.json`](../apps/web/vercel.json
 
    ```bash
    npm install --include=optional
+   npm run verify:production
    npm run lint
    npm run build
    ```
@@ -108,6 +109,7 @@ Before promoting a deployment, verify:
 - [ ] Create a list, refresh the page, and confirm it reloads. Verify the `workspace_snapshots` row is visible in the intended Supabase project.
 - [ ] Open a deep link such as `/settings` in a new browser tab; it renders instead of returning a 404.
 - [ ] Run the opt-in authenticated CRUD test against a non-production test user before a major release.
+- [ ] Run `npm run verify:production`, `npm run lint`, `npm test`, and `npm run build` from the commit that will be released. GitHub Actions runs the same quality gate for pushes and pull requests.
 
 ```bash
 SUPABASE_TEST_ACCESS_TOKEN='user-jwt' npm run test:supabase -w apps/web

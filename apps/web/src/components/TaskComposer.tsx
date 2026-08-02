@@ -21,17 +21,21 @@ export function TaskComposer({
   onCreate,
   onCancel,
   titleInputRef,
+  initialInput,
+  restoredDraft = false,
 }: {
   listId: string;
   onCreate: (input: TodoTaskInput) => Promise<void>;
   onCancel: () => void;
   titleInputRef?: RefObject<HTMLInputElement>;
+  initialInput?: Pick<TodoTaskInput, 'title' | 'priority' | 'dueDate' | 'notes'>;
+  restoredDraft?: boolean;
 }) {
-  const [title, setTitle] = useState('');
-  const [priority, setPriority] = useState<Priority>('medium');
-  const [dueDate, setDueDate] = useState('');
-  const [notes, setNotes] = useState('');
-  const [showNotes, setShowNotes] = useState(false);
+  const [title, setTitle] = useState(initialInput?.title ?? '');
+  const [priority, setPriority] = useState<Priority>(initialInput?.priority ?? 'medium');
+  const [dueDate, setDueDate] = useState(initialInput?.dueDate ?? '');
+  const [notes, setNotes] = useState(initialInput?.notes ?? '');
+  const [showNotes, setShowNotes] = useState(Boolean(initialInput?.notes));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
@@ -49,6 +53,7 @@ export function TaskComposer({
   };
 
   return <form className="task-composer" onSubmit={(event) => void submit(event)}>
+    {restoredDraft ? <p className="task-composer__restored" role="status">Your draft was restored. Review it, then add it to your private list.</p> : null}
     <label className="task-composer__title-label" htmlFor="task-composer-title">What needs to be done?</label>
     <input
       id="task-composer-title"

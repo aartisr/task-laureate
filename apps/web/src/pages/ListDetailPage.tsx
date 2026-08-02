@@ -10,6 +10,7 @@ import { TaskList } from '../components/TaskList';
 import { TaskComposer } from '../components/TaskComposer';
 import { appServices } from '../app/runtime/appServices';
 import { usePageSEO, PAGE_SEO } from '../hooks/usePageSEO';
+import { clearPendingSaveIntent, getPendingSaveIntent, requireSignInForSave } from '../core/auth/pendingSave';
 
 export interface ListDetailPageProps {
   listId: string;
@@ -23,6 +24,8 @@ export function ListDetailPage({ listId }: ListDetailPageProps) {
   const [newTitle, setNewTitle] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const taskInputRef = useRef<HTMLInputElement>(null);
+  const pendingSave = getPendingSaveIntent();
+  const pendingTask = pendingSave?.kind === 'task' && pendingSave.returnTo === `/lists/${listId}` ? pendingSave : null;
 
   // Keyboard shortcuts
   useKeyboardShortcuts({
@@ -97,7 +100,9 @@ export function ListDetailPage({ listId }: ListDetailPageProps) {
 
   const handleCreateTask = async (input: Parameters<typeof taskMutations.createTask.mutateAsync>[0]) => {
     try {
+      if (!await requireSignInForSave({ kind: 'task', input, returnTo: `/lists/${listId}` })) return;
       await taskMutations.createTask.mutateAsync(input);
+      clearPendingSaveIntent();
       announceToScreenReader(`Task "${input.title}" created.`);
       setIsCreatingTask(false);
     } catch (error) {
@@ -301,12 +306,12 @@ export function ListDetailPage({ listId }: ListDetailPageProps) {
 
         {/* Create Task Section */}
         <section className="mb-8 bg-white rounded-lg shadow-md p-6" aria-label="Create new task">
-          {isCreatingTask ? (
-            <TaskComposer listId={listId} onCreate={handleCreateTask} onCancel={() => setIsCreatingTask(false)} titleInputRef={taskInputRef} />
+          {isCreatingTask || pendingTask ? (
+            <TaskComposer listId={listId} initialInput={pendingTask?.input} restoredDraft={Boolean(pendingTask)} onCreate={handleCreateTask} onCancel={() => { clearPendingSaveIntent(); setIsCreatingTask(false); }} titleInputRef={taskInputRef} />
           ) : (
             <button
               type="button"
-              onClick={() => setIsCreatingTask(true)}
+              onClick={() => { clearPendingSaveIntent(); setIsCreatingTask(true); }}
               className="w-full text-left px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
               aria-label="Click to add a new task"
             >

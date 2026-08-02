@@ -1,0 +1,26 @@
+name: Production quality gate
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Test, build, and validate deployment contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20.19.0
+          cache: npm
+      - run: npm ci --include=optional
+      - run: npm run verify:production
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
