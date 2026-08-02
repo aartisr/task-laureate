@@ -3396,6 +3396,7 @@ select:focus {
 .support-footer-cta__actions { display: flex; flex-wrap: wrap; gap: var(--spacing-4); justify-content: center; margin-bottom: var(--spacing-10); }
 .support-footer-cta__credit { font-size: 0.8rem; color: var(--color-text-tertiary); margin: 0; line-height: 1.8; }
 .support-footer-cta__credit a { color: var(--color-action-primary); text-decoration: none; }
+.support-footer-cta__credit a:first-of-type { display: inline-flex; align-items: center; gap: .3rem; }.support-footer-cta__credit a:first-of-type img { inline-size: 1.1rem; block-size: 1.1rem; flex: 0 0 auto; }
 .support-footer-cta__credit a:hover { text-decoration: underline; }
 .persistence-alert {
   position: sticky;

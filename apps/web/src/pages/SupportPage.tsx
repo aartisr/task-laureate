@@ -252,7 +252,7 @@ export function SupportPage() {
         </div>
         <p className="support-footer-cta__credit">
           About Task-Laureate · created by{' '}
-          <a href="https://ai-aarti.com" target="_blank" rel="noopener noreferrer">Aarti S Ravikumar</a>
+          <a href="https://ai-aarti.com" target="_blank" rel="noopener noreferrer"><img src="/.well-known/logo-small.svg" alt="" aria-hidden="true" />Aarti S Ravikumar</a>
           {' '}·{' '}
           <a href="https://saugus.pioneercss.org" target="_blank" rel="noopener noreferrer">PCSSII</a>
           {' '}·{' '}
