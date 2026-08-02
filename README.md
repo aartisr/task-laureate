@@ -1,8 +1,19 @@
 # Task-Laureate
 
+[**Open Task-Laureate →**](https://tasks.ai-aarti.com) · [AI Aarti deployment](https://tasks.ai-aarti.com) · [PCSSII Robotics deployment](https://tasks.pcssiirobotics.org)
+
 Task-Laureate is a private, keyboard-friendly task workspace for planning lists, tracking progress, searching work, reviewing activity, and recovering from mistakes with undo. It is built as an extensible React application: feature modules and persistence adapters can evolve without rewriting the UI shell.
 
 Built by [Aarti S Ravikumar](https://ai-aarti.com), a student at [Pioneer Charter School of Science II (PCSSII)](https://saugus.pioneercss.org).
+
+## Live deployments
+
+Task-Laureate is live at two public addresses:
+
+- [tasks.ai-aarti.com](https://tasks.ai-aarti.com) — AI Aarti deployment
+- [tasks.pcssiirobotics.org](https://tasks.pcssiirobotics.org) — PCSSII Robotics deployment
+
+Both links should serve the same Task-Laureate experience. If you are configuring a new deployment, follow the [Vercel deployment guide](docs/VERCEL_DEPLOYMENT.md) and add the exact deployed origin to Supabase Auth redirect URLs.
 
 ## Why Task-Laureate exists
 
