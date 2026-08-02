@@ -36,6 +36,8 @@ describe('NotificationCenter', () => {
     await act(async () => { root.render(<NotificationCenter />); await Promise.resolve(); await Promise.resolve(); });
     const trigger = host.querySelector<HTMLButtonElement>('.notification-center__trigger');
     expect(trigger?.getAttribute('aria-label')).toBe('1 unread notification');
+    expect(trigger?.classList.contains('is-attention')).toBe(true);
+    expect(trigger?.textContent).toContain('Needs attention');
     expect(trigger?.textContent).toContain('1');
 
     await act(async () => trigger?.click());
@@ -46,6 +48,7 @@ describe('NotificationCenter', () => {
     await act(async () => markRead?.click());
     expect(mocked.markNotificationRead).toHaveBeenCalledWith('notice-1');
     expect(host.querySelector<HTMLButtonElement>('.notification-center__trigger')?.getAttribute('aria-label')).toBe('Notifications');
+    expect(host.querySelector<HTMLButtonElement>('.notification-center__trigger')?.classList.contains('is-quiet')).toBe(true);
   });
 
   it('stays absent when no authenticated user exists', async () => {

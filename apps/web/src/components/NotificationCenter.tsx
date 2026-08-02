@@ -39,11 +39,12 @@ export function NotificationCenter({ onNavigate }: { onNavigate?: () => void }) 
     catch { setMessage('We could not update that notification.'); }
   };
   const label = unread.length ? `${unread.length} unread notification${unread.length === 1 ? '' : 's'}` : 'Notifications';
+  const hasUnread = unread.length > 0;
 
   return <div className="notification-center" ref={container}>
-    <button type="button" className="notification-center__trigger" aria-label={label} aria-expanded={open} aria-controls={id} onClick={() => setOpen((current) => !current)}>
-      <span aria-hidden="true">🔔</span><span className="notification-center__label">Alerts</span>
-      {unread.length ? <span className="notification-center__count" aria-hidden="true">{unread.length > 9 ? '9+' : unread.length}</span> : null}
+    <button type="button" className={`notification-center__trigger ${hasUnread ? 'is-attention' : 'is-quiet'}`} aria-label={label} aria-expanded={open} aria-controls={id} onClick={() => setOpen((current) => !current)}>
+      <span className="notification-center__icon" aria-hidden="true">🔔</span><span className="notification-center__label">{hasUnread ? 'Needs attention' : 'Alerts'}</span>
+      {hasUnread ? <span className="notification-center__count" aria-hidden="true">{unread.length > 9 ? '9+' : unread.length}</span> : null}
     </button>
     <span className="sr-only" aria-live="polite">{unread.length ? `You have ${unread.length} unread notifications.` : ''}</span>
     {open ? <div id={id} className="notification-center__popover" role="dialog" aria-label="Notifications">
