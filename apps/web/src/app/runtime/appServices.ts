@@ -39,6 +39,7 @@ let initialization: Promise<void> | null = null;
 let activeBuffer: ReturnType<typeof createBufferedPersistence> | null = null;
 let activeUserId: string | null = null;
 let pagehideListenerRegistered = false;
+let workspaceGeneration = 0;
 
 function replaceRepository(workspace: WorkspaceData, onChange: (data: WorkspaceData) => void) {
   appServices.queryClient.clear();
@@ -59,6 +60,17 @@ function useSignedOutRepository() {
   replaceRepository(createEmptyWorkspace(), () => undefined);
 }
 
+/**
+ * Immediately removes the previous identity's in-memory and browser-cached
+ * workspace. UI consumers call this at an authentication boundary, before an
+ * asynchronous session lookup can leave stale Lists visible on screen.
+ */
+export function resetWorkspaceForAuthChange() {
+  workspaceGeneration += 1;
+  initialization = null;
+  useSignedOutRepository();
+}
+
 function hasWorkspaceContent(workspace: WorkspaceData) {
   return workspace.lists.length > 0 || workspace.tasks.length > 0 || workspace.activity.length > 0 || workspace.templates.length > 0;
 }
@@ -68,6 +80,8 @@ export function initializePersistence(options: { force?: boolean } = {}): Promis
   if (options.force) initialization = null;
   if (initialization) return initialization;
   initialization = (async () => {
+    const generation = workspaceGeneration;
+    const isCurrentGeneration = () => generation === workspaceGeneration;
     if (persistenceConfig.driver !== 'supabase') {
       setPersistenceStatus('local', 'Saving to this browser only.');
       return;
@@ -76,6 +90,7 @@ export function initializePersistence(options: { force?: boolean } = {}): Promis
     let session: Awaited<ReturnType<typeof authProvider.getSession>> = null;
     try {
       session = await authProvider.getSession();
+      if (!isCurrentGeneration()) return;
       if (!session) {
         useSignedOutRepository();
         setPersistenceStatus('local', 'Sign in to access a private workspace.');
@@ -90,6 +105,7 @@ export function initializePersistence(options: { force?: boolean } = {}): Promis
       const adapter = createSupabaseWorkspaceAdapter({ ...persistenceConfig.supabase, workspaceId });
       const fallbackWorkspace = loadBrowserWorkspace(createEmptyWorkspace(), localKey);
       const remoteWorkspace = await adapter.load();
+      if (!isCurrentGeneration()) return;
       const workspace = remoteWorkspace?.data ?? fallbackWorkspace;
       const buffered = createBufferedPersistence(adapter, {
         debounceMs: persistenceConfig.supabase.debounceMs,
@@ -109,6 +125,7 @@ export function initializePersistence(options: { force?: boolean } = {}): Promis
         console.info('[Task-Laureate persistence] Restoring this signed-in user’s private offline workspace.', { workspaceId });
         buffered.schedule(workspace);
         await buffered.flush();
+        if (!isCurrentGeneration()) return;
       }
       setPersistenceStatus('synced', 'Connected to Supabase. All changes are saved automatically.');
       if (!pagehideListenerRegistered) {
@@ -118,6 +135,7 @@ export function initializePersistence(options: { force?: boolean } = {}): Promis
         });
       }
     } catch (error) {
+      if (!isCurrentGeneration()) return;
       if (!persistenceConfig.supabase.fallbackToLocal) throw error;
       const message = error instanceof Error ? error.message : String(error);
       console.error('[Task-Laureate persistence] Supabase initialization failed.', { message, error });

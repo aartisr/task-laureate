@@ -5,7 +5,7 @@ import { router } from '../router';
 import { ThemeProvider } from '../../core/themes/ThemeProvider';
 import { ErrorBoundary } from '../../components/ErrorBoundary';
 import { useEffect, useRef, useState } from 'react';
-import { initializePersistence } from '../runtime/appServices';
+import { initializePersistence, resetWorkspaceForAuthChange } from '../runtime/appServices';
 import { getPersistenceStatus, subscribeToPersistenceStatus, type PersistenceStatus } from '../../infrastructure/persistence/status';
 import { authProvider } from '../../config/persistence.config';
 import { shouldReinitializeForAuthChange } from '../../core/auth/sessionTransitions';
@@ -14,6 +14,7 @@ export function AppProviders() {
   const [ready, setReady] = useState(false);
   const [startupError, setStartupError] = useState<Error | null>(null);
   const [persistenceStatus, setPersistenceStatus] = useState<PersistenceStatus>(getPersistenceStatus);
+  const [workspaceEpoch, setWorkspaceEpoch] = useState(0);
   const observedAuthUserId = useRef<string | null | undefined>(undefined);
 
   useEffect(() => {
@@ -24,6 +25,11 @@ export function AppProviders() {
 
   useEffect(() => {
     const reconnect = () => {
+      // The repository and query cache must change before the async session
+      // lookup starts. Otherwise a mounted route can render an old account's
+      // query function until React receives the later persistence update.
+      resetWorkspaceForAuthChange();
+      setWorkspaceEpoch((epoch) => epoch + 1);
       setReady(false);
       void initializePersistence({ force: true })
         .then(() => setReady(true))
@@ -55,7 +61,7 @@ export function AppProviders() {
       <QueryClientProvider client={appServices.queryClient}>
         <ThemeProvider>
           {persistenceStatus.phase === 'error' && <div className="persistence-alert" role="alert">{persistenceStatus.detail}</div>}
-          <RouterProvider router={router} />
+          <RouterProvider key={workspaceEpoch} router={router} />
         </ThemeProvider>
       </QueryClientProvider>
     </ErrorBoundary>

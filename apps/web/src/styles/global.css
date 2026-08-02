@@ -2931,6 +2931,8 @@ select:focus {
   border-color: var(--color-border-default);
 }
 
+.account-status-menu { position: relative; width: 100%; }
+
 .account-status {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
@@ -2945,6 +2947,9 @@ select:focus {
   background: var(--color-bg-secondary);
   border: 1px solid var(--color-border-default);
   border-radius: var(--radius-md);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
   transition: border-color var(--transition-base), background var(--transition-base), transform var(--transition-base);
 }
 
@@ -2975,8 +2980,66 @@ select:focus {
 .account-status.is-error .account-status__indicator { background: var(--color-status-error); }
 .account-status__chevron { color: var(--color-text-tertiary); font-size: 1.25rem; }
 
+.account-status__popover {
+  position: absolute;
+  z-index: 30;
+  bottom: calc(100% + var(--spacing-2));
+  left: 0;
+  display: grid;
+  gap: var(--spacing-1);
+  width: max(100%, 17rem);
+  max-width: min(22rem, calc(100vw - var(--spacing-6)));
+  padding: var(--spacing-2);
+  color: var(--color-text-primary);
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+}
+
+.account-status__identity {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  min-width: 0;
+  padding: var(--spacing-2) var(--spacing-2) var(--spacing-3);
+  border-bottom: 1px solid var(--color-border-default);
+}
+
+.account-status__identity > span:last-child { display: grid; min-width: 0; gap: 2px; }
+.account-status__identity strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .8125rem; }
+.account-status__identity small { color: var(--color-text-tertiary); font-size: .72rem; }
+
+.account-status__menu-item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 2.5rem;
+  padding: var(--spacing-2) var(--spacing-3);
+  color: var(--color-text-primary);
+  font: inherit;
+  font-size: .8125rem;
+  font-weight: var(--font-weight-medium);
+  text-align: left;
+  text-decoration: none;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.account-status__menu-item:hover,
+.account-status__menu-item:focus-visible { color: var(--color-text-primary); background: var(--color-bg-tertiary); outline: none; }
+.account-status__menu-item:focus-visible { box-shadow: 0 0 0 2px var(--color-action-primary); }
+.account-status__sign-out { color: var(--color-status-error); }
+.account-status__sign-out:hover:not(:disabled), .account-status__sign-out:focus-visible { color: var(--color-status-error); }
+.account-status__menu-item:disabled { opacity: .6; cursor: wait; }
+.account-status__message { margin: var(--spacing-1) var(--spacing-2) 0; color: var(--color-status-error); font-size: .72rem; line-height: var(--line-height-normal); }
+
 @media (max-width: 767px) {
-  .mobile-navigation__items > .account-status { margin: 0 0 var(--spacing-3); }
+  .mobile-navigation__items > .account-status,
+  .mobile-navigation__items > .account-status-menu { margin: 0 0 var(--spacing-3); }
+  .mobile-navigation__items .account-status__popover { position: static; width: 100%; max-width: none; margin-top: var(--spacing-2); box-shadow: none; }
 }
 
 /* ===== SUPPORT PAGE ===== */
