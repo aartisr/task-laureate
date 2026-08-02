@@ -1,6 +1,30 @@
 # Task-Laureate
 
-Task-Laureate is a fast, keyboard-friendly task workspace for planning lists, tracking progress, searching work, reviewing activity, and recovering from mistakes with undo. It is built as an extensible React application: feature modules and persistence adapters can evolve without rewriting the UI shell.
+Task-Laureate is a private, keyboard-friendly task workspace for planning lists, tracking progress, searching work, reviewing activity, and recovering from mistakes with undo. It is built as an extensible React application: feature modules and persistence adapters can evolve without rewriting the UI shell.
+
+Built by [Aarti S Ravikumar](https://ai-aarti.com), a student at [Pioneer Charter School of Science II (PCSSII)](https://saugus.pioneercss.org).
+
+## Why Task-Laureate exists
+
+Task-Laureate began with a familiar kind of overwhelm: important work scattered across calendars, notes, email, sticky notes, and apps that promised to sync but did not always earn trust. Research, competitions, projects, and schoolwork were all moving at once. The hard part was not caring enough or working hard enough. The hard part was spending attention trying to remember what mattered.
+
+That experience shaped a simple conviction: a task manager should reduce mental overhead, not become another place to manage. It should make the next step visible, make progress honest, and make mistakes recoverable. It should respect a person’s privacy and never pretend a change is safely saved when it is not.
+
+Task-Laureate is an attempt to build that kind of tool: calm enough for a student with an assignment due tomorrow, reliable enough for someone coordinating ambitious work, and open enough for the people who use it to help improve it.
+
+### A promise to the person using it
+
+Your work deserves clarity. Your data deserves an accurate status. Your attention is valuable.
+
+So the application is designed around a few non-negotiables:
+
+- **Useful before demanding commitment.** You can explore the workspace before sign-in. When a List or Task needs to be saved, the app explains why sign-in helps, preserves the complete draft, and returns you to it after authentication.
+- **Private by default.** Signed-in workspaces are scoped to the authenticated account. Local offline copies are account-scoped and cleared on sign-out.
+- **Honest about durability.** The interface distinguishes local, saving, synced, and error states instead of claiming that a cloud save succeeded when it did not.
+- **Forgiving of human mistakes.** List and task changes have an undo journal, and destructive actions are deliberate.
+- **Open to scrutiny and contribution.** The implementation, migration scripts, tests, and deployment contract live in this repository because trust should be inspectable.
+
+This is not a promise that software can eliminate every deadline or every difficult day. It is a promise to make the work in front of you easier to see, safer to organize, and less likely to be lost in the noise.
 
 ## Highlights
 
@@ -24,7 +48,7 @@ Task-Laureate is a fast, keyboard-friendly task workspace for planning lists, tr
 Requirements: Node.js 20.19 or later.
 
 ```bash
-git clone https://github.com/aartisravikumar/task-laureate.git
+git clone https://github.com/aartisr/task-laureate.git
 cd task-laureate
 npm install
 npm run dev
@@ -93,7 +117,24 @@ docs/                     Architecture, feature, QA, and setup documentation
 
 ## Contributing
 
-Issues and pull requests are welcome. Before opening a pull request, run the relevant typecheck and tests for the code you changed. Keep credentials and tokens in ignored local environment files; never commit them.
+Task-Laureate is better when the people who rely on it can shape it. Bug reports, accessibility observations, documentation improvements, and focused pull requests are all welcome.
+
+Before opening a pull request, run the release-quality checks:
+
+```bash
+npm run verify:production
+npm run lint
+npm test
+npm run build
+```
+
+Use the project’s [GitHub issue flow](https://github.com/aartisr/task-laureate/issues/new) to report a bug or share an idea. Keep credentials and tokens in ignored local environment files; never commit them.
+
+## A note from Aarti
+
+I built Task-Laureate because I know how it feels to have meaningful work and still feel lost in the details. If this project gives someone a little more confidence, a little less friction, or one fewer anxious “what did I forget?” moment, then it is doing the work it was meant to do.
+
+If you use it, question it, improve it, or build something new with it: thank you. Good tools are not monuments. They are conversations between the people who make them and the people whose lives they are meant to support.
 
 ## License
 
