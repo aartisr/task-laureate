@@ -3631,3 +3631,28 @@ textarea {
 @media (min-width: 48.0625rem) { .sidebar-footer .notification-center { width: 100%; }.sidebar-footer .notification-center__trigger { width: 100%; justify-content: flex-start; }.sidebar-footer .notification-center__popover { right: auto; bottom: calc(100% + .7rem); left: 0; } }
 @media (max-width: 48rem) { .mobile-topbar__actions .notification-center__label { display: none; }.mobile-navigation__items .notification-center { margin: 0 0 var(--spacing-3); }.mobile-navigation__items .notification-center__trigger { width: 100%; justify-content: flex-start; }.mobile-navigation__items .notification-center__popover { position: static; width: 100%; margin-top: var(--spacing-2); box-shadow: none; } }
 @media (prefers-reduced-motion: reduce) { .notification-center__trigger.is-attention .notification-center__icon { animation: none; } }
+
+/* Responsive safety net: every route shares the same shell, so content must be
+   allowed to shrink before a long title, chip, or control can create overflow. */
+.app-shell, .workspace, .workspace > *, .workspace :is(section, article, header, footer, form, fieldset, div) { min-inline-size: 0; }
+.workspace :is(h1, h2, h3, h4, p, a, button, label, small, strong, span) { overflow-wrap: anywhere; }
+.workspace :is(img, video, canvas, svg) { max-inline-size: 100%; }
+.workspace table { display: block; max-inline-size: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+@media (max-width: 39.9375rem) {
+  /* Avoid double desktop-sized gutters inside the compact mobile shell. */
+  .workspace > main[role="main"] { padding: var(--spacing-4) !important; }
+
+  .page-hero, .support-hero, .data-card, .stat-card, .kpi-card, .workspace-data-panel,
+  .notification-inbox, .supabase-auth-panel, .auth-callback-page__card { min-inline-size: 0; }
+
+  /* Fixed-width reporting rows are useful on desktop, but stack their metadata
+     on narrow screens so each label remains legible without sideways scrolling. */
+  .priority-row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: var(--spacing-2); }
+  .priority-row__label { width: auto; }.priority-row__bar { min-inline-size: 0; }.priority-row__stat { width: auto; text-align: left; }.priority-row__pct { width: auto; text-align: right; }
+  .leaderboard-row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: var(--spacing-2); }.leaderboard-row__bar { display: none; }.leaderboard-row__stat, .leaderboard-row__pct { width: auto; }.leaderboard-row__pct { grid-column: 3; }
+  .completion-bar-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: var(--spacing-2); }.completion-bar-row__name { width: auto; }.completion-bar-row__track { grid-column: 1 / -1; grid-row: 2; min-inline-size: 0; }.completion-bar-row__stat, .completion-bar-row__pct { width: auto; }
+
+  .shortcut-row { align-items: flex-start; flex-wrap: wrap; }.shortcut-keys { min-width: 0; }.shortcut-category { width: 100%; padding-left: calc(2rem + var(--spacing-4)); }
+  .quick-link-card, .community-card { padding: var(--spacing-4); }.quick-link-card__arrow { display: none; }.faq-question, .faq-answer { padding-inline: var(--spacing-4); }
+}
