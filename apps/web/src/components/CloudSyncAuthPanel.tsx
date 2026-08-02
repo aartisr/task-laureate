@@ -1,13 +1,30 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import type { AuthProvider, AuthSession, SocialProviderId } from '../core/contracts/auth';
 import { supportsPasswordAuth, supportsSocialAuth } from '../core/contracts/auth';
-import { getEnabledSocialProviders } from '../config/authProviders';
+import { getEnabledSocialProviders, type SocialProviderDefinition } from '../config/authProviders';
 
 function friendlyAuthError(error: unknown) {
   const detail = error instanceof Error ? error.message : '';
   if (/network|fetch|offline/i.test(detail)) return 'We could not reach secure sign-in. Check your connection and try again.';
   if (/provider|unsupported/i.test(detail)) return 'That sign-in option is not available right now. Choose another option or try again later.';
   return 'We could not complete sign-in. Please try again or choose another method.';
+}
+
+function SocialProviderButton({ provider, busy, onSelect }: {
+  provider: SocialProviderDefinition;
+  busy: SocialProviderId | 'password' | null;
+  onSelect: (provider: SocialProviderId) => void;
+}) {
+  const isBusy = busy === provider.id;
+  return <button
+    type="button"
+    className="social-auth-options__button"
+    onClick={() => onSelect(provider.id)}
+    disabled={busy !== null}
+  >
+    <span className={`social-auth-options__mark social-auth-options__mark--${provider.mark}`} aria-hidden="true">{provider.label.slice(0, 1)}</span>
+    <span>{isBusy ? `Connecting to ${provider.label}…` : `Continue with ${provider.label}`}</span>
+  </button>;
 }
 
 /**
@@ -22,8 +39,11 @@ export function CloudSyncAuthPanel({ provider, returnTo }: { provider: AuthProvi
   const [busy, setBusy] = useState<SocialProviderId | 'password' | null>(null);
   const [message, setMessage] = useState('');
   const enabledProviders = useMemo(() => getEnabledSocialProviders(), []);
-  const recommendedProviders = enabledProviders.filter((candidate) => candidate.category === 'recommended');
-  const moreProviders = enabledProviders.filter((candidate) => candidate.category === 'more');
+  const declaredPrimaryProviders = enabledProviders.filter((candidate) => candidate.tier === 'primary').slice(0, 3);
+  // A deployment with only GitHub (or another additional provider) should not
+  // make a person open an empty-feeling disclosure just to sign in.
+  const primaryProviders = declaredPrimaryProviders.length > 0 ? declaredPrimaryProviders : enabledProviders.slice(0, 3);
+  const additionalProviders = enabledProviders.filter((candidate) => !primaryProviders.some((primary) => primary.id === candidate.id));
 
   useEffect(() => {
     if (!provider.configured) return;
@@ -87,19 +107,13 @@ export function CloudSyncAuthPanel({ provider, returnTo }: { provider: AuthProvi
       <button className="secondary-button" type="button" onClick={() => void signOut()} disabled={busy !== null}>Sign out</button></> : <>
       <p>Continue with an account you already use. Task-Laureate never receives your provider password.</p>
       {supportsSocialAuth(provider) && enabledProviders.length > 0 ? <div className="social-auth-options" aria-label="Sign in with an existing account">
-        {recommendedProviders.map((socialProvider) => (
-          <button key={socialProvider.id} type="button" className="social-auth-options__button" onClick={() => void signInWithProvider(socialProvider.id)} disabled={busy !== null}>
-            Continue with {socialProvider.label}
-          </button>
-        ))}
-        {moreProviders.length > 0 ? <details className="social-auth-options__more">
-          <summary>More ways to continue</summary>
+        {primaryProviders.length > 0 ? <div className="social-auth-options__primary">
+          {primaryProviders.map((socialProvider) => <SocialProviderButton key={socialProvider.id} provider={socialProvider} busy={busy} onSelect={(id) => void signInWithProvider(id)} />)}
+        </div> : null}
+        {additionalProviders.length > 0 ? <details className="social-auth-options__more">
+          <summary><span>More sign-in options</span><small>{additionalProviders.length} available</small></summary>
           <div className="social-auth-options__more-list">
-            {moreProviders.map((socialProvider) => (
-              <button key={socialProvider.id} type="button" className="social-auth-options__button" onClick={() => void signInWithProvider(socialProvider.id)} disabled={busy !== null}>
-                Continue with {socialProvider.label}
-              </button>
-            ))}
+            {additionalProviders.map((socialProvider) => <SocialProviderButton key={socialProvider.id} provider={socialProvider} busy={busy} onSelect={(id) => void signInWithProvider(id)} />)}
           </div>
         </details> : null}
       </div> : null}

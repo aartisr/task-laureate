@@ -139,6 +139,37 @@ Example:
 VITE_AUTH_PROVIDERS=google,azure,github
 ```
 
+### Provider menu configuration
+
+The app has a public provider registry for Google, Microsoft (`azure`), Apple,
+GitHub, Facebook, LinkedIn (`linkedin_oidc`), GitLab, Slack, Discord, and
+Yahoo (`custom:yahoo`). Only entries that are enabled in both Supabase and
+`VITE_AUTH_PROVIDERS` appear. The UI shows at most three first-choice buttons;
+the rest stay in a compact, expandable **More sign-in options** section.
+
+For the full requested set:
+
+```bash
+VITE_AUTH_PROVIDERS=google,azure,apple,github,facebook,linkedin_oidc,gitlab,slack,discord,custom:yahoo
+VITE_AUTH_PRIMARY_PROVIDERS=google,azure,apple
+```
+
+`microsoft`, `linkedin`, and `yahoo` are accepted as readable aliases in the
+public environment variable. You may choose a different first three without
+changing application code, for example `VITE_AUTH_PRIMARY_PROVIDERS=google,github,gitlab`.
+
+For a generic custom OAuth/OIDC provider, configure it in Supabase first, then
+give it a deliberate user-facing label in the public list:
+
+```bash
+VITE_AUTH_PROVIDERS=google,custom:acme-sso|Acme SSO
+VITE_AUTH_PRIMARY_PROVIDERS=google,custom:acme-sso
+```
+
+The identifier must match the enabled Supabase custom-provider identifier. The
+label is display-only; never put a client secret, issuer secret, or token in a
+`VITE_*` value.
+
 Provider-specific notes:
 
 - **Microsoft:** choose the intended supported account types in the Microsoft app registration. [Microsoft identity platform](https://learn.microsoft.com/en-us/entra/identity-platform/v2-app-types)
