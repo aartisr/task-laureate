@@ -108,6 +108,15 @@ describe('supabaseAuthProvider', () => {
     expect(consumeOAuthReturnTo()).toBe('/');
   });
 
+  it('requests the email scope required by Supabase Azure authentication', async () => {
+    const { supabaseAuthProvider } = await loadAdapter();
+    await supabaseAuthProvider.signInWithOAuth({ provider: 'azure', returnTo: '/' });
+    expect(mockState.auth.signInWithOAuth).toHaveBeenCalledWith(expect.objectContaining({
+      provider: 'azure',
+      options: expect.objectContaining({ scopes: 'email', redirectTo: expect.stringMatching(/\/auth\/callback$/) }),
+    }));
+  });
+
   it('maps password, device-local sign-out, and auth subscription behavior through the same session contract', async () => {
     const { supabaseAuthProvider } = await loadAdapter();
     const listener = vi.fn();

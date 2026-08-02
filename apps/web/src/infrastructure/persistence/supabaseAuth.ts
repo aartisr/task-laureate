@@ -182,7 +182,9 @@ const socialCapability: SocialAuthProvider = {
     persistReturnTo(returnTo);
     const { error } = await requireClient().auth.signInWithOAuth({
       provider: provider as Provider,
-      options: { redirectTo: callbackUrl() },
+      // Supabase's Azure provider requires a verified email to complete the
+      // identity. Other providers retain their least-privilege defaults.
+      options: { redirectTo: callbackUrl(), ...(provider === 'azure' ? { scopes: 'email' } : {}) },
     });
     if (error) {
       if (typeof window !== 'undefined') window.sessionStorage.removeItem(returnToStorageKey);
