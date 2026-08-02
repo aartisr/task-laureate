@@ -4,6 +4,7 @@ import { Link, Outlet, useRouterState } from '@tanstack/react-router';
 import { useTheme } from '../core/themes/ThemeProvider';
 import type { NavItem } from '../core/contracts/feature';
 import { AccountStatus } from './AccountStatus';
+import { NotificationCenter } from './NotificationCenter';
 import { authProvider } from '../config/persistence.config';
 import { recoveryNeedsAttention, undoJournal } from '../core/mutations/undoJournal';
 
@@ -114,6 +115,7 @@ export function AppShell({ children, navItems }: AppShellProps) {
           <small>Now viewing: {currentSection?.label ?? 'Dashboard'}</small>
         </div>
         <div className="mobile-topbar__actions">
+          <NotificationCenter />
           <button
             type="button"
             className="mobile-menu-toggle"
@@ -192,6 +194,7 @@ export function AppShell({ children, navItems }: AppShellProps) {
             <span className="sidebar-link__badge">FAQs</span>
           </Link>
           <AccountStatus provider={authProvider} />
+          <NotificationCenter />
 
         </div>
       </aside>
@@ -227,6 +230,7 @@ export function AppShell({ children, navItems }: AppShellProps) {
 
           <div className="mobile-navigation__items">
             <AccountStatus provider={authProvider} onNavigate={() => setIsMobileMenuOpen(false)} />
+            <NotificationCenter onNavigate={() => setIsMobileMenuOpen(false)} />
             {mobilePrimaryTabs.map((item) => {
               const hasRecovery = item.to === '/settings' && recoveryAvailable;
               return (
