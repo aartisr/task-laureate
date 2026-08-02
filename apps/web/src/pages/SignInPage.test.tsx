@@ -41,6 +41,7 @@ describe('SignInPage', () => {
     expect(host.querySelector('h1')?.textContent).toContain('Pick up your momentum');
     const cancel = Array.from(host.querySelectorAll<HTMLAnchorElement>('a')).find((link) => link.textContent === 'Cancel and return home');
     expect(cancel?.getAttribute('href')).toBe('/');
+    expect(host.querySelector<HTMLImageElement>('.sign-in-page__home-link img')?.getAttribute('src')).toBe('/.well-known/logo-small.svg');
     expect(mocked.panel).toHaveBeenCalledWith(expect.objectContaining({ returnTo: '/', presentation: 'embedded' }));
   });
 });

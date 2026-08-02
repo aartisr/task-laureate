@@ -12,7 +12,7 @@ export function SignInPage() {
           <span aria-hidden="true">✓</span>
           <strong>Task-Laureate</strong>
         </Link>
-        <Link to="/" className="sign-in-page__home-link">Return home <span aria-hidden="true">→</span></Link>
+        <Link to="/" className="sign-in-page__home-link"><img src="/.well-known/logo-small.svg" alt="" aria-hidden="true" />Return home <span aria-hidden="true">→</span></Link>
       </header>
 
       <section className="sign-in-page__content">

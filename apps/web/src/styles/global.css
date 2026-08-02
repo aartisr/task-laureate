@@ -3560,6 +3560,7 @@ select:focus {
 .sign-in-page__brand, .sign-in-page__home-link { display: inline-flex; align-items: center; gap: var(--spacing-2); color: var(--color-text-primary); font-size: .875rem; font-weight: var(--font-weight-bold); text-decoration: none; }
 .sign-in-page__brand > span { display: grid; place-items: center; width: 1.85rem; height: 1.85rem; color: var(--color-text-on-action); background: var(--color-action-primary); border-radius: .6rem; box-shadow: var(--shadow-sm); }
 .sign-in-page__home-link { min-height: 2.5rem; padding: .45rem .7rem; color: var(--color-text-secondary); border: 1px solid transparent; border-radius: var(--radius-md); font-weight: var(--font-weight-semibold); }
+.sign-in-page__home-link img { inline-size: 1.35rem; block-size: 1.35rem; flex: 0 0 auto; }
 .sign-in-page__home-link:hover { color: var(--color-text-primary); background: var(--color-bg-secondary); border-color: var(--color-border-default); }
 .sign-in-page__brand:focus-visible, .sign-in-page__home-link:focus-visible, .sign-in-page__cancel-link:focus-visible { outline: 3px solid var(--color-action-primary); outline-offset: 3px; }
 .sign-in-page__content { display: grid; grid-template-columns: minmax(0, 1fr) minmax(19rem, 31rem); align-items: center; gap: clamp(2.5rem, 8vw, 7rem); padding-block: clamp(2.5rem, 8vh, 6rem); }
