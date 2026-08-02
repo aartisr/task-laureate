@@ -70,17 +70,17 @@ export function ListDetailPage({ listId }: ListDetailPageProps) {
 
   if (listLoading) {
     return (
-      <main className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 p-8" role="main" aria-label="List editor">
+      <section className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 p-8" aria-label="List editor">
         <div className="text-center">
           <p className="text-gray-500" aria-live="polite" aria-busy="true">Loading list...</p>
         </div>
-      </main>
+      </section>
     );
   }
 
   if (!list) {
     return (
-      <main className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 p-8" role="main" aria-label="List editor">
+      <section className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 p-8" aria-label="List editor">
         <div className="text-center">
           <p className="text-gray-500">List not found</p>
           <button
@@ -91,7 +91,7 @@ export function ListDetailPage({ listId }: ListDetailPageProps) {
             Back to Dashboard
           </button>
         </div>
-      </main>
+      </section>
     );
   }
 
@@ -149,7 +149,7 @@ export function ListDetailPage({ listId }: ListDetailPageProps) {
   };
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 p-8" role="main" aria-label={`${list.title} list editor`}>
+    <section className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 p-8" aria-label={`${list.title} list editor`}>
       <div className="max-w-4xl mx-auto">
         {/* Header with Back Button */}
         <header className="mb-8">
@@ -201,16 +201,7 @@ export function ListDetailPage({ listId }: ListDetailPageProps) {
                 </div>
               ) : (
                 <div className="list-title-control">
-                  <h1
-                    onClick={() => {
-                      setEditingTitle(true);
-                      setNewTitle(list.title);
-                    }}
-                    className="text-4xl font-bold text-gray-900 cursor-pointer hover:text-blue-600 transition-colors"
-                    title="Click to edit list name"
-                  >
-                    {list.title}
-                  </h1>
+                  <h1 className="text-4xl font-bold text-gray-900">{list.title}</h1>
                   <button
                     type="button"
                     className="list-title-control__edit"
@@ -232,28 +223,34 @@ export function ListDetailPage({ listId }: ListDetailPageProps) {
             {/* Actions Menu */}
             <div className="flex gap-2">
               <button
-                onClick={() => navigate({ to: `/lists/${listId}/activity` })}
+                type="button"
+                onClick={() => navigate({ to: '/activity' })}
                 title="View activity"
                 className="p-2 hover:bg-gray-200 rounded transition-colors"
+                aria-label="View workspace activity"
               >
                 📝
               </button>
               <button
+                type="button"
                 onClick={handleArchiveList}
                 title="Archive list"
                 className="p-2 hover:bg-yellow-100 text-yellow-600 rounded transition-colors"
+                aria-label="Archive list"
               >
                 📦
               </button>
               {showDeleteConfirm ? (
                 <>
                   <button
+                    type="button"
                     onClick={handleDeleteList}
                     className="px-3 py-2 text-xs bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
                   >
                     Confirm
                   </button>
                   <button
+                    type="button"
                     onClick={() => setShowDeleteConfirm(false)}
                     className="px-3 py-2 text-xs bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition-colors"
                   >
@@ -262,9 +259,11 @@ export function ListDetailPage({ listId }: ListDetailPageProps) {
                 </>
               ) : (
                 <button
+                  type="button"
                   onClick={() => setShowDeleteConfirm(true)}
                   title="Delete list"
                   className="p-2 hover:bg-red-100 text-red-600 rounded transition-colors"
+                  aria-label="Delete list"
                 >
                   🗑️
                 </button>
@@ -306,6 +305,7 @@ export function ListDetailPage({ listId }: ListDetailPageProps) {
             <TaskComposer listId={listId} onCreate={handleCreateTask} onCancel={() => setIsCreatingTask(false)} titleInputRef={taskInputRef} />
           ) : (
             <button
+              type="button"
               onClick={() => setIsCreatingTask(true)}
               className="w-full text-left px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
               aria-label="Click to add a new task"
@@ -363,6 +363,6 @@ export function ListDetailPage({ listId }: ListDetailPageProps) {
           </nav>
         </footer>
       </div>
-    </main>
+    </section>
   );
 }

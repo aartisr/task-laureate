@@ -5,10 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 
     <!-- ===== PRIMARY SEO ===== -->
-    <title>Task-Laureate — Premium Task Orchestration for High-Performance Teams</title>
-    <meta name="description" content="Task-Laureate is a calm, fast, premium task management app built for high-performance teams. Organize lists, track tasks, measure progress, and ship more — beautifully." />
-    <meta name="keywords" content="task management, productivity app, todo list, project management, task tracker, team collaboration, task orchestration, work management, GTD, getting things done" />
-    <meta name="author" content="Task-Laureate" />
+    <title>Task-Laureate — A calm, private task workspace</title>
+    <meta name="description" content="Plan lists, prioritize tasks, track honest progress, and keep control of your personal workspace with Task-Laureate." />
+    <meta name="keywords" content="personal task manager, task list, productivity app, task tracker, priorities, due dates, task notes" />
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
     <meta name="googlebot" content="index, follow" />
     <link rel="canonical" href="https://task-laureate.vercel.app/" />
@@ -16,8 +15,8 @@
     <!-- ===== OPEN GRAPH (Facebook, LinkedIn, Slack, Discord, WhatsApp) ===== -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Task-Laureate" />
-    <meta property="og:title" content="Task-Laureate — Calm, Fast Task Orchestration" />
-    <meta property="og:description" content="The premium task management platform for teams who ship. Beautiful, fast, and built to stay out of your way." />
+    <meta property="og:title" content="Task-Laureate — A calm, private task workspace" />
+    <meta property="og:description" content="Plan lists, prioritize tasks, and see honest progress in a focused personal workspace." />
     <meta property="og:url" content="https://task-laureate.vercel.app/" />
     <meta property="og:image" content="https://task-laureate.vercel.app/og-image.svg" />
     <meta property="og:image:width" content="1200" />
@@ -28,12 +27,10 @@
 
     <!-- ===== TWITTER / X CARDS ===== -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@TaskLaureate" />
-    <meta name="twitter:creator" content="@TaskLaureate" />
-    <meta name="twitter:title" content="Task-Laureate — Calm, Fast Task Orchestration" />
-    <meta name="twitter:description" content="The premium task management platform for teams who ship. Beautiful, fast, and built to stay out of your way." />
+    <meta name="twitter:title" content="Task-Laureate — A calm, private task workspace" />
+    <meta name="twitter:description" content="Plan lists, prioritize tasks, and see honest progress in a focused personal workspace." />
     <meta name="twitter:image" content="https://task-laureate.vercel.app/og-image.svg" />
-    <meta name="twitter:image:alt" content="Task-Laureate — Premium Task Management App" />
+    <meta name="twitter:image:alt" content="Task-Laureate task workspace" />
 
     <!-- ===== PWA & MOBILE ===== -->
     <meta name="theme-color" content="#8b5cf6" media="(prefers-color-scheme: dark)" />
@@ -69,31 +66,21 @@
     <meta property="article:author" content="https://ai-aarti.com" />
     <meta name="profile:username" content="aartisr" />
 
-    <!-- ===== GEO / AI SEARCH (Generative Engine Optimization) ===== -->
-    <!-- Helps ChatGPT, Perplexity, Gemini, Claude understand the app -->
-    <meta name="ai-content-declaration" content="task-management-saas" />
-    <meta name="category" content="Productivity, Task Management, Project Management" />
-    <meta name="classification" content="Software Application" />
-    <meta name="coverage" content="Worldwide" />
-    <meta name="rating" content="General" />
-    <meta name="target" content="developers, teams, individuals, project managers" />
-    <meta name="HandheldFriendly" content="True" />
-
-    <!-- ===== SCHEMA.ORG JSON-LD STRUCTURED DATA ===== -->
+    <!-- Structured facts for search systems. Kept deliberately small and verifiable. -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@graph": [
         {
-          "@type": "SoftwareApplication",
+          "@type": "WebApplication",
           "@id": "https://task-laureate.vercel.app/#app",
           "name": "Task-Laureate",
           "alternateName": ["Task Laureate", "TaskLaureate"],
-          "description": "Task-Laureate is a premium, open-source task management application for high-performance individuals and teams. Features include list management, task tracking, progress analytics, activity timelines, and customizable themes.",
+          "description": "A privacy-minded personal task workspace for planning lists, prioritizing tasks, tracking progress, and reviewing activity.",
           "url": "https://task-laureate.vercel.app/",
-          "applicationCategory": "ProductivityApplication",
+          "applicationCategory": "UtilitiesApplication",
           "applicationSubCategory": "Task Management",
-          "operatingSystem": "Web Browser, iOS, Android",
+          "operatingSystem": "Web browser",
           "offers": {
             "@type": "Offer",
             "price": "0",
@@ -106,20 +93,15 @@
             "Activity timeline",
             "Search across all tasks",
             "Multiple visual themes",
-            "Keyboard shortcuts",
-            "Responsive design for mobile and desktop"
+            "Responsive web interface"
           ],
           "screenshot": "https://task-laureate.vercel.app/og-image.svg",
           "softwareVersion": "1.0.0",
-          "datePublished": "2026-07-29",
           "inLanguage": "en",
           "isAccessibleForFree": true,
-          "license": "https://opensource.org/licenses/MIT",
           "author": { "@id": "https://task-laureate.vercel.app/#author" },
           "creator": { "@id": "https://task-laureate.vercel.app/#author" },
-          "publisher": { "@id": "https://task-laureate.vercel.app/#author" },
-          "maintainer": { "@id": "https://task-laureate.vercel.app/#author" },
-          "sourceOrganization": { "@id": "https://task-laureate.vercel.app/#school" }
+          "publisher": { "@id": "https://task-laureate.vercel.app/#author" }
         },
         {
           "@type": "Person",
@@ -132,9 +114,8 @@
             "https://ai-aarti.com",
             "https://github.com/aartisr"
           ],
-          "description": "High school student at Pioneer Charter School of Science II (PCSSII) and developer of Task-Laureate, an open-source premium task management application.",
-          "jobTitle": "Student Developer",
-          "affiliation": { "@id": "https://task-laureate.vercel.app/#school" },
+          "description": "Developer of Task-Laureate.",
+          "jobTitle": "Developer",
           "knowsAbout": [
             "TypeScript",
             "React",
@@ -146,130 +127,12 @@
           ]
         },
         {
-          "@type": "EducationalOrganization",
-          "@id": "https://task-laureate.vercel.app/#school",
-          "name": "Pioneer Charter School of Science II",
-          "alternateName": "PCSSII",
-          "url": "https://saugus.pioneercss.org",
-          "sameAs": "https://saugus.pioneercss.org",
-          "description": "Pioneer Charter School of Science II (PCSSII) is a charter school focused on science and technology education.",
-          "location": {
-            "@type": "Place",
-            "name": "Saugus, California"
-          }
-        },
-        {
           "@type": "WebSite",
           "@id": "https://task-laureate.vercel.app/#website",
           "url": "https://task-laureate.vercel.app/",
           "name": "Task-Laureate",
-          "description": "Premium task orchestration for high-performance teams",
-          "author": { "@id": "https://task-laureate.vercel.app/#author" },
-          "potentialAction": {
-            "@type": "SearchAction",
-            "target": {
-              "@type": "EntryPoint",
-              "urlTemplate": "https://task-laureate.vercel.app/search?q={search_term_string}"
-            },
-            "query-input": "required name=search_term_string"
-          }
-        },
-        {
-          "@type": "BreadcrumbList",
-          "itemListElement": [
-            { "@type": "ListItem", "position": 1, "name": "Dashboard", "item": "https://task-laureate.vercel.app/" },
-            { "@type": "ListItem", "position": 2, "name": "All Lists", "item": "https://task-laureate.vercel.app/lists-overview" },
-            { "@type": "ListItem", "position": 3, "name": "All Tasks", "item": "https://task-laureate.vercel.app/tasks" },
-            { "@type": "ListItem", "position": 4, "name": "Completed", "item": "https://task-laureate.vercel.app/completed" },
-            { "@type": "ListItem", "position": 5, "name": "Progress", "item": "https://task-laureate.vercel.app/progress" },
-            { "@type": "ListItem", "position": 6, "name": "Search", "item": "https://task-laureate.vercel.app/search" },
-            { "@type": "ListItem", "position": 7, "name": "Activity", "item": "https://task-laureate.vercel.app/activity" },
-            { "@type": "ListItem", "position": 8, "name": "Help & Support", "item": "https://task-laureate.vercel.app/support" },
-            { "@type": "ListItem", "position": 9, "name": "Settings", "item": "https://task-laureate.vercel.app/settings" }
-          ]
-        },
-        {
-          "@type": "FAQPage",
-          "mainEntity": [
-            {
-              "@type": "Question",
-              "name": "What is Task-Laureate?",
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": "Task-Laureate is a premium, open-source task management application built by Aarti S Ravikumar, a student at Pioneer Charter School of Science II (PCSSII). It is designed for high-performance individuals and teams who want a calm, fast, beautiful task management experience."
-              }
-            },
-            {
-              "@type": "Question",
-              "name": "Who built Task-Laureate?",
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": "Task-Laureate was designed and built by Aarti S Ravikumar, a high school student at Pioneer Charter School of Science II (PCSSII). The project started because Aarti needed a better way to manage schoolwork, competitions, and research projects without chaos."
-              }
-            },
-            {
-              "@type": "Question",
-              "name": "Is Task-Laureate free?",
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": "Yes, Task-Laureate is completely free and open-source under the MIT license. No ads, no tracking, no paywalls — ever."
-              }
-            },
-            {
-              "@type": "Question",
-              "name": "How do I prioritize tasks in Task-Laureate?",
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": "Task-Laureate supports four priority levels: Urgent (red), High (orange), Medium (yellow), and Low (green). You can set priority when creating or editing any task."
-              }
-            },
-            {
-              "@type": "Question",
-              "name": "Can I use Task-Laureate on mobile?",
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": "Yes, Task-Laureate is fully responsive and works beautifully on mobile phones, tablets, and desktop computers."
-              }
-            }
-          ]
-        },
-        {
-          "@type": "HowTo",
-          "name": "How to use Task-Laureate for task management",
-          "description": "A step-by-step guide to managing tasks effectively with Task-Laureate",
-          "author": { "@id": "https://task-laureate.vercel.app/#author" },
-          "step": [
-            {
-              "@type": "HowToStep",
-              "name": "Create your first list",
-              "text": "From the Dashboard, scroll to the Current Work panel. Enter a list title and optional description, then click Create list.",
-              "url": "https://task-laureate.vercel.app/"
-            },
-            {
-              "@type": "HowToStep",
-              "name": "Add tasks to your list",
-              "text": "Open a list and add tasks with title, notes, priority level, and due date.",
-              "url": "https://task-laureate.vercel.app/lists-overview"
-            },
-            {
-              "@type": "HowToStep",
-              "name": "Prioritize your work",
-              "text": "Set task priority to Urgent, High, Medium, or Low. Use the Tasks view to see all tasks grouped by priority.",
-              "url": "https://task-laureate.vercel.app/tasks"
-            },
-            {
-              "@type": "HowToStep",
-              "name": "Track your progress",
-              "text": "Visit the Progress page for analytics, completion rates, leaderboards, and overdue tracking.",
-              "url": "https://task-laureate.vercel.app/progress"
-            },
-            {
-              "@type": "HowToStep",
-              "name": "Celebrate completions",
-              "text": "Visit the Completed page to see all your wins with completion timelines.",
-              "url": "https://task-laureate.vercel.app/completed"
-            }
-          ]
+          "description": "A calm, privacy-minded personal task workspace.",
+          "author": { "@id": "https://task-laureate.vercel.app/#author" }
         }
       ]
     }
@@ -277,6 +140,14 @@
   </head>
   <body>
     <div id="root"></div>
+    <noscript>
+      <main>
+        <h1>Task-Laureate: a calm, private task workspace</h1>
+        <p>Plan lists, prioritize tasks, keep due dates and notes together, and review progress without turning personal work into a noisy project-management system.</p>
+        <p>Task-Laureate is a responsive, open-source web application for individuals. You can use account-scoped Supabase sync when it is configured, or learn more about the product and its data practices.</p>
+        <p><a href="/about/">Learn about Task-Laureate</a> · <a href="/support">Get support</a> · <a href="https://github.com/aartisr/task-laureate">View the source</a></p>
+      </main>
+    </noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

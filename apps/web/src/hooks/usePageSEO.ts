@@ -17,6 +17,8 @@ export interface PageSEOMeta {
   image?: string;
   /** Breadcrumb path for JSON-LD */
   breadcrumb?: ReadonlyArray<{ readonly name: string; readonly url: string }>;
+  /** Keep private, account-specific workspace views out of search indexes. */
+  noindex?: boolean;
 }
 
 const SITE_NAME = 'Task-Laureate';
@@ -57,7 +59,7 @@ function setJsonLd(id: string, data: object) {
   el.textContent = JSON.stringify(data);
 }
 
-export function usePageSEO({ title, description, url, image, breadcrumb }: PageSEOMeta) {
+export function usePageSEO({ title, description, url, image, breadcrumb, noindex = false }: PageSEOMeta) {
   useEffect(() => {
     const fullTitle = `${title} — ${SITE_NAME}`;
     const canonical = url ?? `${BASE_URL}${window.location.pathname}`;
@@ -72,7 +74,7 @@ export function usePageSEO({ title, description, url, image, breadcrumb }: PageS
     // Standard meta
     setMeta('description', description);
     setMeta('author', AUTHOR_NAME);
-    setMeta('robots', 'index, follow, max-image-preview:large');
+    setMeta('robots', noindex ? 'noindex, nofollow' : 'index, follow, max-image-preview:large');
 
     // Open Graph
     setMeta('og:title', fullTitle, 'property');
@@ -109,7 +111,7 @@ export function usePageSEO({ title, description, url, image, breadcrumb }: PageS
         })),
       } : undefined,
     });
-  }, [title, description, url, image, breadcrumb]);
+  }, [title, description, url, image, breadcrumb, noindex]);
 }
 
 // ── Per-route SEO presets ────────────────────────────────────────────────────
@@ -127,36 +129,43 @@ export const PAGE_SEO = {
     title: 'All Lists',
     description: 'Browse and manage every task list with visual progress rings, filters, and sorting. See exactly where each project stands.',
     breadcrumb: SITE('All Lists', '/lists-overview'),
+    noindex: true,
   },
   tasks: {
     title: 'All Tasks',
     description: 'Every task across all lists in one place. Group by list, priority, or status. Filter, search, and mark things done instantly.',
     breadcrumb: SITE('All Tasks', '/tasks'),
+    noindex: true,
   },
   completed: {
     title: 'Completed Tasks',
     description: "Celebrate your wins. See every completed task with a timeline of accomplishments and per-list completion rates.",
     breadcrumb: SITE('Completed', '/completed'),
+    noindex: true,
   },
   progress: {
     title: 'Progress & Analytics',
     description: 'Deep insights into your productivity: overall completion rate, priority breakdown, lists leaderboard, and overdue tracking.',
     breadcrumb: SITE('Progress', '/progress'),
+    noindex: true,
   },
   search: {
     title: 'Search',
     description: 'Find any list or task instantly. Full-text search across titles, descriptions, tags, and notes.',
     breadcrumb: SITE('Search', '/search'),
+    noindex: true,
   },
   activity: {
     title: 'Activity Timeline',
     description: 'A complete audit trail of every action taken — created, updated, completed, archived — across all lists and tasks.',
     breadcrumb: SITE('Activity', '/activity'),
+    noindex: true,
   },
   settings: {
     title: 'Settings',
     description: 'Customise Task-Laureate to your taste. Switch between Dark Pro, Luxury Minimal, and Warm & Community themes.',
     breadcrumb: SITE('Settings', '/settings'),
+    noindex: true,
   },
   support: {
     title: 'Help & Support',
@@ -171,5 +180,6 @@ export const PAGE_SEO = {
       { name: 'All Lists', url: `${BASE_URL}/lists-overview` },
       { name: listTitle, url: `${BASE_URL}/lists` },
     ],
+    noindex: true,
   }),
 } as const;

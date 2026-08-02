@@ -4,68 +4,20 @@
         xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
         http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
 
-  <!-- Homepage / Dashboard -->
+  <!-- Public product home -->
   <url>
     <loc>https://task-laureate.vercel.app/</loc>
-    <lastmod>2026-07-29</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>1.0</priority>
+    <lastmod>2026-08-02</lastmod>
   </url>
 
-  <!-- Lists Overview -->
+  <!-- Crawlable product story and help -->
   <url>
-    <loc>https://task-laureate.vercel.app/lists-overview</loc>
-    <lastmod>2026-07-29</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
+    <loc>https://task-laureate.vercel.app/about/</loc>
+    <lastmod>2026-08-02</lastmod>
   </url>
-
-  <!-- All Tasks -->
   <url>
-    <loc>https://task-laureate.vercel.app/tasks</loc>
-    <lastmod>2026-07-29</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-
-  <!-- Completed Tasks -->
-  <url>
-    <loc>https://task-laureate.vercel.app/completed</loc>
-    <lastmod>2026-07-29</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
-  <!-- Progress / Analytics -->
-  <url>
-    <loc>https://task-laureate.vercel.app/progress</loc>
-    <lastmod>2026-07-29</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
-  <!-- Search -->
-  <url>
-    <loc>https://task-laureate.vercel.app/search</loc>
-    <lastmod>2026-07-29</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <!-- Activity Timeline -->
-  <url>
-    <loc>https://task-laureate.vercel.app/activity</loc>
-    <lastmod>2026-07-29</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <!-- Settings -->
-  <url>
-    <loc>https://task-laureate.vercel.app/settings</loc>
-    <lastmod>2026-07-29</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
+    <loc>https://task-laureate.vercel.app/support</loc>
+    <lastmod>2026-08-02</lastmod>
   </url>
 
 </urlset>

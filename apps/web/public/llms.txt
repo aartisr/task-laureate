@@ -1,128 +1,33 @@
-# Task-Laureate — AI-Readable Documentation
-# https://task-laureate.vercel.app/llms.txt
-#
-# This file follows the llms.txt standard (https://llmstxt.org/)
-# to help AI assistants understand this application.
-
 # Task-Laureate
 
-> A premium, open-source task management application for high-performance individuals and teams.
-> Calm, fast, distraction-free productivity with beautiful design and powerful analytics.
+> Task-Laureate is a free, open-source, privacy-minded task workspace for individuals who want to plan lists, prioritize work, track progress, and keep their data under their control.
 
-## What is Task-Laureate?
+## What it does
 
-Task-Laureate is a web-based task management application that helps individuals and teams organize their work, track progress, and achieve goals. It is free, open-source, and deployable to Vercel.
+- Creates lists and tasks with priorities, due dates, tags, and notes.
+- Shows progress, completed work, task status, search, and activity history.
+- Supports account-scoped Supabase sync with row-level security, optional social sign-in, export/import, and device-local browser alerts.
+- Works as a responsive web application and can be self-hosted on Vercel.
 
-Key characteristics:
-- **Premium design**: Dark-first UI with multiple themes (Dark Pro, Luxury Minimal, Warm & Community)
-- **Fast**: Built with React 18, TanStack Router, and TanStack Query
-- **Calm**: Distraction-free interface focused on what matters
-- **Analytics**: Progress tracking, completion rates, priority breakdowns
-- **Open source**: MIT licensed, hackable, extensible
+## What it does not claim
 
-## Core Features
+- It is not a multi-user collaboration suite or a replacement for an organization-wide project-management system.
+- Browser alerts are optional, device-specific, and best-effort; the in-app inbox is the durable notification record.
+- It does not promise offline operation, real-time delivery, or universal AI/search ranking.
 
-### Task Management
-- Create task lists with titles and descriptions
-- Add tasks with priority levels: Urgent, High, Medium, Low
-- Track task status: To Do, In Progress, Done, Blocked
-- Set due dates and tags on tasks
-- Add notes to tasks
-- Mark tasks complete with one click
+## Public pages
 
-### Lists & Organization
-- Organize tasks into named lists
-- View completion percentage per list
-- Archive completed lists
-- Browse all lists with filtering and sorting
+- Product overview: https://task-laureate.vercel.app/about/
+- Support: https://task-laureate.vercel.app/support
+- Application: https://task-laureate.vercel.app/
+- Source repository: https://github.com/aartisr/task-laureate
 
-### Progress & Analytics
-- Overall completion rate with visual gauge
-- Status distribution (done/in progress/todo/blocked)
-- Completion breakdown by priority
-- Lists leaderboard ranked by progress
-- Overdue task tracking
-- Completion timeline
+## Primary audience
 
-### Search
-- Full-text search across all lists and tasks
-- Search by title, description, tags
+Students, makers, and focused individuals who want a clean personal task workspace with transparent data handling.
 
-### Activity Timeline
-- Complete audit trail of all actions
-- Filter by date and list
+## Source and documentation
 
-### Themes
-- Dark Pro (default)
-- Luxury Minimal (light)
-- Warm & Community
-
-## Technical Architecture
-
-- **Frontend**: React 18 + TypeScript + Vite
-- **Routing**: TanStack Router
-- **Data**: TanStack Query + in-memory repository (Postgres optional)
-- **Deployment**: Vercel (zero-config)
-- **Database**: Optional Postgres via Prisma ORM
-
-## How to Use Task-Laureate
-
-1. Visit https://task-laureate.vercel.app/
-2. The dashboard shows your workspace summary (Lists, Tasks, Completed, Progress)
-3. Click any stat card to drill into details
-4. Create a new list from the dashboard
-5. Click a list to open it and add tasks
-6. Use the Search page to find any task instantly
-7. Track progress on the Progress page
-
-## URL Structure
-
-- `/` — Dashboard with summary stats
-- `/lists-overview` — All lists with filters and progress
-- `/tasks` — All tasks across all lists, grouped and filtered
-- `/completed` — Completed tasks with celebration view
-- `/progress` — Analytics, leaderboard, overdue tracking
-- `/search` — Full-text search
-- `/activity` — Activity timeline
-- `/lists/:id` — Individual list with tasks
-- `/settings` — Theme and preferences
-
-## Frequently Asked Questions
-
-**Q: Is Task-Laureate free?**
-A: Yes, completely free and open-source under MIT license.
-
-**Q: Does it work on mobile?**
-A: Yes, fully responsive across all screen sizes.
-
-**Q: Can I use it offline?**
-A: The app loads from cache when offline (PWA-ready).
-
-**Q: How do I deploy my own instance?**
-A: Fork the repo and deploy to Vercel with zero configuration.
-
-**Q: Does it support teams?**
-A: Current version is single-user. Multi-user collaboration is on the roadmap.
-
-**Q: What keyboard shortcuts are available?**
-A: ⌘N creates a new list, ⌘F opens search.
-
-## Comparison with Alternatives
-
-| Feature | Task-Laureate | Todoist | Notion | Linear |
-|---------|--------------|---------|--------|--------|
-| Free | ✅ | Partial | Partial | Partial |
-| Open Source | ✅ | ❌ | ❌ | ❌ |
-| Self-hostable | ✅ | ❌ | ❌ | ❌ |
-| Progress Analytics | ✅ | Limited | Manual | ✅ |
-| Premium Design | ✅ | ✅ | ✅ | ✅ |
-| Fast/Lightweight | ✅ | ✅ | ❌ | ✅ |
-
-## Repository
-
-GitHub: https://github.com/aartisr/task-laureate
-
-## Contact
-
-Website: https://task-laureate.vercel.app/
-GitHub: https://github.com/aartisr/task-laureate
+- README and setup: https://github.com/aartisr/task-laureate/blob/master/README.md
+- Vercel setup: https://github.com/aartisr/task-laureate/blob/master/docs/VERCEL_DEPLOYMENT.md
+- Supabase setup: https://github.com/aartisr/task-laureate/blob/master/docs/SUPABASE_PERSISTENCE.md

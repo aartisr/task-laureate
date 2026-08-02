@@ -135,6 +135,7 @@ export function TasksPage() {
       <div className="list-controls list-controls--wrap">
         <input
           className="list-search"
+          aria-label="Search tasks"
           placeholder="Search tasks…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -144,6 +145,7 @@ export function TasksPage() {
           {(['all', 'todo', 'doing', 'done', 'blocked'] as Array<TodoItemStatus | 'all'>).map((s) => (
             <button
               key={s}
+              type="button"
               onClick={() => setStatusFilter(s)}
               className={`filter-pill ${statusFilter === s ? 'filter-pill--active' : ''}`}
             >
@@ -156,6 +158,7 @@ export function TasksPage() {
           {(['all', 'urgent', 'high', 'medium', 'low'] as Array<Priority | 'all'>).map((p) => (
             <button
               key={p}
+              type="button"
               onClick={() => setPriorityFilter(p)}
               className={`filter-pill ${priorityFilter === p ? 'filter-pill--active' : ''} ${p !== 'all' ? PRIORITY_META[p as Priority].cls : ''}`}
             >
@@ -168,6 +171,7 @@ export function TasksPage() {
           {(['list', 'priority', 'status'] as const).map((g) => (
             <button
               key={g}
+              type="button"
               onClick={() => setGroupBy(g)}
               className={`filter-pill ${groupBy === g ? 'filter-pill--active' : ''}`}
             >

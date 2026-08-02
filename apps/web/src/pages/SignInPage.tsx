@@ -4,6 +4,13 @@ import { authProvider } from '../config/persistence.config';
 
 /** A calm, reversible entry point to private cloud sync. */
 export function SignInPage() {
+  const returnHomeAfterPasswordSignIn = () => {
+    // Password authentication completes on this page (unlike OAuth, which has
+    // its own callback route). Replace rather than push so Back never returns
+    // a signed-in person to a stale sign-in form.
+    window.location.replace('/');
+  };
+
   return (
     <main className="sign-in-page" aria-labelledby="sign-in-title">
       <div className="sign-in-page__aurora" aria-hidden="true" />
@@ -33,7 +40,7 @@ export function SignInPage() {
             <h2 id="sign-in-panel-title">Choose how to continue</h2>
             <p>Use an account you already trust. We never see or store its password.</p>
           </div>
-          <CloudSyncAuthPanel provider={authProvider} returnTo="/" presentation="embedded" />
+          <CloudSyncAuthPanel provider={authProvider} returnTo="/" presentation="embedded" onAuthenticated={returnHomeAfterPasswordSignIn} />
           <div className="sign-in-page__cancel">
             <Link to="/" className="sign-in-page__cancel-link">Cancel and return home</Link>
             <p>You can sign in anytime from the workspace menu.</p>

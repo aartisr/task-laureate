@@ -106,6 +106,7 @@ export function ListsPage() {
       <div className="list-controls">
         <input
           className="list-search"
+          aria-label="Filter lists"
           placeholder="Filter lists…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -114,6 +115,7 @@ export function ListsPage() {
           {(['all', 'active', 'archived'] as FilterStatus[]).map((f) => (
             <button
               key={f}
+              type="button"
               onClick={() => setFilter(f)}
               className={`filter-pill ${filter === f ? 'filter-pill--active' : ''}`}
             >
@@ -123,6 +125,7 @@ export function ListsPage() {
         </div>
         <select
           className="sort-select"
+          aria-label="Sort lists"
           value={sort}
           onChange={(e) => setSort(e.target.value as SortKey)}
         >

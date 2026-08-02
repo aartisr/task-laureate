@@ -12,6 +12,7 @@ A comprehensive guide to all Task-Laureate documentation organized by purpose.
 - **[VERCEL_HOBBY_NOTIFICATIONS.md](VERCEL_HOBBY_NOTIFICATIONS.md)** — Free daily in-app reminders using Vercel Hobby Cron and Supabase
 - **[OIDC_SOCIAL_SIGN_IN_IMPLEMENTATION_PLAN.md](OIDC_SOCIAL_SIGN_IN_IMPLEMENTATION_PLAN.md)** — Provider-neutral OAuth/OIDC sign-in setup and operations guide
 - **[CONFIGURING_LOGIN.md](CONFIGURING_LOGIN.md)** — Step-by-step Supabase, identity-provider, local, and Vercel login configuration
+- **[DISCOVERABILITY_AND_GROWTH.md](DISCOVERABILITY_AND_GROWTH.md)** — Search, AI-assisted search, public content, and sustainable-growth runbook
 
 ---
 
@@ -58,6 +59,7 @@ A comprehensive guide to all Task-Laureate documentation organized by purpose.
 | VERCEL_HOBBY_NOTIFICATIONS.md | Hobby notification setup | Developers, operators |
 | OIDC_SOCIAL_SIGN_IN_IMPLEMENTATION_PLAN.md | Social sign-in and OIDC | Developers, DevOps |
 | CONFIGURING_LOGIN.md | Login configuration runbook | Operators, DevOps |
+| DISCOVERABILITY_AND_GROWTH.md | Search and AI discovery | Product owners, developers |
 | PERFORMANCE_MONITORING.md | System health | DevOps, monitoring teams |
 
 ---

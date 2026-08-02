@@ -1,5 +1,5 @@
 import { createClient, type Provider, type Session, type SupabaseClient } from '@supabase/supabase-js';
-import type { AuthIdentity, AuthProvider, AuthSession, PasswordAuthProvider, SocialAuthProvider, SocialProviderId } from '../../core/contracts/auth';
+import type { AuthIdentity, AuthProvider, AuthSession, EmailConfirmationAuthProvider, PasswordAuthProvider, SocialAuthProvider, SocialProviderId } from '../../core/contracts/auth';
 
 const url = import.meta.env.VITE_SUPABASE_URL;
 const publishableKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
@@ -176,6 +176,18 @@ const passwordCapability: PasswordAuthProvider = {
   },
 };
 
+const emailConfirmationCapability: EmailConfirmationAuthProvider = {
+  ...baseProvider,
+  async resendSignupConfirmation({ email }) {
+    const { error } = await requireClient().auth.resend({
+      type: 'signup',
+      email,
+      options: { emailRedirectTo: callbackUrl() },
+    });
+    if (error) throw error;
+  },
+};
+
 const socialCapability: SocialAuthProvider = {
   ...baseProvider,
   async signInWithOAuth({ provider, returnTo }) {
@@ -248,7 +260,8 @@ const socialCapability: SocialAuthProvider = {
 };
 
 /** A single adapter offering optional password and OAuth/OIDC capabilities. */
-export const supabaseAuthProvider: PasswordAuthProvider & SocialAuthProvider = {
+export const supabaseAuthProvider: PasswordAuthProvider & SocialAuthProvider & EmailConfirmationAuthProvider = {
   ...passwordCapability,
+  ...emailConfirmationCapability,
   ...socialCapability,
 };

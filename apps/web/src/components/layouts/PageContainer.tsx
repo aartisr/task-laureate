@@ -36,8 +36,7 @@ export function PageContainer({
   };
 
   return (
-    <main
-      role="main"
+    <section
       aria-label={ariaLabel || title}
       style={{
         minHeight: '100vh',
@@ -124,6 +123,6 @@ export function PageContainer({
           </footer>
         )}
       </div>
-    </main>
+    </section>
   );
 }

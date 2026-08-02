@@ -59,6 +59,8 @@ function applyTheme(themeName: ThemeName) {
   const root = document.documentElement;
   const isDarkTheme = themeName === 'dark-pro';
   root.style.colorScheme = isDarkTheme ? 'dark' : 'light';
+  // Decorative layers can adapt without coupling individual pages to a theme.
+  root.dataset.theme = themeName;
 
   // Background colors
   root.style.setProperty('--color-bg-primary', theme.colors.bg.primary);

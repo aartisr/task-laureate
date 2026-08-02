@@ -6,7 +6,6 @@ Allow: /
 
 # Sitemaps
 Sitemap: https://task-laureate.vercel.app/sitemap.xml
-Sitemap: https://task-laureate.vercel.app/sitemap-images.xml
 
 # AI Crawlers — allow for GEO (Generative Engine Optimization)
 User-agent: GPTBot
@@ -32,6 +31,3 @@ Allow: /
 
 User-agent: Applebot
 Allow: /
-
-# Crawl delay (be polite to search engines)
-Crawl-delay: 1

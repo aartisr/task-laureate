@@ -16,6 +16,11 @@ export interface PasswordAuthProvider extends AuthProvider {
   signUp(credentials: { email: string; password: string }): Promise<AuthSession | null>;
 }
 
+/** Optional capability for email providers that require a post-signup confirmation. */
+export interface EmailConfirmationAuthProvider extends AuthProvider {
+  resendSignupConfirmation(input: { email: string }): Promise<void>;
+}
+
 export type SocialProviderId =
   | 'google' | 'azure' | 'apple' | 'github' | 'facebook'
   | 'linkedin_oidc' | 'gitlab' | 'slack' | 'discord' | `custom:${string}`;
@@ -39,6 +44,10 @@ export interface SocialAuthProvider extends AuthProvider {
 
 export function supportsPasswordAuth(provider: AuthProvider): provider is PasswordAuthProvider {
   return 'signIn' in provider && 'signUp' in provider;
+}
+
+export function supportsEmailConfirmation(provider: AuthProvider): provider is EmailConfirmationAuthProvider {
+  return 'resendSignupConfirmation' in provider;
 }
 
 export function supportsSocialAuth(provider: AuthProvider): provider is SocialAuthProvider {

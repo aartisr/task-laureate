@@ -9,6 +9,7 @@ const mockState = vi.hoisted(() => ({
     signInWithPassword: vi.fn(),
     signUp: vi.fn(),
     signInWithOAuth: vi.fn(),
+    resend: vi.fn(),
     getUserIdentities: vi.fn(),
     linkIdentity: vi.fn(),
     unlinkIdentity: vi.fn(),
@@ -44,6 +45,7 @@ beforeEach(() => {
   mockState.auth.signInWithPassword.mockResolvedValue({ data: { session }, error: null });
   mockState.auth.signUp.mockResolvedValue({ data: { session: null }, error: null });
   mockState.auth.signInWithOAuth.mockResolvedValue({ data: { url: 'https://auth.example.test' }, error: null });
+  mockState.auth.resend.mockResolvedValue({ error: null });
   mockState.auth.getUserIdentities.mockResolvedValue({ data: { identities: [] }, error: null });
   mockState.auth.linkIdentity.mockResolvedValue({ error: null });
   mockState.auth.unlinkIdentity.mockResolvedValue({ error: null });
@@ -115,6 +117,16 @@ describe('supabaseAuthProvider', () => {
       provider: 'azure',
       options: expect.objectContaining({ scopes: 'email', redirectTo: expect.stringMatching(/\/auth\/callback$/) }),
     }));
+  });
+
+  it('resends signup confirmation through the same safe callback URL', async () => {
+    const { supabaseAuthProvider } = await loadAdapter();
+    await supabaseAuthProvider.resendSignupConfirmation({ email: 'aarti@example.com' });
+    expect(mockState.auth.resend).toHaveBeenCalledWith({
+      type: 'signup',
+      email: 'aarti@example.com',
+      options: { emailRedirectTo: expect.stringMatching(/\/auth\/callback$/) },
+    });
   });
 
   it('maps password, device-local sign-out, and auth subscription behavior through the same session contract', async () => {

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link } from '@tanstack/react-router';
+import { COMMUNITY_LINKS } from '../config/communityLinks';
 import { usePageSEO, PAGE_SEO } from '../hooks/usePageSEO';
 
 const SHORTCUTS = [
@@ -187,58 +188,24 @@ export function SupportPage() {
           <p className="support-section__desc">Task-Laureate is open source and community-powered. Join us.</p>
         </div>
         <div className="community-grid">
-          <a
-            href="https://github.com/aartisr/task-laureate/issues/new"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="community-card community-card--github"
-          >
-            <div className="community-card__icon">🐛</div>
-            <div>
-              <strong>Report a bug</strong>
-              <p>Found something broken? Open an issue on GitHub and we'll fix it fast.</p>
-            </div>
-            <span className="community-card__arrow">↗</span>
-          </a>
-          <a
-            href="https://github.com/aartisr/task-laureate/discussions"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="community-card community-card--discuss"
-          >
-            <div className="community-card__icon">💬</div>
-            <div>
-              <strong>Start a discussion</strong>
-              <p>Have a feature idea? Want to share how you use it? We'd love to hear from you.</p>
-            </div>
-            <span className="community-card__arrow">↗</span>
-          </a>
-          <a
-            href="https://github.com/aartisr/task-laureate"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="community-card community-card--star"
-          >
-            <div className="community-card__icon">⭐</div>
-            <div>
-              <strong>Star on GitHub</strong>
-              <p>If Task-Laureate has helped you, a star means the world to us. It takes 2 seconds.</p>
-            </div>
-            <span className="community-card__arrow">↗</span>
-          </a>
-          <a
-            href="https://github.com/aartisr/task-laureate/fork"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="community-card community-card--fork"
-          >
-            <div className="community-card__icon">🍴</div>
-            <div>
-              <strong>Fork & build</strong>
-              <p>Make it yours. The codebase is clean, well-documented, and built to be extended.</p>
-            </div>
-            <span className="community-card__arrow">↗</span>
-          </a>
+          {COMMUNITY_LINKS.map((link) => (
+            <a
+              key={link.id}
+              href={link.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`community-card ${link.className}`}
+              aria-label={`${link.title} — opens GitHub in a new tab`}
+            >
+              <div className="community-card__icon" aria-hidden="true">{link.icon}</div>
+              <div>
+                <strong>{link.title}</strong>
+                <p>{link.description}</p>
+              </div>
+              <span className="community-card__arrow" aria-hidden="true">↗</span>
+              <span className="sr-only"> Opens GitHub in a new tab.</span>
+            </a>
+          ))}
         </div>
       </section>
 

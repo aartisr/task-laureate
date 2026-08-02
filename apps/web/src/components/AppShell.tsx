@@ -109,6 +109,7 @@ export function AppShell({ children, navItems }: AppShellProps) {
 
   return (
     <div className={`app-shell ${shellThemeClass}`}>
+      <a className="skip-link" href="#main-content">Skip to main content</a>
       <header className="mobile-topbar" aria-label="Mobile navigation">
         <div className="mobile-topbar__brand">
           <span>Task-Laureate</span>
@@ -283,7 +284,7 @@ export function AppShell({ children, navItems }: AppShellProps) {
           ) : null}
         </nav>
       </div>
-      <main className="workspace" role="main">
+      <main id="main-content" className="workspace" tabIndex={-1}>
         {children ?? <Outlet />}
       </main>
       <nav className="mobile-bottom-nav" aria-label="Quick Navigation">

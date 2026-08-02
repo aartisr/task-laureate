@@ -56,7 +56,7 @@ Task-Laureate includes a provider-neutral sign-in panel at **Settings → Privat
 In **Supabase Dashboard**:
 
 1. Enable the **Email** provider under **Authentication → Providers**.
-2. Under **Authentication → URL Configuration**, set the Site URL and add every callback origin to the redirect allow list. For local development, add `http://localhost:5173`; add your exact production origin before deploying.
+2. Under **Authentication → URL Configuration**, set the Site URL and add the exact callback URLs to the redirect allow list: `http://localhost:5173/auth/callback` locally and `https://YOUR_DOMAIN/auth/callback` in production. An origin by itself is not enough for this application’s confirmation and OAuth callback.
 3. Keep email confirmation enabled for production. A new user receives a confirmation link and is returned to the allowed application URL.
 
 ### Existing-account sign-in (OAuth/OIDC)

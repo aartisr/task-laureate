@@ -20,6 +20,7 @@ import { SettingsPage } from '../pages/SettingsPage';
 import { SupportPage } from '../pages/SupportPage';
 import { AuthCallbackPage } from '../pages/AuthCallbackPage';
 import { SignInPage } from '../pages/SignInPage';
+import { BackgroundWatermark } from '../components/BackgroundWatermark';
 import { listQueryOptions, listTasksQueryOptions, dashboardQueryOptions, activityQueryOptions, searchQueryOptions } from '../core/contracts/queryKeys';
 
 const rootRoute = createRootRouteWithContext<{
@@ -32,12 +33,13 @@ function RootLayout() {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   // OAuth callbacks are deliberately free of navigation chrome so the person
   // sees one unambiguous completion state while the session is exchanged.
-  if (pathname === '/auth/callback' || pathname === '/sign-in') return <Outlet />;
-  return (
+  if (pathname === '/auth/callback' || pathname === '/sign-in') return <><BackgroundWatermark /><Outlet /></>;
+  return <>
+    <BackgroundWatermark />
     <AppShell navItems={appServices.registry.getNavItems()}>
       <Outlet />
     </AppShell>
-  );
+  </>;
 }
 
 const indexRoute = createRoute({

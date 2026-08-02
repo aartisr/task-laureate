@@ -12,6 +12,12 @@
   ],
   "headers": [
     {
+      "source": "/(lists-overview|lists|tasks|completed|progress|search|activity|settings|sign-in|auth)(.*)",
+      "headers": [
+        { "key": "X-Robots-Tag", "value": "noindex, nofollow" }
+      ]
+    },
+    {
       "source": "/(.*)",
       "headers": [
         { "key": "X-Content-Type-Options", "value": "nosniff" },
