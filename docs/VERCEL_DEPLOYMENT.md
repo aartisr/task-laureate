@@ -1,21 +1,21 @@
 # Vercel deployment guide
 
-This guide deploys Task-Laureate as a static Vite single-page application (SPA) on Vercel. It is deliberately provider-neutral: substitute your own Git provider, domain, Supabase project, and approved package registry. No secret belongs in the repository.
+This guide deploys Task-Laureate as a Vite single-page application (SPA) plus one server-only notification cron endpoint on Vercel. It is deliberately provider-neutral: substitute your own Git provider, domain, and Supabase project. No secret belongs in the repository.
 
 ## What is deployed
 
-The repository is an npm-workspaces monorepo. The Vercel project is rooted at the repository root:
+The repository is an npm-workspaces monorepo. The recommended Vercel project root is `apps/web`:
 
 | Setting | Value |
 | --- | --- |
-| Root Directory | `.` (repository root) |
+| Root Directory | `apps/web` |
 | Framework Preset | Vite (or auto-detected Vite) |
-| Install Command | `npm install --include=optional` |
-| Build Command | `npm run build` |
+| Install Command | `cd ../.. && npm ci --include=optional` |
+| Build Command | `npm run verify:public-registry && npm run build` |
 | Output Directory | `dist` |
 | Node.js | 20.19+ |
 
-These settings are committed in [`vercel.json`](../vercel.json). The build runs the web-workspace typecheck and Vite production build. It writes Vite's normal `apps/web/dist` output, then mirrors that static site to the repository-root `dist` directory for Vercel's monorepo output resolver. The published output contains no server-side secrets.
+These settings are committed in [`apps/web/vercel.json`](../apps/web/vercel.json). The build runs the web-workspace typecheck and Vite production build. The published static output contains no server-side secrets. The same root-level configuration and a thin API entry point are retained for teams that intentionally use `.` as the Vercel root; choose one root directory and do not override the committed build settings in the dashboard.
 
 `vercel.json` also preserves direct navigation to client routes such as `/settings` and `/lists/<id>`. Requests for actual files keep their normal behavior; application routes are rewritten to `index.html` and TanStack Router renders the route in the browser.
 
@@ -35,7 +35,7 @@ These settings are committed in [`vercel.json`](../vercel.json). The build runs 
 
 ## Create and configure the Vercel project
 
-1. In Vercel, select **Add New → Project**, import the repository, and leave **Root Directory** set to the repository root.
+1. In Vercel, select **Add New → Project**, import the repository, and set **Root Directory** to `apps/web`.
 2. Verify the build settings match the table above. The committed configuration is the source of truth; avoid adding a conflicting output directory in the dashboard.
 3. Set the Production Branch to the branch that is allowed to release, commonly `main`.
 4. Deploy once to obtain the assigned `*.vercel.app` URL. Add a custom domain afterward if one will be used.
@@ -52,8 +52,11 @@ Add these values in **Project Settings → Environment Variables**. Configure ea
 | `VITE_SUPABASE_PUBLISHABLE_KEY` | Yes for cloud sync | Yes | Supabase publishable key (or legacy anon key) |
 | `VITE_SUPABASE_WORKSPACE_ID` | Recommended | Yes | Logical workspace namespace, e.g. `production` or `preview`; the app otherwise uses `default` |
 | `VITE_AUTH_PROVIDERS` | Optional | Yes | Comma-separated, already-enabled Supabase OAuth/OIDC identifiers, e.g. `google,azure,github,custom:yahoo` |
+| `SUPABASE_URL` | Required for daily in-app notifications | No | Server-only Supabase project URL used by the cron |
+| `SUPABASE_SERVICE_ROLE_KEY` | Required for daily in-app notifications | No | Server-only Supabase service-role key used by the cron |
+| `CRON_SECRET` | Required for daily in-app notifications | No | Long random server-only value that authenticates Vercel Cron |
 
-Do not add `VITE_SUPABASE_ACCESS_TOKEN`. This app signs the user in in the browser, stores the user session locally, and refreshes it. Do not add a Supabase service-role key, database password, private npm token, or any other secret with a `VITE_` prefix.
+Do not add `VITE_SUPABASE_ACCESS_TOKEN`. This app signs the user in in the browser, stores the user session locally, and refreshes it. Do not add a Supabase service-role key, database password, private npm token, or any other secret with a `VITE_` prefix. Set the three server-only notification values only in Vercel—never in `.env.local` or source control.
 
 After editing an environment variable, redeploy. Vite embeds `VITE_*` values during the build; changing the Vercel variable alone cannot alter an already-created deployment.
 
@@ -96,6 +99,7 @@ Before promoting a deployment, verify:
 - [ ] Supabase Site URL and Redirect URLs include the final production callback URL, local callback URL, and the correctly scoped preview wildcard.
 - [ ] Each visible OAuth/OIDC provider is enabled in Supabase and has its exact Supabase callback registered with the provider.
 - [ ] A new user can continue with an existing account (or email fallback) at **Settings → Private cloud sync**.
+- [ ] If in-app notifications are enabled, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and a 32-byte-or-longer `CRON_SECRET` are set only for Production, and the notification migration has been applied.
 - [ ] Create a list, refresh the page, and confirm it reloads. Verify the `workspace_snapshots` row is visible in the intended Supabase project.
 - [ ] Open a deep link such as `/settings` in a new browser tab; it renders instead of returning a 404.
 - [ ] Run the opt-in authenticated CRUD test against a non-production test user before a major release.

@@ -4,6 +4,9 @@
   "installCommand": "npm ci --include=optional",
   "buildCommand": "npm run verify:public-registry && npm run build",
   "outputDirectory": "dist",
+  "crons": [
+    { "path": "/api/cron/notifications", "schedule": "0 13 * * *" }
+  ],
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ],
