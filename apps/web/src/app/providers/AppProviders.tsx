@@ -1,5 +1,6 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { RouterProvider } from '@tanstack/react-router';
+import { Analytics } from '@vercel/analytics/react';
 import { appServices } from '../runtime/appServices';
 import { router } from '../router';
 import { ThemeProvider } from '../../core/themes/ThemeProvider';
@@ -62,6 +63,7 @@ export function AppProviders() {
         <ThemeProvider>
           {persistenceStatus.phase === 'error' && <div className="persistence-alert" role="alert">{persistenceStatus.detail}</div>}
           <RouterProvider key={workspaceEpoch} router={router} />
+          <Analytics />
         </ThemeProvider>
       </QueryClientProvider>
     </ErrorBoundary>
