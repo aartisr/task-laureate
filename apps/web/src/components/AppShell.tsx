@@ -112,7 +112,7 @@ export function AppShell({ children, navItems }: AppShellProps) {
       <a className="skip-link" href="#main-content">Skip to main content</a>
       <header className="mobile-topbar" aria-label="Mobile navigation">
         <div className="mobile-topbar__brand">
-          <span>Task-Laureate</span>
+          <span>Task Laureate</span>
           <small>Now viewing: {currentSection?.label ?? 'Dashboard'}</small>
         </div>
         <div className="mobile-topbar__actions">
@@ -132,9 +132,9 @@ export function AppShell({ children, navItems }: AppShellProps) {
         </div>
       </header>
       <aside className="sidebar" aria-label="Navigation">
-        <div className="brand-mark" title="Task-Laureate - Premium task management">
-          <span>Task-Laureate</span>
-          <small>Premium Tasks</small>
+        <div className="brand-mark" aria-label="Task Laureate">
+          <img src="/.well-known/logo-small.svg" alt="" aria-hidden="true" />
+          <span>Task Laureate</span>
         </div>
         <nav className="sidebar-nav" aria-label="Primary Navigation">
           <p className="sidebar-nav__label">Workspace</p>

@@ -1,7 +1,9 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
+import { useNavigate } from '@tanstack/react-router';
 import { announceToScreenReader, createId } from '../lib/a11y';
 import type { TodoItem } from '../core/contracts/domain';
 import { TaskItem } from './TaskItem';
+import { TaskDetailLens } from './TaskDetailLens';
 import { DraggableItem } from './DraggableItem';
 import { useDragDrop } from '../hooks/useDragDrop';
 
@@ -44,10 +46,11 @@ function groupForTask(task: TodoItem, today: string): TaskGroup {
 
 const groupOrder: TaskGroup[] = ['Overdue', 'Due today', 'Upcoming', 'No due date', 'Completed'];
 
-export function TaskList({ tasks, isLoading, onTaskUpdate, onTaskComplete, onTaskDelete, onTaskRestore, readOnly = false }: TaskListProps) {
+export function TaskList({ listId, tasks, isLoading, onTaskUpdate, onTaskComplete, onTaskDelete, onTaskRestore, readOnly = false }: TaskListProps) {
+  const navigate = useNavigate();
   const [sortBy, setSortBy] = useState<SortOption>('focus');
   const [filterBy, setFilterBy] = useState<FilterOption>('active');
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const regionId = useRef(createId('tasklist-region')).current;
   const today = todayKey();
 
@@ -78,7 +81,8 @@ export function TaskList({ tasks, isLoading, onTaskUpdate, onTaskComplete, onTas
     return groupOrder.map((name) => ({ name, tasks: visibleTasks.filter((task) => groupForTask(task, today) === name) })).filter((group) => group.tasks.length > 0);
   }, [sortBy, visibleTasks, today]);
 
-  const selectTask = useCallback((taskId: string) => setEditingId((current) => current === taskId ? null : taskId), []);
+  const selectTask = useCallback((taskId: string) => setSelectedId((current) => current === taskId ? null : taskId), []);
+  const selectedTask = tasks.find((task) => task.id === selectedId) ?? null;
   const completionPercent = stats.total ? Math.round((stats.completed / stats.total) * 100) : 0;
 
   if (isLoading) return <section className="task-list task-list--loading" aria-busy="true" aria-live="polite"><p>Loading tasks…</p></section>;
@@ -107,12 +111,15 @@ export function TaskList({ tasks, isLoading, onTaskUpdate, onTaskComplete, onTas
       </label>
     </div>
 
+    <div className="task-lens-layout">
     {groups.length ? <div className="task-list__groups">{groups.map((group) => <section className="task-list__group" key={group.name ?? 'all'} aria-label={group.name ?? 'Tasks'}>
       {group.name ? <h3 className={`task-list__group-title task-list__group-title--${group.name.toLowerCase().replaceAll(' ', '-')}`}>{group.name}<span>{group.tasks.length}</span></h3> : null}
       <div role="list" className="task-list__items">{group.tasks.map((task) => {
         const sourceIndex = tasks.findIndex((candidate) => candidate.id === task.id);
-        return <DraggableItem key={task.id} index={sourceIndex} isDragging={draggedIndex === sourceIndex} isDragOver={dragOverIndex === sourceIndex} onDragStart={handleDragStart} onDragOver={handleDragOver} onDragEnd={handleDragEnd} onDragLeave={handleDragLeave} className="move-handle"><div role="listitem"><TaskItem task={task} isEditing={editingId === task.id} onSelect={() => selectTask(task.id)} onComplete={() => onTaskComplete(task.id)} onUpdate={(data) => onTaskUpdate(task.id, data)} onDelete={() => onTaskDelete(task.id)} onRestore={() => onTaskRestore(task.id)} /></div></DraggableItem>;
+        return <DraggableItem key={task.id} index={sourceIndex} isDragging={draggedIndex === sourceIndex} isDragOver={dragOverIndex === sourceIndex} onDragStart={handleDragStart} onDragOver={handleDragOver} onDragEnd={handleDragEnd} onDragLeave={handleDragLeave} className="move-handle"><div role="listitem"><TaskItem task={task} selected={selectedId === task.id} onOpen={() => selectTask(task.id)} onComplete={() => onTaskComplete(task.id)} onDelete={() => onTaskDelete(task.id)} onRestore={() => onTaskRestore(task.id)} /></div></DraggableItem>;
       })}</div>
     </section>)}</div> : <div className="task-list__empty" role="status"><span aria-hidden="true">✦</span><h3>{filterBy === 'active' ? 'Nothing is waiting' : filterBy === 'completed' ? 'No completed tasks yet' : 'No tasks yet'}</h3><p>{filterBy === 'active' ? 'Enjoy the clear runway, or add the next task above.' : 'Try another view or add a task above.'}</p></div>}
+    {selectedTask ? <TaskDetailLens task={selectedTask} onClose={() => setSelectedId(null)} onOpenFocus={() => navigate({ to: '/lists/$listId/tasks/$taskId', params: { listId, taskId: selectedTask.id } })} onUpdate={(input) => onTaskUpdate(selectedTask.id, input)} onComplete={() => onTaskComplete(selectedTask.id)} /> : null}
+    </div>
   </section>;
 }

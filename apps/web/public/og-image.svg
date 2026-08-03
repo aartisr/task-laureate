@@ -61,7 +61,7 @@
 
     <!-- Badge pill -->
     <rect x="0" y="0" width="180" height="32" rx="16" fill="#8b5cf6" fill-opacity="0.2" stroke="#8b5cf6" stroke-width="1" stroke-opacity="0.5"/>
-    <text x="90" y="21" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="13" font-weight="600" fill="#a78bfa" letter-spacing="0.5">Premium Tasks</text>
+    <text x="90" y="21" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="13" font-weight="600" fill="#a78bfa" letter-spacing="0.5">Task Laureate</text>
 
     <!-- Main title -->
     <text y="100" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="72" font-weight="800" fill="url(#brand)" letter-spacing="-1">Task-Laureate</text>

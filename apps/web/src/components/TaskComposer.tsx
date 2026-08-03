@@ -1,6 +1,7 @@
 import { type FormEvent, type RefObject, useState } from 'react';
 import type { Priority } from '../core/contracts/domain';
 import type { TodoTaskInput } from '../core/contracts/repository';
+import { MAX_NOTE_LENGTH } from '../core/domain/richNote';
 
 const priorities: Array<{ value: Priority; label: string; symbol: string }> = [
   { value: 'urgent', label: 'Urgent', symbol: '●' },
@@ -92,7 +93,7 @@ export function TaskComposer({
       {showNotes ? 'Hide notes' : 'Add notes'}
     </button>
     {showNotes ? <label className="task-composer__notes" htmlFor="task-composer-notes">Notes
-      <textarea id="task-composer-notes" value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Add context, links, or the next step…" maxLength={5000} rows={3} />
+      <textarea id="task-composer-notes" value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Add context, links, or the next step…" maxLength={MAX_NOTE_LENGTH} rows={3} />
     </label> : null}
     {error ? <p className="task-composer__error" role="alert">{error}</p> : null}
     <div className="task-composer__actions">

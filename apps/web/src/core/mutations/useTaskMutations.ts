@@ -17,6 +17,7 @@ import { createMutationOrchestrator, type MutationOperation } from './mutationOr
 import { listTasksQueryOptions } from '../contracts/queryKeys';
 import { queryKeys } from '../contracts/queryKeys';
 import { undoJournal } from './undoJournal';
+import { MAX_NOTE_LENGTH } from '../domain/richNote';
 
 interface TaskMutationContext {
   repository: TodoRepository;
@@ -61,8 +62,8 @@ export function useTaskMutations(context: TaskMutationContext) {
           if (input.title && input.title.length > 500) {
             errors.push({ field: 'title', message: 'Title must be 500 characters or less' });
           }
-          if (input.notes && input.notes.length > 5000) {
-            errors.push({ field: 'notes', message: 'Notes must be 5000 characters or less' });
+          if (input.notes && input.notes.length > MAX_NOTE_LENGTH) {
+            errors.push({ field: 'notes', message: `Notes must be ${MAX_NOTE_LENGTH.toLocaleString()} characters or less` });
           }
           if (input.dueDate && new Date(input.dueDate) < new Date()) {
             // Allow past dates for flexibility
@@ -120,8 +121,8 @@ export function useTaskMutations(context: TaskMutationContext) {
           if (input.title !== undefined && input.title.length > 500) {
             errors.push({ field: 'title', message: 'Title must be 500 characters or less' });
           }
-          if (input.notes !== undefined && input.notes.length > 5000) {
-            errors.push({ field: 'notes', message: 'Notes must be 5000 characters or less' });
+          if (input.notes !== undefined && input.notes.length > MAX_NOTE_LENGTH) {
+            errors.push({ field: 'notes', message: `Notes must be ${MAX_NOTE_LENGTH.toLocaleString()} characters or less` });
           }
           if (input.tags !== undefined && input.tags.length > 20) {
             errors.push({ field: 'tags', message: 'Maximum 20 tags allowed' });

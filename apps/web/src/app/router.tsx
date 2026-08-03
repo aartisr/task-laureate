@@ -20,6 +20,7 @@ import { SettingsPage } from '../pages/SettingsPage';
 import { SupportPage } from '../pages/SupportPage';
 import { AuthCallbackPage } from '../pages/AuthCallbackPage';
 import { SignInPage } from '../pages/SignInPage';
+import { TaskFocusPage } from '../pages/TaskFocusPage';
 import { BackgroundWatermark } from '../components/BackgroundWatermark';
 import { listQueryOptions, listTasksQueryOptions, dashboardQueryOptions, activityQueryOptions, searchQueryOptions } from '../core/contracts/queryKeys';
 
@@ -61,6 +62,18 @@ const listRoute = createRoute({
     ]);
   },
   component: ListDetailRoute,
+});
+
+const taskFocusRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: 'lists/$listId/tasks/$taskId',
+  loader: async ({ params }) => {
+    await Promise.all([
+      appServices.queryClient.prefetchQuery(listQueryOptions(appServices.repository, params.listId)),
+      appServices.queryClient.prefetchQuery(listTasksQueryOptions(appServices.repository, params.listId)),
+    ]);
+  },
+  component: TaskFocusRoute,
 });
 
 const searchRoute = createRoute({
@@ -144,6 +157,7 @@ const signInRoute = createRoute({
 const routeTree = rootRoute.addChildren([
   indexRoute,
   listRoute,
+  taskFocusRoute,
   searchRoute,
   activityRoute,
   settingsRoute,
@@ -172,6 +186,11 @@ function DashboardRoute() {
 function ListDetailRoute() {
   const params = useParams({ strict: false }) as { listId?: string };
   return <ListDetailPage listId={params.listId ?? ''} />;
+}
+
+function TaskFocusRoute() {
+  const params = useParams({ strict: false }) as { listId?: string; taskId?: string };
+  return <TaskFocusPage listId={params.listId ?? ''} taskId={params.taskId ?? ''} />;
 }
 
 function SearchRoute() {
