@@ -17,13 +17,20 @@ function fail(response, status, message) { return response.status(status).json({
 export default async function handler(request, response) {
   if (request.method !== 'POST') return response.status(405).setHeader('Allow', 'POST').json({ message: 'Method not allowed.' });
   const auth = request.headers.authorization;
-  const supabaseUrl = process.env.SUPABASE_URL?.replace(/\/$/, '');
-  const publishableKey = process.env.SUPABASE_PUBLISHABLE_KEY;
+  // The public URL/key are safe to reuse server-side. Supporting the Vite names
+  // makes this endpoint work with the project’s existing Supabase deployment
+  // configuration while keeping Resend itself strictly server-only.
+  const supabaseUrl = (process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL)?.replace(/\/$/, '');
+  const publishableKey = process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
   const resendKey = process.env.RESEND_API_KEY;
   const from = process.env.RESEND_FROM_EMAIL;
   const replyTo = process.env.RESEND_REPLY_TO;
   const appUrl = process.env.PUBLIC_APP_URL?.replace(/\/$/, '');
-  if (!auth?.startsWith('Bearer ') || !supabaseUrl || !publishableKey || !resendKey || !from || !appUrl) return fail(response, 503, 'Invitation email delivery is not configured yet.');
+  const missing = [
+    !resendKey && 'RESEND_API_KEY', !from && 'RESEND_FROM_EMAIL', !appUrl && 'PUBLIC_APP_URL', !supabaseUrl && 'SUPABASE_URL or VITE_SUPABASE_URL', !publishableKey && 'SUPABASE_PUBLISHABLE_KEY or VITE_SUPABASE_PUBLISHABLE_KEY',
+  ].filter(Boolean);
+  if (!auth?.startsWith('Bearer ')) return fail(response, 401, 'Sign in before sending an invitation.');
+  if (missing.length) return fail(response, 503, `Invitation email delivery is not configured. Missing: ${missing.join(', ')}.`);
   const jwt = auth.slice(7);
   try {
     const identity = await fetch(`${supabaseUrl}/auth/v1/user`, { headers: { apikey: publishableKey, Authorization: auth } });

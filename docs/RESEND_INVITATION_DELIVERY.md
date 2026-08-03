@@ -16,8 +16,8 @@ Set these in Vercel for Preview and Production. Do not put any of them in
 | `RESEND_API_KEY` | Resend API key, restricted to email sending where available |
 | `RESEND_FROM_EMAIL` | Verified sender, e.g. `Task Laureate <invites@yourdomain.com>` |
 | `RESEND_REPLY_TO` | Optional monitored reply-to address |
-| `SUPABASE_URL` | Your project URL |
-| `SUPABASE_PUBLISHABLE_KEY` | Browser-safe Supabase publishable key, used to verify caller JWTs |
+| `SUPABASE_URL` | Your project URL (the existing `VITE_SUPABASE_URL` is also accepted) |
+| `SUPABASE_PUBLISHABLE_KEY` | Browser-safe Supabase publishable key (the existing `VITE_SUPABASE_PUBLISHABLE_KEY` is also accepted) |
 | `PUBLIC_APP_URL` | Canonical deployed app URL, without a trailing slash |
 
 Set `VITE_INVITATION_DELIVERY_URL=/api/invitations` in the Vercel build
