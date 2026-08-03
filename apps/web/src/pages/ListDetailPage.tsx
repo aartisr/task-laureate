@@ -8,7 +8,9 @@ import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 import { announceToScreenReader, createId } from '../lib/a11y';
 import { TaskList } from '../components/TaskList';
 import { TaskComposer } from '../components/TaskComposer';
+import { ShareResourcePanel } from '../components/ShareResourcePanel';
 import { appServices } from '../app/runtime/appServices';
+import { supportsCollaboration } from '../core/contracts/repository';
 import { usePageSEO, PAGE_SEO } from '../hooks/usePageSEO';
 import { clearPendingSaveIntent, getPendingSaveIntent, requireSignInForSave } from '../core/auth/pendingSave';
 
@@ -23,6 +25,8 @@ export function ListDetailPage({ listId }: ListDetailPageProps) {
   const [editingTitle, setEditingTitle] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showSharing, setShowSharing] = useState(false);
+  const [shareNotice, setShareNotice] = useState<string | null>(null);
   const taskInputRef = useRef<HTMLInputElement>(null);
   const pendingSave = getPendingSaveIntent();
   const pendingTask = pendingSave?.kind === 'task' && pendingSave.returnTo === `/lists/${listId}` ? pendingSave : null;
@@ -245,8 +249,20 @@ export function ListDetailPage({ listId }: ListDetailPageProps) {
               )}
             </div>
 
-            {/* Actions Menu */}
-            <div className="flex gap-2">
+            <div className="list-detail-actions" aria-label="List actions">
+              <button
+                type="button"
+                onClick={() => {
+                  if (supportsCollaboration(repository)) { setShareNotice(null); setShowSharing(true); }
+                  else setShareNotice('Sharing is ready as soon as this workspace connects to secure collaboration storage. Sign in and apply the collaboration migrations, then try again.');
+                }}
+                title="Share this List with collaborators"
+                className="share-list-action"
+                aria-label={`Share list: ${list.title}`}
+              >
+                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M19 8v6M22 11h-6" /></svg><span>Share</span>
+              </button>
+              <div className="list-detail-actions__utility" aria-label="More List actions">
               <button
                 type="button"
                 onClick={() => navigate({ to: '/activity' })}
@@ -293,6 +309,7 @@ export function ListDetailPage({ listId }: ListDetailPageProps) {
                   🗑️
                 </button>
               )}
+              </div>
             </div>
           </div>
 
@@ -401,6 +418,8 @@ export function ListDetailPage({ listId }: ListDetailPageProps) {
             </div>
           </nav>
         </footer>
+        {showSharing && supportsCollaboration(repository) ? <ShareResourcePanel repository={repository} resource={{ resourceType: 'list', resourceId: list.id }} resourceName={list.title} onClose={() => setShowSharing(false)} /> : null}
+        {shareNotice ? <div className="mt-4 rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm text-indigo-950" role="status"><div className="flex items-start justify-between gap-3"><span>{shareNotice}</span><button type="button" className="font-semibold underline" onClick={() => setShareNotice(null)}>Dismiss</button></div></div> : null}
       </div>
     </section>
   );

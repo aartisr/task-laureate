@@ -1,18 +1,20 @@
 import { QueryClient } from '@tanstack/react-query';
 import { createFeatureRegistry } from '../../core/registry/featureRegistry';
 import { createMemoryTodoRepository } from '../../infrastructure/mock/memoryRepository';
+import type { TodoRepository } from '../../core/contracts/repository';
 import { activityFeature } from '../../features/activity/feature';
 import { listFeature } from '../../features/lists/feature';
 import { searchFeature } from '../../features/search/feature';
 import { settingsFeature } from '../../features/settings/feature';
 import { taskFeature } from '../../features/tasks/feature';
-import { browserWorkspaceKeyForUser, clearBrowserWorkspace, createBufferedPersistence, createEmptyWorkspace, loadBrowserWorkspace, saveBrowserWorkspace, type WorkspaceData } from '../../infrastructure/persistence/workspace';
-import { createSupabaseWorkspaceAdapter } from '../../infrastructure/persistence/supabase';
+import { collaborationFeature } from '../../features/collaboration/feature';
+import { clearBrowserWorkspace, createEmptyWorkspace, type WorkspaceData } from '../../infrastructure/persistence/workspace';
+import { createSupabaseCollaborationTodoRepository } from '../../infrastructure/persistence/supabaseCollaborationRepository';
 import { authProvider, persistenceConfig } from '../../config/persistence.config';
 import { setPersistenceStatus } from '../../infrastructure/persistence/status';
 
 export const appServices = {
-  repository: createMemoryTodoRepository(createEmptyWorkspace(), { onChange: () => undefined }),
+  repository: createMemoryTodoRepository(createEmptyWorkspace(), { onChange: () => undefined }) as TodoRepository,
   queryClient: new QueryClient({
     defaultOptions: {
       queries: {
@@ -32,24 +34,21 @@ export const appServices = {
     searchFeature,
     activityFeature,
     settingsFeature,
+    collaborationFeature,
   ]),
 };
 
 let initialization: Promise<void> | null = null;
-let activeBuffer: ReturnType<typeof createBufferedPersistence> | null = null;
 let activeUserId: string | null = null;
-let pagehideListenerRegistered = false;
 let workspaceGeneration = 0;
 
-function replaceRepository(workspace: WorkspaceData, onChange: (data: WorkspaceData) => void) {
+function replaceRepository(repository: TodoRepository) {
   appServices.queryClient.clear();
-  appServices.repository = createMemoryTodoRepository(workspace, { onChange });
+  appServices.repository = repository;
 }
 
 function disposeActiveWorkspace({ clearCache = false } = {}) {
-  activeBuffer?.dispose();
-  activeBuffer = null;
-  if (clearCache && activeUserId) clearBrowserWorkspace(browserWorkspaceKeyForUser(activeUserId));
+  if (clearCache) clearBrowserWorkspace();
   activeUserId = null;
 }
 
@@ -57,7 +56,7 @@ function useSignedOutRepository() {
   disposeActiveWorkspace({ clearCache: true });
   // Delete the pre-account, origin-wide key from earlier versions. It must never be read or migrated.
   clearBrowserWorkspace();
-  replaceRepository(createEmptyWorkspace(), () => undefined);
+  replaceRepository(createMemoryTodoRepository(createEmptyWorkspace(), { onChange: () => undefined }));
 }
 
 /**
@@ -71,11 +70,7 @@ export function resetWorkspaceForAuthChange() {
   useSignedOutRepository();
 }
 
-function hasWorkspaceContent(workspace: WorkspaceData) {
-  return workspace.lists.length > 0 || workspace.tasks.length > 0 || workspace.activity.length > 0 || workspace.templates.length > 0;
-}
-
-/** Initializes a private, authenticated workspace before routing begins. */
+/** Initializes an RLS-enforced normalized workspace before routing begins. */
 export function initializePersistence(options: { force?: boolean } = {}): Promise<void> {
   if (options.force) initialization = null;
   if (initialization) return initialization;
@@ -97,58 +92,25 @@ export function initializePersistence(options: { force?: boolean } = {}): Promis
         console.info('[Task-Laureate persistence] No authenticated Supabase session; using an empty in-memory workspace.');
         return;
       }
-      disposeActiveWorkspace({ clearCache: activeUserId !== null && activeUserId !== session.user.id });
+      disposeActiveWorkspace({ clearCache: true });
       clearBrowserWorkspace();
       activeUserId = session.user.id;
-      const localKey = browserWorkspaceKeyForUser(session.user.id);
-      const workspaceId = `${persistenceConfig.supabase.workspaceId}_${session.user.id}`;
-      const adapter = createSupabaseWorkspaceAdapter({ ...persistenceConfig.supabase, workspaceId });
-      const fallbackWorkspace = loadBrowserWorkspace(createEmptyWorkspace(), localKey);
-      const remoteWorkspace = await adapter.load();
-      if (!isCurrentGeneration()) return;
-      const workspace = remoteWorkspace?.data ?? fallbackWorkspace;
-      const buffered = createBufferedPersistence(adapter, {
-        debounceMs: persistenceConfig.supabase.debounceMs,
-        onSaveStart: () => setPersistenceStatus('saving', 'Saving changes to Supabase…'),
-        onSaveSuccess: () => setPersistenceStatus('synced', 'All changes are saved to Supabase.'),
-        onSaveError: (error, attempt) => {
-          const message = error instanceof Error ? error.message : String(error);
-          console.error('[Task-Laureate persistence] Save failed; retaining local data and retrying.', { attempt, message });
-          setPersistenceStatus('error', `Supabase save failed; retrying automatically. ${message}`);
-        },
-      });
-      // The offline mirror is namespaced to this authenticated user and never crosses an account boundary.
-      saveBrowserWorkspace(workspace, localKey);
-      activeBuffer = buffered;
-      replaceRepository(workspace, (data) => { saveBrowserWorkspace(data, localKey); buffered.schedule(data); });
-      if (!remoteWorkspace && hasWorkspaceContent(workspace)) {
-        console.info('[Task-Laureate persistence] Restoring this signed-in user’s private offline workspace.', { workspaceId });
-        buffered.schedule(workspace);
-        await buffered.flush();
-        if (!isCurrentGeneration()) return;
-      }
-      setPersistenceStatus('synced', 'Connected to Supabase. All changes are saved automatically.');
-      if (!pagehideListenerRegistered) {
-        pagehideListenerRegistered = true;
-        window.addEventListener('pagehide', () => {
-          void activeBuffer?.flush().catch((error) => console.error('[Task-Laureate persistence] Final page-exit save failed.', error));
-        });
-      }
+      replaceRepository(createSupabaseCollaborationTodoRepository(persistenceConfig.supabase));
+      setPersistenceStatus('synced', 'Connected to Supabase. Tasks are secured per List and Task.');
     } catch (error) {
       if (!isCurrentGeneration()) return;
       if (!persistenceConfig.supabase.fallbackToLocal) throw error;
       const message = error instanceof Error ? error.message : String(error);
       console.error('[Task-Laureate persistence] Supabase initialization failed.', { message, error });
       if (session) {
-        disposeActiveWorkspace({ clearCache: activeUserId !== null && activeUserId !== session.user.id });
+        disposeActiveWorkspace({ clearCache: true });
         clearBrowserWorkspace();
         activeUserId = session.user.id;
-        const localKey = browserWorkspaceKeyForUser(session.user.id);
-        replaceRepository(loadBrowserWorkspace(createEmptyWorkspace(), localKey), (data) => saveBrowserWorkspace(data, localKey));
+        replaceRepository(createMemoryTodoRepository(createEmptyWorkspace(), { onChange: () => undefined }));
       } else {
         useSignedOutRepository();
       }
-      setPersistenceStatus('error', `Supabase is not connected. ${session ? 'Only this signed-in user’s offline copy is available.' : 'Sign in to access a private workspace.'} ${message}`);
+      setPersistenceStatus('error', `Supabase is not connected. ${session ? 'Your workspace could not be loaded.' : 'Sign in to access a workspace.'} ${message}`);
     }
   })();
   return initialization;

@@ -9,6 +9,8 @@ import { announceToScreenReader } from '../lib/a11y';
 import { isRecentlyCompleted, archiveRecommendation } from '../core/domain/listLifecycle';
 import type { TodoList, TodoListStatus } from '../core/contracts/domain';
 import { usePageSEO, PAGE_SEO } from '../hooks/usePageSEO';
+import { ShareResourcePanel } from '../components/ShareResourcePanel';
+import { supportsCollaboration } from '../core/contracts/repository';
 
 type SortKey = 'title' | 'progress' | 'tasks' | 'created';
 type FilterStatus = 'all' | TodoListStatus;
@@ -55,6 +57,8 @@ export function ListsPage() {
   const [search, setSearch] = useState('');
   const [cursor, setCursor] = useState<string | null>(null);
   const [cursorHistory, setCursorHistory] = useState<Array<string | null>>([]);
+  const [sharingList, setSharingList] = useState<TodoList | null>(null);
+  const [shareNotice, setShareNotice] = useState<string | null>(null);
   const pageInput = { cursor, limit: DEFAULT_PAGE_SIZE, status: filter === 'all' ? undefined : filter, query: search, sort };
   const { data: page, isFetching } = useQuery({
     queryKey: queryKeys.listsPage(pageInput),
@@ -166,14 +170,14 @@ export function ListsPage() {
             <ListCard key={list.id} list={list} onDelete={async () => {
               await listMutations.deleteList.mutateAsync(list.id);
               announceToScreenReader(`List “${list.title}” moved to deleted items. You can undo this from the undo centre.`);
-            }} onArchive={async () => { await listMutations.archiveList.mutateAsync(list.id); announceToScreenReader(`List “${list.title}” archived. You can restore it at any time.`); }} onRestore={async () => { await listMutations.restoreList.mutateAsync(list.id); announceToScreenReader(`List “${list.title}” restored.`); }} onReuse={() => reuseList(list)} />
+            }} onArchive={async () => { await listMutations.archiveList.mutateAsync(list.id); announceToScreenReader(`List “${list.title}” archived. You can restore it at any time.`); }} onRestore={async () => { await listMutations.restoreList.mutateAsync(list.id); announceToScreenReader(`List “${list.title}” restored.`); }} onReuse={() => reuseList(list)} onShare={() => { if (supportsCollaboration(appServices.repository)) { setShareNotice(null); setSharingList(list); } else setShareNotice('Sharing will be available once this workspace connects to secure collaboration storage. Sign in and apply the collaboration migrations, then try again.'); }} />
           ))}
         </div>
       )}
       {filter === 'active' && !search && (completedPage?.items ?? []).some((list) => isRecentlyCompleted(list)) && (
         <section className="completed-shelf" aria-label="Completed recently">
           <div className="completed-shelf__heading"><div><p className="eyebrow">A record of progress</p><h2>Completed recently</h2><p>Your finished work stays close for 30 days. Reopen, reuse, or archive when it no longer needs attention.</p></div><button type="button" className="text-sm font-medium text-green-900 underline" onClick={() => { setFilter('completed'); resetPage(); }}>View all completed</button></div>
-          <div className="lists-grid">{completedPage!.items.filter((list) => isRecentlyCompleted(list)).map((list) => <ListCard key={list.id} list={list} onDelete={async () => { await listMutations.deleteList.mutateAsync(list.id); }} onArchive={async () => { await listMutations.archiveList.mutateAsync(list.id); }} onRestore={async () => { await listMutations.restoreList.mutateAsync(list.id); }} onReuse={() => reuseList(list)} />)}</div>
+          <div className="lists-grid">{completedPage!.items.filter((list) => isRecentlyCompleted(list)).map((list) => <ListCard key={list.id} list={list} onDelete={async () => { await listMutations.deleteList.mutateAsync(list.id); }} onArchive={async () => { await listMutations.archiveList.mutateAsync(list.id); }} onRestore={async () => { await listMutations.restoreList.mutateAsync(list.id); }} onReuse={() => reuseList(list)} onShare={() => { if (supportsCollaboration(appServices.repository)) { setShareNotice(null); setSharingList(list); } else setShareNotice('Sharing will be available once this workspace connects to secure collaboration storage. Sign in and apply the collaboration migrations, then try again.'); }} />)}</div>
         </section>
       )}
       {lists.length > 0 && (
@@ -183,11 +187,13 @@ export function ListsPage() {
           <button type="button" className="secondary-button" disabled={!page?.nextCursor || isFetching} onClick={() => { setCursorHistory((history) => [...history, cursor]); setCursor(page!.nextCursor); }}>Next</button>
         </nav>
       )}
+      {sharingList && supportsCollaboration(appServices.repository) ? <ShareResourcePanel repository={appServices.repository} resource={{ resourceType: 'list', resourceId: sharingList.id }} resourceName={sharingList.title} onClose={() => setSharingList(null)} /> : null}
+      {shareNotice ? <div className="mt-5 rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm text-indigo-950" role="status"><div className="flex items-start justify-between gap-3"><span>{shareNotice}</span><button type="button" className="font-semibold underline" onClick={() => setShareNotice(null)}>Dismiss</button></div></div> : null}
     </section>
   );
 }
 
-function ListCard({ list, onDelete, onArchive, onRestore, onReuse }: { list: TodoList; onDelete: () => Promise<void>; onArchive: () => Promise<void>; onRestore: () => Promise<void>; onReuse: () => Promise<void> }) {
+function ListCard({ list, onDelete, onArchive, onRestore, onReuse, onShare }: { list: TodoList; onDelete: () => Promise<void>; onArchive: () => Promise<void>; onRestore: () => Promise<void>; onReuse: () => Promise<void>; onShare: () => void }) {
   const remaining = list.taskCount - list.completedTaskCount;
   const [manageOpen, setManageOpen] = useState(false);
   const [deleteArmed, setDeleteArmed] = useState(false);
@@ -221,6 +227,7 @@ function ListCard({ list, onDelete, onArchive, onRestore, onReuse }: { list: Tod
       </div>
       <div className="list-card__actions">
         <Link to="/lists/$listId" params={{ listId: list.id }} className="primary-button list-card__open">Open list <span aria-hidden="true">→</span></Link>
+        <button type="button" className="list-card__share" onClick={onShare} aria-label={`Share List: ${list.title}`}><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M19 8v6M22 11h-6" /></svg>Share</button>
         <button type="button" aria-expanded={manageOpen} className="secondary-button list-card__manage" onClick={() => setManageOpen((open) => !open)}>Manage</button>
       </div>
       {manageOpen && <div className="list-card__menu" aria-label={`Manage ${list.title}`}>

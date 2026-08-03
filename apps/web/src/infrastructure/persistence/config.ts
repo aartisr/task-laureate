@@ -12,6 +12,8 @@ export interface SupabasePersistenceConfig {
   debounceMs: number;
   /** Continue with local data if Supabase cannot be reached at startup. */
   fallbackToLocal: boolean;
+  /** Optional server endpoint that creates and emails collaboration invitations. */
+  invitationDeliveryUrl?: string;
 }
 
 export interface PersistenceConfig {

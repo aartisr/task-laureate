@@ -9,6 +9,7 @@ import type {
   TodoListStatus,
   Priority,
 } from './domain';
+import type { Collaborator, CollaboratorRole, ShareInvitation, ShareResourceType, SharedResource } from '../domain/sharing';
 
 export interface TodoListInput {
   title: string;
@@ -42,6 +43,38 @@ export interface TodoTaskUpdateInput {
 
 export interface SearchInput {
   query: string;
+}
+
+export interface WorkspaceArchiveData {
+  lists: TodoList[];
+  tasks: TodoItem[];
+  activity: ActivityEvent[];
+  templates: ListTemplate[];
+}
+
+export interface ShareResourceInput {
+  resourceType: ShareResourceType;
+  resourceId: string;
+}
+
+export interface CreateShareInvitationInput extends ShareResourceInput {
+  email: string;
+  role: CollaboratorRole;
+}
+
+/** Optional capability: private-only repositories intentionally do not expose it. */
+export interface CollaborationRepository {
+  listSharedResources(): Promise<SharedResource[]>;
+  listCollaborators(input: ShareResourceInput): Promise<Collaborator[]>;
+  listOutgoingInvitations(input: ShareResourceInput): Promise<ShareInvitation[]>;
+  createShareInvitation(input: CreateShareInvitationInput): Promise<{ invitation: ShareInvitation; acceptanceUrl?: string; delivery: 'sent' | 'manual' }>;
+  acceptShareInvitation(token: string): Promise<{ resourceType: ShareResourceType; resourceId: string; role: CollaboratorRole }>;
+  revokeShareInvitation(invitationId: string): Promise<void>;
+  revokeResourceAccess(input: ShareResourceInput & { userId: string }): Promise<void>;
+}
+
+export function supportsCollaboration(repository: TodoRepository): repository is TodoRepository & CollaborationRepository {
+  return 'listCollaborators' in repository && 'createShareInvitation' in repository;
 }
 
 /**
@@ -89,4 +122,6 @@ export interface TodoRepository {
   clearActivity(): Promise<void>;
   listTemplates(): Promise<ListTemplate[]>;
   search(input: SearchInput): Promise<{ query: string; results: SearchResult[] }>;
+  exportWorkspace(): Promise<WorkspaceArchiveData>;
+  importWorkspace(workspace: WorkspaceArchiveData): Promise<void>;
 }

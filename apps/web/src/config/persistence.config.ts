@@ -23,5 +23,6 @@ export const persistenceConfig: PersistenceConfig = {
     requireAuth: true,
     debounceMs: 300,
     fallbackToLocal: true,
+    invitationDeliveryUrl: import.meta.env.VITE_INVITATION_DELIVERY_URL,
   },
 };

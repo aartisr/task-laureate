@@ -13,6 +13,8 @@ A comprehensive guide to all Task-Laureate documentation organized by purpose.
 - **[OIDC_SOCIAL_SIGN_IN_IMPLEMENTATION_PLAN.md](OIDC_SOCIAL_SIGN_IN_IMPLEMENTATION_PLAN.md)** — Provider-neutral OAuth/OIDC sign-in setup and operations guide
 - **[CONFIGURING_LOGIN.md](CONFIGURING_LOGIN.md)** — Step-by-step Supabase, identity-provider, local, and Vercel login configuration
 - **[DISCOVERABILITY_AND_GROWTH.md](DISCOVERABILITY_AND_GROWTH.md)** — Search, AI-assisted search, public content, and sustainable-growth runbook
+- **[SHARING_AND_COLLABORATION_RESEARCH.md](SHARING_AND_COLLABORATION_RESEARCH.md)** — Research-backed design and security blueprint for sharing Lists and Tasks
+- **[RESEND_INVITATION_DELIVERY.md](RESEND_INVITATION_DELIVERY.md)** — Server-only Resend invitation email setup and verification
 
 ---
 
@@ -60,6 +62,8 @@ A comprehensive guide to all Task-Laureate documentation organized by purpose.
 | OIDC_SOCIAL_SIGN_IN_IMPLEMENTATION_PLAN.md | Social sign-in and OIDC | Developers, DevOps |
 | CONFIGURING_LOGIN.md | Login configuration runbook | Operators, DevOps |
 | DISCOVERABILITY_AND_GROWTH.md | Search and AI discovery | Product owners, developers |
+| SHARING_AND_COLLABORATION_RESEARCH.md | Sharing, permissions, invitations, and RLS blueprint | Product owners, designers, developers |
+| RESEND_INVITATION_DELIVERY.md | Resend invitation delivery setup | Developers, DevOps |
 | PERFORMANCE_MONITORING.md | System health | DevOps, monitoring teams |
 
 ---

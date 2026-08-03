@@ -21,6 +21,8 @@ import { SupportPage } from '../pages/SupportPage';
 import { AuthCallbackPage } from '../pages/AuthCallbackPage';
 import { SignInPage } from '../pages/SignInPage';
 import { TaskFocusPage } from '../pages/TaskFocusPage';
+import { SharedWithMePage } from '../pages/SharedWithMePage';
+import { AcceptSharePage } from '../pages/AcceptSharePage';
 import { BackgroundWatermark } from '../components/BackgroundWatermark';
 import { listQueryOptions, listTasksQueryOptions, dashboardQueryOptions, activityQueryOptions, searchQueryOptions } from '../core/contracts/queryKeys';
 
@@ -34,7 +36,7 @@ function RootLayout() {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   // OAuth callbacks are deliberately free of navigation chrome so the person
   // sees one unambiguous completion state while the session is exchanged.
-  if (pathname === '/auth/callback' || pathname === '/sign-in') return <><BackgroundWatermark /><Outlet /></>;
+  if (pathname === '/auth/callback' || pathname === '/sign-in' || pathname === '/share/accept') return <><BackgroundWatermark /><Outlet /></>;
   return <>
     <BackgroundWatermark />
     <AppShell navItems={appServices.registry.getNavItems()}>
@@ -154,6 +156,9 @@ const signInRoute = createRoute({
   component: SignInPage,
 });
 
+const sharedWithMeRoute = createRoute({ getParentRoute: () => rootRoute, path: 'shared-with-me', component: SharedWithMePage });
+const acceptShareRoute = createRoute({ getParentRoute: () => rootRoute, path: 'share/accept', component: AcceptSharePage });
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   listRoute,
@@ -168,6 +173,8 @@ const routeTree = rootRoute.addChildren([
   supportRoute,
   authCallbackRoute,
   signInRoute,
+  sharedWithMeRoute,
+  acceptShareRoute,
 ]);
 
 export const router = createRouter({

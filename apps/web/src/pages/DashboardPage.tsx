@@ -10,7 +10,9 @@ import { announceToScreenReader, createId } from '../lib/a11y';
 import { appServices } from '../app/runtime/appServices';
 import { usePageSEO, PAGE_SEO } from '../hooks/usePageSEO';
 import { ListComposer } from '../components/ListComposer';
-import type { TodoListInput } from '../core/contracts/repository';
+import { ShareResourcePanel } from '../components/ShareResourcePanel';
+import { supportsCollaboration, type TodoListInput } from '../core/contracts/repository';
+import type { TodoList } from '../core/contracts/domain';
 import { clearPendingSaveIntent, getPendingSaveIntent, requireSignInForSave } from '../core/auth/pendingSave';
 
 export function DashboardPage() {
@@ -18,6 +20,8 @@ export function DashboardPage() {
   const navigate = useNavigate();
   const repository = appServices.repository;
   const [isCreatingList, setIsCreatingList] = useState(false);
+  const [sharingList, setSharingList] = useState<TodoList | null>(null);
+  const [shareNotice, setShareNotice] = useState<string | null>(null);
   const listTitleInputRef = useRef<HTMLInputElement>(null);
   const pendingSave = getPendingSaveIntent();
   const pendingList = pendingSave?.kind === 'list' && pendingSave.returnTo === '/' ? pendingSave : null;
@@ -232,11 +236,7 @@ export function DashboardPage() {
               const listCompletion =
                 list.taskCount > 0 ? Math.round((list.completedTaskCount / list.taskCount) * 100) : 0;
               return (
-                <Card
-                  key={list.id}
-                  onClick={() => navigate({ to: `/lists/${list.id}` })}
-                  ariaLabel={`${list.title}, ${list.completedTaskCount} of ${list.taskCount} tasks completed, ${listCompletion}% progress`}
-                >
+                <Card key={list.id} ariaLabel={`${list.title}, ${list.completedTaskCount} of ${list.taskCount} tasks completed, ${listCompletion}% progress`}>
                   <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2">{list.title}</h3>
                   {list.description && (
                     <p className="text-sm text-[var(--color-text-secondary)] mb-4 line-clamp-2">
@@ -262,6 +262,13 @@ export function DashboardPage() {
                       />
                     </div>
                   )}
+                  <div className="mt-5 flex flex-wrap items-center gap-2">
+                    <button type="button" className="secondary-button" onClick={() => navigate({ to: `/lists/${list.id}` })}>Open List</button>
+                    <button type="button" className="list-card__share" onClick={() => {
+                      if (supportsCollaboration(repository)) { setShareNotice(null); setSharingList(list); }
+                      else setShareNotice('Sharing will be available once this workspace connects to secure collaboration storage. Sign in and apply the collaboration migrations, then try again.');
+                    }} aria-label={`Share List: ${list.title}`}><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M19 8v6M22 11h-6" /></svg>Share</button>
+                  </div>
                 </Card>
               );
             })}
@@ -290,6 +297,8 @@ export function DashboardPage() {
           }}
         />
       )}
+      {sharingList && supportsCollaboration(repository) ? <ShareResourcePanel repository={repository} resource={{ resourceType: 'list', resourceId: sharingList.id }} resourceName={sharingList.title} onClose={() => setSharingList(null)} /> : null}
+      {shareNotice ? <div className="mt-6 rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm text-indigo-950" role="status"><div className="flex items-start justify-between gap-3"><span>{shareNotice}</span><button type="button" className="font-semibold underline" onClick={() => setShareNotice(null)}>Dismiss</button></div></div> : null}
     </PageContainer>
   );
 }

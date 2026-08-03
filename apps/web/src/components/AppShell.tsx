@@ -34,8 +34,8 @@ export function AppShell({ children, navItems }: AppShellProps) {
 
   const desktopNavigation = useMemo(() => {
     const dashboard = { label: 'Dashboard', to: '/', icon: '📊', description: 'Your overview' };
-    const essentialPaths = new Set(['/', '/search', '/activity', '/settings']);
-    const essentials = [dashboard, ...['/search', '/activity', '/settings']
+    const essentialPaths = new Set(['/', '/shared-with-me', '/search', '/activity', '/settings']);
+    const essentials = [dashboard, ...['/shared-with-me', '/search', '/activity', '/settings']
       .map((path) => navItems.find((item) => item.to === path))
       .filter((item): item is NavItem => Boolean(item))];
 
