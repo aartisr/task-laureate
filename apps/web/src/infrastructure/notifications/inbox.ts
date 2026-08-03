@@ -4,12 +4,20 @@ export type NotificationEvent = {
   id: string;
   title: string;
   body: string;
-  kind: 'due_soon' | 'weekly_digest';
+  kind: 'due_soon' | 'weekly_digest' | 'task_assigned' | 'task_reminder';
   created_at: string;
   read_at: string | null;
 };
 
-export type NotificationPreferences = { due_soon: boolean; weekly_digest: boolean };
+export type NotificationPreferences = {
+  due_soon: boolean;
+  weekly_digest: boolean;
+  email_reminders: boolean;
+  sms_reminders: boolean;
+  phone_e164: string | null;
+  sms_opted_in_at: string | null;
+  time_zone: string;
+};
 
 async function request(path: string, init: RequestInit = {}) {
   const session = await authProvider.getSession();
@@ -31,7 +39,7 @@ export async function getNotificationEvents(limit = 12) {
 }
 
 export async function getNotificationPreferences() {
-  const response = await request('notification_preferences?select=due_soon,weekly_digest&limit=1');
+  const response = await request('notification_preferences?select=due_soon,weekly_digest,email_reminders,sms_reminders,phone_e164,sms_opted_in_at,time_zone&limit=1');
   const preferences = response ? await response.json() as NotificationPreferences[] : [];
   return preferences[0] ?? null;
 }

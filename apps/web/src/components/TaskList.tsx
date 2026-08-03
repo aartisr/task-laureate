@@ -21,6 +21,7 @@ export interface TaskListProps {
   readOnly?: boolean;
   /** Explains why controls are unavailable without coupling this component to access policy. */
   readOnlyMessage?: string;
+  canManageReminders?: boolean;
 }
 
 type SortOption = 'focus' | 'priority' | 'dueDate' | 'createdAt' | 'alphabetical';
@@ -56,7 +57,7 @@ function groupForTask(task: TodoItem, today: string): TaskGroup {
 
 const groupOrder: TaskGroup[] = ['Overdue', 'Due today', 'Upcoming', 'No due date', 'Completed'];
 
-export function TaskList({ listId, tasks, isLoading, onTaskUpdate, onTaskComplete, onTaskDelete, onTaskRestore, readOnly = false, readOnlyMessage = 'Restore the list to edit or add work.' }: TaskListProps) {
+export function TaskList({ listId, tasks, isLoading, onTaskUpdate, onTaskComplete, onTaskDelete, onTaskRestore, readOnly = false, readOnlyMessage = 'Restore the list to edit or add work.', canManageReminders = false }: TaskListProps) {
   const navigate = useNavigate();
   const [sortBy, setSortBy] = useState<SortOption>('focus');
   const [filterBy, setFilterBy] = useState<FilterOption>('active');
@@ -138,7 +139,7 @@ export function TaskList({ listId, tasks, isLoading, onTaskUpdate, onTaskComplet
         return <DraggableItem key={task.id} index={sourceIndex} isDragging={draggedIndex === sourceIndex} isDragOver={dragOverIndex === sourceIndex} onDragStart={handleDragStart} onDragOver={handleDragOver} onDragEnd={handleDragEnd} onDragLeave={handleDragLeave} className="move-handle"><div role="listitem"><TaskItem task={task} selected={selectedId === task.id} onOpen={() => selectTask(task.id)} onComplete={() => onTaskComplete(task.id)} onDelete={() => onTaskDelete(task.id)} onRestore={() => onTaskRestore(task.id)} /></div></DraggableItem>;
       })}</div>}
     </section>)}</div> : <div className="task-list__empty" role="status"><span aria-hidden="true">✦</span><h3>{filterBy === 'active' ? 'Nothing is waiting' : filterBy === 'completed' ? 'No completed tasks yet' : 'No tasks yet'}</h3><p>{filterBy === 'active' ? 'Enjoy the clear runway, or add the next task above.' : 'Try another view or add a task above.'}</p></div>}
-    {selectedTask ? <TaskDetailLens task={selectedTask} onClose={() => setSelectedId(null)} onOpenFocus={() => navigate({ to: '/lists/$listId/tasks/$taskId', params: { listId, taskId: selectedTask.id } })} onUpdate={(input) => onTaskUpdate(selectedTask.id, input)} onComplete={() => onTaskComplete(selectedTask.id)} /> : null}
+    {selectedTask ? <TaskDetailLens task={selectedTask} canManageReminders={canManageReminders} onClose={() => setSelectedId(null)} onOpenFocus={() => navigate({ to: '/lists/$listId/tasks/$taskId', params: { listId, taskId: selectedTask.id } })} onUpdate={(input) => onTaskUpdate(selectedTask.id, input)} onComplete={() => onTaskComplete(selectedTask.id)} /> : null}
     </div>
   </section>;
 }
