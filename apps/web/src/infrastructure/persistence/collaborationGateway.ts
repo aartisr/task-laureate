@@ -1,5 +1,5 @@
 import type { CollaborationRepository, CreateShareInvitationInput, ShareResourceInput } from '../../core/contracts/repository';
-import type { Collaborator, CollaboratorRole, ShareInvitation, ShareResourceType, SharedResource } from '../../core/domain/sharing';
+import type { Collaborator, CollaboratorRole, EffectiveRole, ShareInvitation, ShareResourceType, SharedResource } from '../../core/domain/sharing';
 import { normalizeInvitationEmail } from '../../core/domain/sharing';
 import type { SupabasePersistenceConfig } from './config';
 import { collaborationError } from './collaborationErrors';
@@ -63,6 +63,10 @@ export function createSupabaseCollaborationGateway(config: SupabasePersistenceCo
     async listSharedResources() {
       const rows = await (await authorized('/rpc/list_shared_resources', { method: 'POST', body: JSON.stringify({}) })).json() as SharedResourceRow[];
       return rows.map((row): SharedResource => ({ resourceType: row.resource_type, resourceId: row.resource_id, title: row.title, description: row.description, role: row.role, sharedBy: row.shared_by, updatedAt: row.updated_at }));
+    },
+    async getResourceAccess({ resourceType, resourceId }: ShareResourceInput): Promise<EffectiveRole> {
+      const role = await (await authorized('/rpc/get_collaboration_resource_access', { method: 'POST', body: JSON.stringify({ p_resource_type: resourceType, p_resource_id: resourceId }) })).json() as EffectiveRole | null;
+      return role ?? null;
     },
     async listCollaborators({ resourceType, resourceId }: ShareResourceInput) {
       const key = memberKey(resourceType);

@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef } from 'react';
-import { useSuspenseQuery } from '@tanstack/react-query';
+import { useQuery, useSuspenseQuery } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
 import { queryKeys } from '../core/contracts/queryKeys';
 import { useListMutations } from '../core/mutations/useListMutations';
@@ -9,6 +9,7 @@ import { announceToScreenReader, createId } from '../lib/a11y';
 import { TaskList } from '../components/TaskList';
 import { TaskComposer } from '../components/TaskComposer';
 import { ShareResourcePanel } from '../components/ShareResourcePanel';
+import { ListAccessBanner } from '../components/ListAccessBanner';
 import { appServices } from '../app/runtime/appServices';
 import { supportsCollaboration } from '../core/contracts/repository';
 import { usePageSEO, PAGE_SEO } from '../hooks/usePageSEO';
@@ -57,6 +58,15 @@ export function ListDetailPage({ listId }: ListDetailPageProps) {
     staleTime: 5000,
   });
 
+  // Resolve access directly from the database. A recipient list can never be
+  // mistaken for an owner list because a cached aggregate happened to be stale.
+  const accessQuery = useQuery({
+    queryKey: ['collaboration', 'resource-access', 'list', listId],
+    queryFn: () => supportsCollaboration(repository) ? repository.getResourceAccess({ resourceType: 'list', resourceId: listId }) : Promise.resolve('owner' as const),
+    enabled: supportsCollaboration(repository),
+    staleTime: 30_000,
+  });
+
   // Mutations
   const listMutations = useListMutations({
     repository,
@@ -74,6 +84,15 @@ export function ListDetailPage({ listId }: ListDetailPageProps) {
     const completionPercent = total > 0 ? Math.round((completed / total) * 100) : 0;
     return { total, completed, completionPercent };
   }, [tasks]);
+
+  const accessRole = accessQuery.data;
+  const sharedRole = accessRole === 'editor' || accessRole === 'viewer' ? accessRole : null;
+  const isSharedList = sharedRole !== null;
+  // Avoid a brief owner-control flash while recipient access is being resolved.
+  const accessPending = supportsCollaboration(repository) && accessQuery.isLoading;
+  const accessUnavailable = supportsCollaboration(repository) && (accessQuery.isError || accessRole === null);
+  const canEditTasks = !accessPending && !accessUnavailable && (!isSharedList || sharedRole === 'editor');
+  const canManageList = !accessPending && !accessUnavailable && !isSharedList;
 
   if (listLoading) {
     return (
@@ -231,7 +250,7 @@ export function ListDetailPage({ listId }: ListDetailPageProps) {
               ) : (
                 <div className="list-title-control">
                   <h1 className="text-4xl font-bold text-gray-900">{list.title}</h1>
-                  <button
+                  {canManageList && <button
                     type="button"
                     className="list-title-control__edit"
                     onClick={() => {
@@ -241,7 +260,7 @@ export function ListDetailPage({ listId }: ListDetailPageProps) {
                     aria-label={`Edit list name: ${list.title}`}
                   >
                     <span aria-hidden="true">✎</span> Edit name
-                  </button>
+                  </button>}
                 </div>
               )}
               {list.description && (
@@ -249,7 +268,7 @@ export function ListDetailPage({ listId }: ListDetailPageProps) {
               )}
             </div>
 
-            <div className="list-detail-actions" aria-label="List actions">
+            {canManageList && <div className="list-detail-actions" aria-label="List actions">
               <button
                 type="button"
                 onClick={() => {
@@ -310,19 +329,22 @@ export function ListDetailPage({ listId }: ListDetailPageProps) {
                 </button>
               )}
               </div>
-            </div>
+            </div>}
           </div>
+
+          {sharedRole ? <ListAccessBanner role={sharedRole} /> : null}
+          {accessUnavailable ? <p className="list-access-unavailable" role="status">We could not verify your List permissions. Editing and List controls are temporarily unavailable—refresh to retry.</p> : null}
 
           {list.status === 'completed' && (
             <div className="mt-4 flex items-center justify-between gap-3 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-950" role="status">
               <span>✓ Completed {list.completedAt ? new Date(list.completedAt).toLocaleDateString() : ''}. Keep it as a record, archive it when it no longer needs attention, or reopen it.</span>
-              <button type="button" onClick={handleReopenList} className="shrink-0 rounded border border-green-700 px-3 py-1 font-medium text-green-900">Reopen</button>
+              {canManageList ? <button type="button" onClick={handleReopenList} className="shrink-0 rounded border border-green-700 px-3 py-1 font-medium text-green-900">Reopen</button> : null}
             </div>
           )}
           {list.status === 'archived' && (
             <div className="mt-4 flex items-center justify-between gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950" role="status">
               <span>📦 Archived lists are safely preserved and read-only. Restore it to make changes.</span>
-              <button type="button" onClick={handleRestoreArchivedList} className="shrink-0 rounded border border-amber-700 px-3 py-1 font-medium text-amber-900">Restore list</button>
+              {canManageList ? <button type="button" onClick={handleRestoreArchivedList} className="shrink-0 rounded border border-amber-700 px-3 py-1 font-medium text-amber-900">Restore list</button> : null}
             </div>
           )}
 
@@ -355,7 +377,7 @@ export function ListDetailPage({ listId }: ListDetailPageProps) {
         </header>
 
         {/* Create Task Section */}
-        {list.status !== 'archived' && <section className="mb-8 bg-white rounded-lg shadow-md p-6" aria-label="Create new task">
+        {list.status !== 'archived' && canEditTasks && <section className="mb-8 bg-white rounded-lg shadow-md p-6" aria-label="Create new task">
           {isCreatingTask || pendingTask ? (
             <TaskComposer listId={listId} initialInput={pendingTask?.input} restoredDraft={Boolean(pendingTask)} onCreate={handleCreateTask} onCancel={() => { clearPendingSaveIntent(); setIsCreatingTask(false); }} titleInputRef={taskInputRef} />
           ) : (
@@ -371,7 +393,7 @@ export function ListDetailPage({ listId }: ListDetailPageProps) {
         </section>}
 
         {/* Tasks Section */}
-        <section className="bg-white rounded-lg shadow-md p-6" aria-label="Tasks list">
+        <section className="task-list-shell" aria-label="Tasks list">
           <TaskList
             listId={listId}
             tasks={tasks}
@@ -399,7 +421,8 @@ export function ListDetailPage({ listId }: ListDetailPageProps) {
             onTaskRestore={async (id) => {
               await taskMutations.restoreTask.mutateAsync(id);
             }}
-            readOnly={list.status === 'archived'}
+            readOnly={list.status === 'archived' || !canEditTasks}
+            readOnlyMessage={list.status === 'archived' ? 'Restore the list to edit or add work.' : accessPending ? 'Checking your access…' : accessUnavailable ? 'We could not verify your access. Refresh to retry.' : 'You have read-only access to this shared list. Only its owner can make changes.'}
           />
         </section>
 

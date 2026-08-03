@@ -68,6 +68,12 @@ export function ListsPage() {
     queryKey: queryKeys.listsPage({ cursor: null, limit: 5, status: 'completed', sort: 'created' }),
     queryFn: () => appServices.repository.listListsPage({ limit: 5, status: 'completed', sort: 'created' }),
   });
+  const sharedListsQuery = useQuery({
+    queryKey: ['collaboration', 'shared-resources'],
+    queryFn: () => supportsCollaboration(appServices.repository) ? appServices.repository.listSharedResources() : Promise.resolve([]),
+    enabled: supportsCollaboration(appServices.repository),
+    staleTime: 30_000,
+  });
   const listMutations = useListMutations({ repository: appServices.repository, userId: 'user-1' });
   const reuseList = async (source: TodoList) => {
     const copy = await appServices.repository.createList({ title: `${source.title} (new run)`, description: source.description, templateId: source.templateId });
@@ -79,6 +85,9 @@ export function ListsPage() {
 
   const lists = page?.items ?? [];
   const allLists = data?.lists ?? [];
+  const sharedListRoles = new Map((sharedListsQuery.data ?? []).filter((resource) => resource.resourceType === 'list').map((resource) => [resource.resourceId, resource.role]));
+  const accessIsResolved = !supportsCollaboration(appServices.repository) || (!sharedListsQuery.isLoading && !sharedListsQuery.isError);
+  const canManage = (listId: string) => accessIsResolved && !sharedListRoles.has(listId);
 
   const totalTasks = allLists.reduce((s, l) => s + l.taskCount, 0);
   const avgProgress =
@@ -170,14 +179,14 @@ export function ListsPage() {
             <ListCard key={list.id} list={list} onDelete={async () => {
               await listMutations.deleteList.mutateAsync(list.id);
               announceToScreenReader(`List “${list.title}” moved to deleted items. You can undo this from the undo centre.`);
-            }} onArchive={async () => { await listMutations.archiveList.mutateAsync(list.id); announceToScreenReader(`List “${list.title}” archived. You can restore it at any time.`); }} onRestore={async () => { await listMutations.restoreList.mutateAsync(list.id); announceToScreenReader(`List “${list.title}” restored.`); }} onReuse={() => reuseList(list)} onShare={() => { if (supportsCollaboration(appServices.repository)) { setShareNotice(null); setSharingList(list); } else setShareNotice('Sharing will be available once this workspace connects to secure collaboration storage. Sign in and apply the collaboration migrations, then try again.'); }} />
+            }} onArchive={async () => { await listMutations.archiveList.mutateAsync(list.id); announceToScreenReader(`List “${list.title}” archived. You can restore it at any time.`); }} onRestore={async () => { await listMutations.restoreList.mutateAsync(list.id); announceToScreenReader(`List “${list.title}” restored.`); }} onReuse={() => reuseList(list)} canManage={canManage(list.id)} onShare={() => { if (supportsCollaboration(appServices.repository)) { setShareNotice(null); setSharingList(list); } else setShareNotice('Sharing will be available once this workspace connects to secure collaboration storage. Sign in and apply the collaboration migrations, then try again.'); }} />
           ))}
         </div>
       )}
       {filter === 'active' && !search && (completedPage?.items ?? []).some((list) => isRecentlyCompleted(list)) && (
         <section className="completed-shelf" aria-label="Completed recently">
           <div className="completed-shelf__heading"><div><p className="eyebrow">A record of progress</p><h2>Completed recently</h2><p>Your finished work stays close for 30 days. Reopen, reuse, or archive when it no longer needs attention.</p></div><button type="button" className="text-sm font-medium text-green-900 underline" onClick={() => { setFilter('completed'); resetPage(); }}>View all completed</button></div>
-          <div className="lists-grid">{completedPage!.items.filter((list) => isRecentlyCompleted(list)).map((list) => <ListCard key={list.id} list={list} onDelete={async () => { await listMutations.deleteList.mutateAsync(list.id); }} onArchive={async () => { await listMutations.archiveList.mutateAsync(list.id); }} onRestore={async () => { await listMutations.restoreList.mutateAsync(list.id); }} onReuse={() => reuseList(list)} onShare={() => { if (supportsCollaboration(appServices.repository)) { setShareNotice(null); setSharingList(list); } else setShareNotice('Sharing will be available once this workspace connects to secure collaboration storage. Sign in and apply the collaboration migrations, then try again.'); }} />)}</div>
+          <div className="lists-grid">{completedPage!.items.filter((list) => isRecentlyCompleted(list)).map((list) => <ListCard key={list.id} list={list} onDelete={async () => { await listMutations.deleteList.mutateAsync(list.id); }} onArchive={async () => { await listMutations.archiveList.mutateAsync(list.id); }} onRestore={async () => { await listMutations.restoreList.mutateAsync(list.id); }} onReuse={() => reuseList(list)} canManage={canManage(list.id)} onShare={() => { if (supportsCollaboration(appServices.repository)) { setShareNotice(null); setSharingList(list); } else setShareNotice('Sharing will be available once this workspace connects to secure collaboration storage. Sign in and apply the collaboration migrations, then try again.'); }} />)}</div>
         </section>
       )}
       {lists.length > 0 && (
@@ -193,7 +202,7 @@ export function ListsPage() {
   );
 }
 
-function ListCard({ list, onDelete, onArchive, onRestore, onReuse, onShare }: { list: TodoList; onDelete: () => Promise<void>; onArchive: () => Promise<void>; onRestore: () => Promise<void>; onReuse: () => Promise<void>; onShare: () => void }) {
+function ListCard({ list, onDelete, onArchive, onRestore, onReuse, onShare, canManage }: { list: TodoList; onDelete: () => Promise<void>; onArchive: () => Promise<void>; onRestore: () => Promise<void>; onReuse: () => Promise<void>; onShare: () => void; canManage: boolean }) {
   const remaining = list.taskCount - list.completedTaskCount;
   const [manageOpen, setManageOpen] = useState(false);
   const [deleteArmed, setDeleteArmed] = useState(false);
@@ -227,10 +236,9 @@ function ListCard({ list, onDelete, onArchive, onRestore, onReuse, onShare }: { 
       </div>
       <div className="list-card__actions">
         <Link to="/lists/$listId" params={{ listId: list.id }} className="primary-button list-card__open">Open list <span aria-hidden="true">→</span></Link>
-        <button type="button" className="list-card__share" onClick={onShare} aria-label={`Share List: ${list.title}`}><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M19 8v6M22 11h-6" /></svg>Share</button>
-        <button type="button" aria-expanded={manageOpen} className="secondary-button list-card__manage" onClick={() => setManageOpen((open) => !open)}>Manage</button>
+        {canManage ? <><button type="button" className="list-card__share" onClick={onShare} aria-label={`Share List: ${list.title}`}><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M19 8v6M22 11h-6" /></svg>Share</button><button type="button" aria-expanded={manageOpen} className="secondary-button list-card__manage" onClick={() => setManageOpen((open) => !open)}>Manage</button></> : null}
       </div>
-      {manageOpen && <div className="list-card__menu" aria-label={`Manage ${list.title}`}>
+      {canManage && manageOpen && <div className="list-card__menu" aria-label={`Manage ${list.title}`}>
         {list.status === 'completed' && <><p className="list-card__menu-copy">This run is complete. Its history is preserved.</p><button type="button" disabled={isSaving} onClick={() => void run(onReuse)}>↻ Start a fresh run</button></>}
         {list.status === 'archived' ? <button type="button" disabled={isSaving} onClick={() => void run(onRestore)}>↩ Restore to {list.archivedFromStatus === 'completed' ? 'completed' : 'in progress'}</button> : <button type="button" disabled={isSaving} onClick={() => void run(onArchive)}>⌂ {archiveRecommendation(list) ? 'Archive recommended' : 'Archive from daily view'}</button>}
         {deleteArmed ? <div className="list-card__danger"><span>Move to deleted items? You can undo this.</span><button type="button" disabled={isSaving} onClick={() => void run(onDelete)}>Yes, delete</button><button type="button" onClick={() => setDeleteArmed(false)}>Cancel</button></div> : <button type="button" className="list-card__delete" onClick={() => setDeleteArmed(true)}>Delete list…</button>}

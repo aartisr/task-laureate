@@ -6,6 +6,7 @@ import { TaskItem } from './TaskItem';
 import { TaskDetailLens } from './TaskDetailLens';
 import { DraggableItem } from './DraggableItem';
 import { useDragDrop } from '../hooks/useDragDrop';
+import './TaskList.css';
 
 export interface TaskListProps {
   listId: string;
@@ -17,6 +18,8 @@ export interface TaskListProps {
   onTaskRestore: (id: string) => Promise<void>;
   /** Archived lists retain their history but must not look editable. */
   readOnly?: boolean;
+  /** Explains why controls are unavailable without coupling this component to access policy. */
+  readOnlyMessage?: string;
 }
 
 type SortOption = 'focus' | 'priority' | 'dueDate' | 'createdAt' | 'alphabetical';
@@ -46,7 +49,7 @@ function groupForTask(task: TodoItem, today: string): TaskGroup {
 
 const groupOrder: TaskGroup[] = ['Overdue', 'Due today', 'Upcoming', 'No due date', 'Completed'];
 
-export function TaskList({ listId, tasks, isLoading, onTaskUpdate, onTaskComplete, onTaskDelete, onTaskRestore, readOnly = false }: TaskListProps) {
+export function TaskList({ listId, tasks, isLoading, onTaskUpdate, onTaskComplete, onTaskDelete, onTaskRestore, readOnly = false, readOnlyMessage = 'Restore the list to edit or add work.' }: TaskListProps) {
   const navigate = useNavigate();
   const [sortBy, setSortBy] = useState<SortOption>('focus');
   const [filterBy, setFilterBy] = useState<FilterOption>('active');
@@ -87,8 +90,8 @@ export function TaskList({ listId, tasks, isLoading, onTaskUpdate, onTaskComplet
 
   if (isLoading) return <section className="task-list task-list--loading" aria-busy="true" aria-live="polite"><p>Loading tasks…</p></section>;
 
-  if (readOnly) return <section id={regionId} className="task-list task-list--readonly" aria-label="Archived tasks">
-    <header className="task-list__header"><div><p className="task-list__eyebrow">Read-only record</p><h2>Tasks</h2><p>Restore the list to edit or add work.</p></div><div className="task-list__progress"><span>{completionPercent}% complete</span><div role="progressbar" aria-valuenow={completionPercent} aria-valuemin={0} aria-valuemax={100}><i style={{ width: `${completionPercent}%` }} /></div></div></header>
+  if (readOnly) return <section id={regionId} className="task-list task-list--readonly" aria-label="Read-only tasks">
+    <header className="task-list__header"><div><p className="task-list__eyebrow">Read-only</p><h2>Tasks</h2><p>{readOnlyMessage}</p></div><div className="task-list__progress"><span>{completionPercent}% complete</span><div role="progressbar" aria-valuenow={completionPercent} aria-valuemin={0} aria-valuemax={100}><i style={{ width: `${completionPercent}%` }} /></div></div></header>
     <div role="list" className="task-list__items">{tasks.map((task) => <article key={task.id} role="listitem" className={`task-item ${task.completedAt ? 'task-item--completed' : ''}`}><div className="task-item__row"><span aria-hidden="true" className="task-item__readonly-check">{task.completedAt ? '✓' : '○'}</span><div className="task-item__content"><p className="task-item__title">{task.title}</p>{task.notes && <p className="task-item__meta">{task.notes}</p>}</div></div></article>)}</div>
   </section>;
 

@@ -9,7 +9,7 @@ import type {
   TodoListStatus,
   Priority,
 } from './domain';
-import type { Collaborator, CollaboratorRole, ShareInvitation, ShareResourceType, SharedResource } from '../domain/sharing';
+import type { Collaborator, CollaboratorRole, EffectiveRole, ShareInvitation, ShareResourceType, SharedResource } from '../domain/sharing';
 
 export interface TodoListInput {
   title: string;
@@ -65,6 +65,8 @@ export interface CreateShareInvitationInput extends ShareResourceInput {
 /** Optional capability: private-only repositories intentionally do not expose it. */
 export interface CollaborationRepository {
   listSharedResources(): Promise<SharedResource[]>;
+  /** Database-authoritative role for the signed-in user on one resource. */
+  getResourceAccess(input: ShareResourceInput): Promise<EffectiveRole>;
   listCollaborators(input: ShareResourceInput): Promise<Collaborator[]>;
   listOutgoingInvitations(input: ShareResourceInput): Promise<ShareInvitation[]>;
   createShareInvitation(input: CreateShareInvitationInput): Promise<{ invitation: ShareInvitation; acceptanceUrl?: string; delivery: 'sent' | 'manual' }>;
@@ -74,7 +76,7 @@ export interface CollaborationRepository {
 }
 
 export function supportsCollaboration(repository: TodoRepository): repository is TodoRepository & CollaborationRepository {
-  return 'listCollaborators' in repository && 'createShareInvitation' in repository;
+  return 'listCollaborators' in repository && 'getResourceAccess' in repository && 'createShareInvitation' in repository;
 }
 
 /**
