@@ -87,10 +87,16 @@ export function createSupabaseCollaborationGateway(config: SupabasePersistenceCo
           let payload: { message?: string } = {};
           try { payload = await response.json() as typeof payload; } catch { /* a proxy or stale deployment may return HTML */ }
           const requestId = response.headers.get('x-vercel-id');
-          throw new Error(payload.message ?? `The invitation delivery service returned HTTP ${response.status}.${requestId ? ` Reference: ${requestId}.` : ''}`);
+          const localViteWithoutFunction = response.status === 404
+            && config.invitationDeliveryUrl.startsWith('/')
+            && ['localhost', '127.0.0.1', '::1'].includes(window.location.hostname);
+          // Vite serves the SPA but not Vercel functions. Preserve a usable,
+          // secure manual invitation flow rather than presenting a false error.
+          if (!localViteWithoutFunction) throw new Error(payload.message ?? `The invitation delivery service returned HTTP ${response.status}.${requestId ? ` Reference: ${requestId}.` : ''}`);
+        } else {
+          const result = await response.json() as { invitation: InvitationRow };
+          return { invitation: toInvitation(result.invitation), delivery: 'sent' as const };
         }
-        const result = await response.json() as { invitation: InvitationRow };
-        return { invitation: toInvitation(result.invitation), delivery: 'sent' as const };
       }
       const rawToken = token();
       const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
