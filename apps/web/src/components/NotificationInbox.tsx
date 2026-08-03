@@ -37,13 +37,12 @@ export function NotificationInbox() {
   };
 
   return <section className="notification-inbox" aria-labelledby="notification-inbox-title">
-    <div><p className="notification-inbox__eyebrow">In-app notifications</p><h2 id="notification-inbox-title">Your inbox</h2><p>Private reminders created by a daily check. They appear here; this app does not claim to send email or push alerts.</p></div>
+    <div><p className="notification-inbox__eyebrow">In-app notifications</p><h2 id="notification-inbox-title">Your inbox</h2><p>Private task-assignment and reminder history. Email, SMS, and browser alerts are separate opt-in channels.</p></div>
     <fieldset className="notification-inbox__preferences">
       <legend>What should appear in your inbox?</legend>
-      <label><input type="checkbox" checked={preferences.due_soon} onChange={(event) => void savePreference('due_soon', event.target.checked)} /> <span><strong>Due soon</strong><small>Tasks due today or tomorrow (UTC).</small></span></label>
-      <label><input type="checkbox" checked={preferences.weekly_digest} onChange={(event) => void savePreference('weekly_digest', event.target.checked)} /> <span><strong>Weekly digest</strong><small>A Sunday (UTC) summary of your active work.</small></span></label>
+      <label><input type="checkbox" checked={preferences.due_soon} onChange={(event) => void savePreference('due_soon', event.target.checked)} /> <span><strong>In-app task reminders</strong><small>Show scheduled reminders for work assigned to you.</small></span></label>
     </fieldset>
-    <p className="notification-inbox__timing">Daily checks run on Vercel Hobby. Delivery time may vary within the scheduled UTC hour.</p>
+    <p className="notification-inbox__timing">The daily delivery check is scheduled for 13:00 UTC; provider delivery time can vary.</p>
     <BrowserPushControl />
     {events.length === 0 && !message ? <p className="notification-inbox__empty">Nothing needs your attention right now.</p> : null}
     <div className="notification-inbox__items">{events.map((event) => <article key={event.id} className={event.read_at ? 'is-read' : ''}><div><strong>{event.title}</strong><p>{event.body}</p><small>{new Date(event.created_at).toLocaleString()}</small></div>{!event.read_at ? <button type="button" onClick={() => void markRead(event)}>Mark read</button> : null}</article>)}</div>

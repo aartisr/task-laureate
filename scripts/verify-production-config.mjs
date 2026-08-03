@@ -37,9 +37,12 @@ for (const file of [
   'apps/web/public/push-worker.js',
   'apps/web/api/cron/notifications.mjs',
   'apps/web/api/cron/webPush.mjs',
+  'apps/web/api/notifications/providers.mjs',
+  'apps/web/api/invitations.mjs',
   'supabase/migrations/001_workspace_snapshots.sql',
   'supabase/migrations/003_notification_inbox.sql',
   'supabase/migrations/004_browser_push_subscriptions.sql',
+  'supabase/migrations/015_task_assignments_and_reminders.sql',
 ]) requireFile(file);
 
 const ignore = read('.gitignore');

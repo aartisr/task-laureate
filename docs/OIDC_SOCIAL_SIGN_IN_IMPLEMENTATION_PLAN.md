@@ -1,5 +1,7 @@
 # Social sign-in and OIDC implementation plan
 
+> Historical design plan. The current deployment procedure is maintained in [OPERATIONS.md](OPERATIONS.md); references below to snapshot persistence describe the architecture that preceded normalized collaboration tables.
+
 ## Purpose
 
 This document is the implementation plan for letting a Task-Laureate user use an existing identity—such as Google, Microsoft, Apple, GitHub, or Yahoo—instead of creating a new password for this application.

@@ -50,13 +50,14 @@ describe('NotificationInbox', () => {
     expect(fetchMock.mock.calls[0][1].headers.Authorization).toBe('Bearer session-token');
 
     fetchMock.mockResolvedValueOnce(jsonResponse([]));
-    const weeklyDigest = host.querySelectorAll<HTMLInputElement>('input[type="checkbox"]')[1];
-    await act(async () => weeklyDigest.click());
+    const weeklyDigest = host.querySelector<HTMLInputElement>('input[type="checkbox"]');
+    expect(weeklyDigest).not.toBeNull();
+    await act(async () => weeklyDigest!.click());
 
     const [url, options] = fetchMock.mock.calls[2];
     expect(url).toContain('notification_preferences?on_conflict=owner_id');
     expect(options.method).toBe('POST');
-    expect(JSON.parse(options.body)).toEqual([{ owner_id: 'owner-1', due_soon: true, weekly_digest: true, updated_at: expect.any(String) }]);
+    expect(JSON.parse(options.body)).toEqual([{ owner_id: 'owner-1', due_soon: false, weekly_digest: false, updated_at: expect.any(String) }]);
   });
 
   it('marks an unread notice read using the owner-scoped RLS endpoint', async () => {

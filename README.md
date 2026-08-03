@@ -43,8 +43,10 @@ This is not a promise that software can eliminate every deadline or every diffic
 - Undo journal for task and list mutations
 - Theme system and responsive, accessible UI primitives
 - Versioned workspace export/import format
-- Local browser persistence and an optional Supabase workspace adapter
-- Buffered remote writes, retries, and an account-scoped offline cache
+- Normalized Supabase collaboration with owner/editor/viewer access control
+- One-time invitation links, shared-work discovery, and RLS enforcement
+- Assignment-aware in-app, email, and opt-in SMS reminders
+- Bounded keyset reads and virtualized task rendering for large workspaces
 
 ## Tech stack
 
@@ -67,39 +69,11 @@ npm run dev
 
 Open the local URL printed by Vite (normally <http://localhost:5173>). Run `npm run build`, `npm run lint`, or `npm run test` from the repository root for the corresponding web-app command.
 
-## Persistence
+## Production architecture
 
-The app keeps a portable, versioned workspace snapshot. The persistence switchboard is [`apps/web/src/config/persistence.config.ts`](apps/web/src/config/persistence.config.ts). With the Supabase driver, every workspace is private to an authenticated account. Its offline cache is keyed to that account, never read while signed out, and cleared on sign-out.
+The current Supabase implementation stores Lists, Tasks, sharing relationships, and reminders in normalized tables. Browser requests use the signed-in user’s JWT and are authorized by Postgres row-level security. Server-only Vercel functions handle invitation email and scheduled delivery; their service credentials never enter the browser.
 
-### Supabase setup
-
-Follow the complete [Supabase persistence guide](docs/SUPABASE_PERSISTENCE.md). In short:
-
-1. Apply [`supabase/migrations/001_workspace_snapshots.sql`](supabase/migrations/001_workspace_snapshots.sql) to create the `workspace_snapshots` table, RLS policies, and index.
-2. Put client-safe values in `apps/web/.env.local` (this file is Git-ignored):
-
-   ```bash
-   VITE_SUPABASE_URL=https://your-project.supabase.co
-   VITE_SUPABASE_PUBLISHABLE_KEY=your_publishable_key
-   VITE_SUPABASE_WORKSPACE_ID=main
-   # Optional public display registry; enable only providers already configured in Supabase.
-   VITE_AUTH_PROVIDERS=google,azure,github,custom:yahoo
-   ```
-
-3. Configure the matching Supabase Auth providers, then start the app and open **Settings → Private cloud sync** to continue with an existing account. The app manages the browser session and token refresh itself; do not create `VITE_SUPABASE_ACCESS_TOKEN`.
-4. In **Supabase Dashboard → Authentication → URL Configuration**, allow your local Vite URL (normally `http://localhost:5173`) and your production URL for email-confirmation redirects.
-
-Use only a Supabase publishable/anon key in the browser—never a service-role key. For Supabase project and authentication guidance, see the [Supabase JavaScript documentation](https://supabase.com/docs/reference/javascript/introduction).
-
-### Verify a live Supabase project
-
-An opt-in integration test validates the actual configuration and Data API, confirms the expected table columns, then performs authenticated create/read/update/delete against a unique row and removes it afterwards.
-
-```bash
-SUPABASE_TEST_ACCESS_TOKEN='eyJ...' npm run test:supabase -w apps/web
-```
-
-The test token must be for a dedicated authenticated user and must not be a service-role token. See the [live readiness-test instructions](docs/SUPABASE_PERSISTENCE.md#live-readiness-test) for details.
+Apply migrations `001` through `015` in order for a new environment. Migration `006` retires the legacy snapshot table and is intentionally destructive; use it only after confirming that no snapshot data needs to survive. Full setup, environment variables, delivery-provider configuration, and the release checklist are in [the production operations guide](docs/OPERATIONS.md).
 
 ## Project layout
 
@@ -116,12 +90,7 @@ docs/                     Architecture, feature, QA, and setup documentation
 
 ## Documentation
 
-- [Supabase persistence and readiness test](docs/SUPABASE_PERSISTENCE.md)
-- [OIDC and social sign-in implementation plan](docs/OIDC_SOCIAL_SIGN_IN_IMPLEMENTATION_PLAN.md)
-- [Step-by-step login configuration](docs/CONFIGURING_LOGIN.md)
-- [Vercel deployment and configuration](docs/VERCEL_DEPLOYMENT.md)
-- [Free Vercel Hobby in-app and browser notifications](docs/VERCEL_HOBBY_NOTIFICATIONS.md)
-- [Discoverability and sustainable growth](docs/DISCOVERABILITY_AND_GROWTH.md)
+- [Production operations](docs/OPERATIONS.md)
 - [Architecture guide](docs/ARCHITECTURE_GUIDE.md)
 - [Feature guide](docs/QUICK_FEATURE_GUIDE.md)
 - [Documentation index](docs/INDEX.md)

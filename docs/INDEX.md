@@ -1,77 +1,15 @@
-# 📚 Task-Laureate Documentation Index
+# Documentation
 
-A comprehensive guide to all Task-Laureate documentation organized by purpose.
+Use these documents as the maintained entry points. Historical research and implementation plans remain in the repository for context, but are not production runbooks.
 
----
+| Document | Use it for |
+| --- | --- |
+| [OPERATIONS.md](OPERATIONS.md) | Supabase migrations, Vercel variables, auth, invitations, reminders, release and incident response |
+| [ARCHITECTURE_GUIDE.md](ARCHITECTURE_GUIDE.md) | Current boundaries, extension points, and design rules |
+| [QUICK_FEATURE_GUIDE.md](QUICK_FEATURE_GUIDE.md) | Current user-facing Lists, Tasks, sharing, and reminders workflow |
+| [QA_AND_PRODUCTION_READINESS.md](QA_AND_PRODUCTION_READINESS.md) | What automated checks prove and what still needs environment validation |
+| [SHARING_AND_COLLABORATION_RESEARCH.md](SHARING_AND_COLLABORATION_RESEARCH.md) | Product and security rationale behind the collaboration model |
 
-## 🚀 Getting Started
+## Historical references
 
-- **[QUICK_FEATURE_GUIDE.md](QUICK_FEATURE_GUIDE.md)** — User-friendly overview of all features and how to use them
-- **[TODO_IMPLEMENTATION_PLAN.md](TODO_IMPLEMENTATION_PLAN.md)** — Implementation roadmap and task breakdown
-- **[VERCEL_DEPLOYMENT.md](VERCEL_DEPLOYMENT.md)** — Plug-and-play Vercel deployment, Supabase, and auth setup
-- **[VERCEL_HOBBY_NOTIFICATIONS.md](VERCEL_HOBBY_NOTIFICATIONS.md)** — Free daily in-app reminders using Vercel Hobby Cron and Supabase
-- **[OIDC_SOCIAL_SIGN_IN_IMPLEMENTATION_PLAN.md](OIDC_SOCIAL_SIGN_IN_IMPLEMENTATION_PLAN.md)** — Provider-neutral OAuth/OIDC sign-in setup and operations guide
-- **[CONFIGURING_LOGIN.md](CONFIGURING_LOGIN.md)** — Step-by-step Supabase, identity-provider, local, and Vercel login configuration
-- **[DISCOVERABILITY_AND_GROWTH.md](DISCOVERABILITY_AND_GROWTH.md)** — Search, AI-assisted search, public content, and sustainable-growth runbook
-- **[SHARING_AND_COLLABORATION_RESEARCH.md](SHARING_AND_COLLABORATION_RESEARCH.md)** — Research-backed design and security blueprint for sharing Lists and Tasks
-- **[RESEND_INVITATION_DELIVERY.md](RESEND_INVITATION_DELIVERY.md)** — Server-only Resend invitation email setup and verification
-
----
-
-## 🏗️ Architecture & Design
-
-- **[ARCHITECTURE_GUIDE.md](ARCHITECTURE_GUIDE.md)** — System architecture, component structure, and design patterns
-- **[REFACTORING_GUIDE.md](REFACTORING_GUIDE.md)** — Code organization and refactoring guidelines
-- **[CODE_SNIPPETS.md](CODE_SNIPPETS.md)** — Reusable code patterns and examples
-
----
-
-## 🎨 Design & Theming
-
-- **[THEMES_IMPLEMENTATION_SUMMARY.md](THEMES_IMPLEMENTATION_SUMMARY.md)** — Complete theme system implementation details
-- **[THEMES_RESEARCH.md](THEMES_RESEARCH.md)** — Theme research and design exploration
-
----
-
-## ✅ Quality Assurance & Testing
-
-- **[TEST_SUITE_SUMMARY.md](TEST_SUITE_SUMMARY.md)** — Comprehensive test coverage overview and test categories
-- **[FEATURE_COMPLETENESS.md](FEATURE_COMPLETENESS.md)** — Feature checklist and completion status
-- **[QA_AND_PRODUCTION_READINESS.md](QA_AND_PRODUCTION_READINESS.md)** — Quality assurance checklist and production deployment guide
-
----
-
-## 📊 Performance & Monitoring
-
-- **[PERFORMANCE_MONITORING.md](PERFORMANCE_MONITORING.md)** — Performance metrics, monitoring setup, and optimization guidelines
-
----
-
-## Quick Reference
-
-| Document | Purpose | Audience |
-|----------|---------|----------|
-| QUICK_FEATURE_GUIDE.md | Feature overview | End users, new team members |
-| ARCHITECTURE_GUIDE.md | System design | Developers, architects |
-| TEST_SUITE_SUMMARY.md | Testing reference | QA, developers |
-| THEMES_IMPLEMENTATION_SUMMARY.md | Theme system | Designers, developers |
-| REFACTORING_GUIDE.md | Code quality | Developers |
-| QA_AND_PRODUCTION_READINESS.md | Deployment | DevOps, team leads |
-| VERCEL_DEPLOYMENT.md | Vercel deployment | Developers, DevOps |
-| VERCEL_HOBBY_NOTIFICATIONS.md | Hobby notification setup | Developers, operators |
-| OIDC_SOCIAL_SIGN_IN_IMPLEMENTATION_PLAN.md | Social sign-in and OIDC | Developers, DevOps |
-| CONFIGURING_LOGIN.md | Login configuration runbook | Operators, DevOps |
-| DISCOVERABILITY_AND_GROWTH.md | Search and AI discovery | Product owners, developers |
-| SHARING_AND_COLLABORATION_RESEARCH.md | Sharing, permissions, invitations, and RLS blueprint | Product owners, designers, developers |
-| RESEND_INVITATION_DELIVERY.md | Resend invitation delivery setup | Developers, DevOps |
-| PERFORMANCE_MONITORING.md | System health | DevOps, monitoring teams |
-
----
-
-## Getting Help
-
-- Check **QUICK_FEATURE_GUIDE.md** if you're new to Task-Laureate
-- Read **ARCHITECTURE_GUIDE.md** before making structural changes
-- Review **TEST_SUITE_SUMMARY.md** to understand testing strategy
-- Consult **QA_AND_PRODUCTION_READINESS.md** for deployment procedures
-- Follow **VERCEL_DEPLOYMENT.md** to configure a Vercel project and its deployment environments
+The OIDC, theme, Puck, growth, and refactoring documents record earlier exploration or specialized work. Consult them when changing that area, but prefer the documents above for current operational behavior.

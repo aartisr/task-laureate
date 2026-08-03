@@ -1,5 +1,7 @@
 # Task Laureate sharing and collaboration research
 
+> Historical research rationale. The normalized collaboration model described by this research is now implemented. For current behavior and release steps, use [QUICK_FEATURE_GUIDE.md](QUICK_FEATURE_GUIDE.md) and [OPERATIONS.md](OPERATIONS.md).
+
 **Status:** design approved for implementation planning; no product changes in this document  
 **Research date:** 2026-08-03  
 **Decision in one sentence:** make sharing private, explicit, and resource-scoped: an owner can invite a person to a List or individual Task as **Can update** or **Read-only**; authorization is enforced by the database, never merely by the interface.
