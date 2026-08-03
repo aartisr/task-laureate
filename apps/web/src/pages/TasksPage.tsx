@@ -3,7 +3,8 @@ import { Link } from '@tanstack/react-router';
 import { useState } from 'react';
 import { appServices } from '../app/runtime/appServices';
 import { dashboardQueryOptions, listTasksQueryOptions } from '../core/contracts/queryKeys';
-import type { TodoItem, TodoItemStatus, Priority } from '../core/contracts/domain';
+import { supportsScalableTaskFeed } from '../core/contracts/repository';
+import type { TodoItem, TodoItemStatus, Priority, TodoList } from '../core/contracts/domain';
 import { useTodoMutations } from '../core/mutations/useTodoMutations';
 import { usePageSEO, PAGE_SEO } from '../hooks/usePageSEO';
 
@@ -23,15 +24,26 @@ const STATUS_META: Record<TodoItemStatus, { label: string; cls: string; icon: st
   deleted: { label: 'Deleted',  cls: 'status--deleted', icon: '🗑️' },
 };
 
-function AllTasksLoader() {
+function AllTasksLoader(): { tasksByList: Record<string, { title: string; tasks: TodoItem[] }>; loading: boolean; lists: Array<Pick<TodoList, 'id' | 'title'>>; bounded: boolean } {
+  const scalableRepository = supportsScalableTaskFeed(appServices.repository) ? appServices.repository : null;
+  const scalable = Boolean(scalableRepository);
   const { data: dashboard } = useQuery(dashboardQueryOptions(appServices.repository));
+  const feedQuery = useQuery({ queryKey: ['tasks', 'feed', 'initial'], queryFn: () => scalableRepository ? scalableRepository.listTaskFeed({ limit: 100 }) : Promise.resolve(null), enabled: scalable, staleTime: 15_000 });
   const listIds = (dashboard?.lists ?? []).map((l) => l.id);
 
   // One query per list — each cached separately
   const listTaskQueries = listIds.map((id) =>
     // eslint-disable-next-line react-hooks/rules-of-hooks
-    useQuery({ ...listTasksQueryOptions(appServices.repository, id), enabled: !!id })
+    useQuery({ ...listTasksQueryOptions(appServices.repository, id), enabled: !!id && !scalable })
   );
+
+  if (scalable) {
+    const items = feedQuery.data?.items ?? [];
+    const lists = [...new Map(items.map((task) => [task.listId, { id: task.listId, title: task.listTitle }])).values()];
+    const tasksByList: Record<string, { title: string; tasks: TodoItem[] }> = {};
+    for (const list of lists) tasksByList[list.id] = { title: list.title, tasks: items.filter((task) => task.listId === list.id) };
+    return { tasksByList, loading: feedQuery.isLoading, lists, bounded: Boolean(feedQuery.data?.nextCursor) };
+  }
 
   const tasksByList: Record<string, { title: string; tasks: TodoItem[] }> = {};
   listIds.forEach((id, i) => {
@@ -43,12 +55,12 @@ function AllTasksLoader() {
   });
 
   const loading = listTaskQueries.some((q) => q.isLoading);
-  return { tasksByList, loading, lists: dashboard?.lists ?? [] };
+  return { tasksByList, loading, lists: dashboard?.lists ?? [], bounded: false };
 }
 
 export function TasksPage() {
   usePageSEO(PAGE_SEO.tasks);
-  const { tasksByList, loading, lists } = AllTasksLoader();
+  const { tasksByList, loading, lists, bounded } = AllTasksLoader();
   const { completeTask } = useTodoMutations();
   const [statusFilter, setStatusFilter] = useState<TodoItemStatus | 'all'>('all');
   const [priorityFilter, setPriorityFilter] = useState<Priority | 'all'>('all');
@@ -104,7 +116,7 @@ export function TasksPage() {
         <div>
           <p className="eyebrow">All Tasks</p>
           <h1>Everything in flight</h1>
-          <p className="lede">{allTasks.length} tasks across {lists.length} lists</p>
+          <p className="lede">{allTasks.length} tasks across {lists.length} lists{bounded ? ' · Refine your view to load the next set' : ''}</p>
         </div>
         <div className="hero-actions">
           <Link className="secondary-button" to="/">← Dashboard</Link>

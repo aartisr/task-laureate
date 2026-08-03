@@ -35,6 +35,7 @@
 .task-list__sort { display: inline-flex; align-items: center; gap: .45rem; padding-inline: .3rem .1rem; color: var(--color-text-secondary); font-size: .78rem; font-weight: var(--font-weight-semibold); white-space: nowrap; }
 .task-list__sort select { min-block-size: 2.2rem; border: 1px solid transparent; border-radius: var(--radius-md); background: transparent; color: var(--color-text-primary); cursor: pointer; font: inherit; font-weight: var(--font-weight-semibold); padding: .35rem .45rem; }
 .task-list__sort select:hover { border-color: var(--color-border-default); background: var(--color-bg-primary); }
+.task-list__views { display: inline-flex; align-items: center; gap: .35rem; }.task-list__views select, .task-list__views button { min-block-size: 2.2rem; border: 1px solid var(--color-border-default); border-radius: var(--radius-md); background: var(--color-bg-primary); color: var(--color-text-primary); cursor: pointer; font: inherit; font-size: .78rem; font-weight: var(--font-weight-semibold); padding: .35rem .5rem; }.task-list__views button:hover { border-color: var(--color-action-primary); color: var(--color-action-primary); }
 
 .task-list__groups { display: grid; gap: clamp(1.25rem, 2.5vw, 1.8rem); }
 .task-list__group { display: grid; gap: .5rem; }
@@ -43,8 +44,9 @@
 .task-list__group-title span { display: inline-grid; min-inline-size: 1.28rem; block-size: 1.28rem; place-items: center; border-radius: 999px; background: var(--color-bg-tertiary); font-size: .68rem; font-variant-numeric: tabular-nums; letter-spacing: 0; }
 .task-list__group-title--overdue { color: var(--color-status-error); }.task-list__group-title--due-today { color: var(--color-status-warning); }
 .task-list__items { display: grid; gap: .38rem; }
+.task-list__items--virtual { max-block-size: 35rem; overflow: auto; scrollbar-gutter: stable; }
 
-.task-item { position: relative; border: 1px solid transparent; border-radius: calc(var(--radius-lg) - .05rem); background: transparent; color: var(--color-text-primary); transition: border-color var(--transition-base), background var(--transition-base), box-shadow var(--transition-base), transform var(--transition-base); }
+.task-item { position: relative; content-visibility: auto; contain-intrinsic-size: auto 5.5rem; border: 1px solid transparent; border-radius: calc(var(--radius-lg) - .05rem); background: transparent; color: var(--color-text-primary); transition: border-color var(--transition-base), background var(--transition-base), box-shadow var(--transition-base), transform var(--transition-base); }
 .task-item:hover { border-color: var(--color-border-default); background: var(--color-bg-secondary); box-shadow: 0 .45rem 1rem color-mix(in srgb, #172033 5%, transparent); }
 .task-item--selected { border-color: color-mix(in srgb, var(--color-action-primary) 48%, var(--color-border-default)); background: color-mix(in srgb, var(--color-action-primary) 5%, var(--color-bg-secondary)); box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-action-primary) 12%, transparent); }
 .task-item--completed { opacity: .68; }.task-item--deleted { opacity: .65; }.task-item--editing { border-color: var(--color-action-primary); box-shadow: var(--shadow-md); }

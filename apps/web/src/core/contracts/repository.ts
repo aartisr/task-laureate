@@ -101,6 +101,32 @@ export interface ListPageInput extends CursorPageInput {
   sort?: 'title' | 'progress' | 'tasks' | 'created';
 }
 
+export interface TaskFeedInput {
+  status?: TodoItemStatus | 'all';
+  priority?: Priority | 'all';
+  query?: string;
+  cursor?: string | null;
+  limit?: number;
+}
+
+export interface TaskFeedItem extends TodoItem {
+  listTitle: string;
+}
+
+export interface TaskFeedPage {
+  items: TaskFeedItem[];
+  nextCursor: string | null;
+}
+
+/** Optional bounded read path for remote repositories with server-side feeds. */
+export interface ScalableTaskFeedRepository {
+  listTaskFeed(input?: TaskFeedInput): Promise<TaskFeedPage>;
+}
+
+export function supportsScalableTaskFeed(repository: TodoRepository): repository is TodoRepository & ScalableTaskFeedRepository {
+  return 'listTaskFeed' in repository;
+}
+
 export interface TodoRepository {
   getDashboard(): Promise<{ summary: DashboardSummary; lists: TodoList[] }>;
   listLists(): Promise<TodoList[]>;

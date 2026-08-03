@@ -39,8 +39,8 @@ describe('normalized collaboration repository', () => {
       calls += 1;
       return new Response(JSON.stringify({ message: 'Could not find the function public.create_collaboration_list' }), { status: 404 });
     });
-    await expect(repository.createList({ title: 'Launch' })).rejects.toThrow('migrations 005 through 008');
-    await expect(repository.createList({ title: 'Retry' })).rejects.toThrow('migrations 005 through 008');
+    await expect(repository.createList({ title: 'Launch' })).rejects.toThrow('schema cache');
+    await expect(repository.createList({ title: 'Retry' })).rejects.toThrow('schema cache');
     expect(calls).toBe(1);
   });
 });

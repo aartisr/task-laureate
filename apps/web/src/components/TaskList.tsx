@@ -6,6 +6,7 @@ import { TaskItem } from './TaskItem';
 import { TaskDetailLens } from './TaskDetailLens';
 import { DraggableItem } from './DraggableItem';
 import { useDragDrop } from '../hooks/useDragDrop';
+import { VirtualTaskItems } from './VirtualTaskItems';
 import './TaskList.css';
 
 export interface TaskListProps {
@@ -25,6 +26,12 @@ export interface TaskListProps {
 type SortOption = 'focus' | 'priority' | 'dueDate' | 'createdAt' | 'alphabetical';
 type FilterOption = 'all' | 'active' | 'completed';
 type TaskGroup = 'Overdue' | 'Due today' | 'Upcoming' | 'No due date' | 'Completed';
+type PersonalView = { id: string; name: string; filterBy: FilterOption; sortBy: SortOption };
+const personalViewsKey = 'task-laureate.personal-task-views.v1';
+
+function loadPersonalViews(): PersonalView[] {
+  try { const value = JSON.parse(localStorage.getItem(personalViewsKey) ?? '[]'); return Array.isArray(value) ? value.filter((item): item is PersonalView => typeof item?.id === 'string' && typeof item?.name === 'string') : []; } catch { return []; }
+}
 
 const priorityOrder: Record<TodoItem['priority'], number> = { urgent: 0, high: 1, medium: 2, low: 3 };
 
@@ -54,6 +61,7 @@ export function TaskList({ listId, tasks, isLoading, onTaskUpdate, onTaskComplet
   const [sortBy, setSortBy] = useState<SortOption>('focus');
   const [filterBy, setFilterBy] = useState<FilterOption>('active');
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [personalViews, setPersonalViews] = useState<PersonalView[]>(loadPersonalViews);
   const regionId = useRef(createId('tasklist-region')).current;
   const today = todayKey();
 
@@ -85,6 +93,13 @@ export function TaskList({ listId, tasks, isLoading, onTaskUpdate, onTaskComplet
   }, [sortBy, visibleTasks, today]);
 
   const selectTask = useCallback((taskId: string) => setSelectedId((current) => current === taskId ? null : taskId), []);
+  const savePersonalView = () => {
+    const name = window.prompt('Name this personal view');
+    if (!name?.trim()) return;
+    const next = [...personalViews, { id: crypto.randomUUID(), name: name.trim().slice(0, 60), filterBy, sortBy }];
+    setPersonalViews(next); localStorage.setItem(personalViewsKey, JSON.stringify(next));
+    announceToScreenReader(`Saved personal view ${name.trim()}`);
+  };
   const selectedTask = tasks.find((task) => task.id === selectedId) ?? null;
   const completionPercent = stats.total ? Math.round((stats.completed / stats.total) * 100) : 0;
 
@@ -112,15 +127,16 @@ export function TaskList({ listId, tasks, isLoading, onTaskUpdate, onTaskComplet
           <option value="focus">What needs attention</option><option value="priority">Priority</option><option value="dueDate">Due date</option><option value="createdAt">Recently added</option><option value="alphabetical">Name A–Z</option>
         </select>
       </label>
+      <div className="task-list__views"><select aria-label="Open a saved personal view" defaultValue="" onChange={(event) => { const view = personalViews.find((item) => item.id === event.target.value); if (view) { setFilterBy(view.filterBy); setSortBy(view.sortBy); announceToScreenReader(`Opened ${view.name}`); } event.currentTarget.value = ''; }}><option value="">Personal views</option>{personalViews.map((view) => <option key={view.id} value={view.id}>{view.name}</option>)}</select><button type="button" onClick={savePersonalView}>Save view</button></div>
     </div>
 
     <div className="task-lens-layout">
     {groups.length ? <div className="task-list__groups">{groups.map((group) => <section className="task-list__group" key={group.name ?? 'all'} aria-label={group.name ?? 'Tasks'}>
       {group.name ? <h3 className={`task-list__group-title task-list__group-title--${group.name.toLowerCase().replaceAll(' ', '-')}`}>{group.name}<span>{group.tasks.length}</span></h3> : null}
-      <div role="list" className="task-list__items">{group.tasks.map((task) => {
+      {(sortBy !== 'focus' && group.tasks.length > 120) ? <VirtualTaskItems tasks={group.tasks} render={(task) => <TaskItem key={task.id} task={task} selected={selectedId === task.id} onOpen={() => selectTask(task.id)} onComplete={() => onTaskComplete(task.id)} onDelete={() => onTaskDelete(task.id)} onRestore={() => onTaskRestore(task.id)} />} /> : <div role="list" className="task-list__items">{group.tasks.map((task) => {
         const sourceIndex = tasks.findIndex((candidate) => candidate.id === task.id);
         return <DraggableItem key={task.id} index={sourceIndex} isDragging={draggedIndex === sourceIndex} isDragOver={dragOverIndex === sourceIndex} onDragStart={handleDragStart} onDragOver={handleDragOver} onDragEnd={handleDragEnd} onDragLeave={handleDragLeave} className="move-handle"><div role="listitem"><TaskItem task={task} selected={selectedId === task.id} onOpen={() => selectTask(task.id)} onComplete={() => onTaskComplete(task.id)} onDelete={() => onTaskDelete(task.id)} onRestore={() => onTaskRestore(task.id)} /></div></DraggableItem>;
-      })}</div>
+      })}</div>}
     </section>)}</div> : <div className="task-list__empty" role="status"><span aria-hidden="true">✦</span><h3>{filterBy === 'active' ? 'Nothing is waiting' : filterBy === 'completed' ? 'No completed tasks yet' : 'No tasks yet'}</h3><p>{filterBy === 'active' ? 'Enjoy the clear runway, or add the next task above.' : 'Try another view or add a task above.'}</p></div>}
     {selectedTask ? <TaskDetailLens task={selectedTask} onClose={() => setSelectedId(null)} onOpenFocus={() => navigate({ to: '/lists/$listId/tasks/$taskId', params: { listId, taskId: selectedTask.id } })} onUpdate={(input) => onTaskUpdate(selectedTask.id, input)} onComplete={() => onTaskComplete(selectedTask.id)} /> : null}
     </div>

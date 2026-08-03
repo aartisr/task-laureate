@@ -6,25 +6,15 @@ import {
   useParams,
   useRouterState,
 } from '@tanstack/react-router';
+import { lazy, Suspense, type ComponentType, type ReactNode } from 'react';
 import { appServices } from './runtime/appServices';
 import { AppShell } from '../components/AppShell';
-import { ActivityPage } from '../pages/ActivityPage';
-import { DashboardPage } from '../pages/DashboardPage';
-import { ListDetailPage } from '../pages/ListDetailPage';
-import { ListsPage } from '../pages/ListsPage';
-import { TasksPage } from '../pages/TasksPage';
-import { CompletedPage } from '../pages/CompletedPage';
-import { ProgressPage } from '../pages/ProgressPage';
-import { SearchPage } from '../pages/SearchPage';
-import { SettingsPage } from '../pages/SettingsPage';
-import { SupportPage } from '../pages/SupportPage';
-import { AuthCallbackPage } from '../pages/AuthCallbackPage';
-import { SignInPage } from '../pages/SignInPage';
-import { TaskFocusPage } from '../pages/TaskFocusPage';
-import { SharedWithMePage } from '../pages/SharedWithMePage';
-import { AcceptSharePage } from '../pages/AcceptSharePage';
 import { BackgroundWatermark } from '../components/BackgroundWatermark';
 import { listQueryOptions, listTasksQueryOptions, dashboardQueryOptions, activityQueryOptions, searchQueryOptions } from '../core/contracts/queryKeys';
+
+const page = <T extends Record<string, ComponentType<any>>>(load: () => Promise<T>, name: keyof T) => lazy(async () => ({ default: (await load())[name] }));
+const ActivityPage = page(() => import('../pages/ActivityPage'), 'ActivityPage'); const DashboardPage = page(() => import('../pages/DashboardPage'), 'DashboardPage'); const ListDetailPage = page(() => import('../pages/ListDetailPage'), 'ListDetailPage'); const ListsPage = page(() => import('../pages/ListsPage'), 'ListsPage'); const TasksPage = page(() => import('../pages/TasksPage'), 'TasksPage'); const CompletedPage = page(() => import('../pages/CompletedPage'), 'CompletedPage'); const ProgressPage = page(() => import('../pages/ProgressPage'), 'ProgressPage'); const SearchPage = page(() => import('../pages/SearchPage'), 'SearchPage'); const SettingsPage = page(() => import('../pages/SettingsPage'), 'SettingsPage'); const SupportPage = page(() => import('../pages/SupportPage'), 'SupportPage'); const AuthCallbackPage = page(() => import('../pages/AuthCallbackPage'), 'AuthCallbackPage'); const SignInPage = page(() => import('../pages/SignInPage'), 'SignInPage'); const TaskFocusPage = page(() => import('../pages/TaskFocusPage'), 'TaskFocusPage'); const SharedWithMePage = page(() => import('../pages/SharedWithMePage'), 'SharedWithMePage'); const AcceptSharePage = page(() => import('../pages/AcceptSharePage'), 'AcceptSharePage');
+const Lazy = ({ children }: { children: ReactNode }) => <Suspense fallback={<main className="page-surface" aria-busy="true">Loading…</main>}>{children}</Suspense>;
 
 const rootRoute = createRootRouteWithContext<{
   queryClient: typeof appServices.queryClient;
@@ -108,7 +98,7 @@ const listsOverviewRoute = createRoute({
   loader: async () => {
     await appServices.queryClient.prefetchQuery(dashboardQueryOptions(appServices.repository));
   },
-  component: () => <ListsPage />,
+  component: () => <Lazy><ListsPage /></Lazy>,
 });
 
 const tasksRoute = createRoute({
@@ -117,7 +107,7 @@ const tasksRoute = createRoute({
   loader: async () => {
     await appServices.queryClient.prefetchQuery(dashboardQueryOptions(appServices.repository));
   },
-  component: () => <TasksPage />,
+  component: () => <Lazy><TasksPage /></Lazy>,
 });
 
 const completedRoute = createRoute({
@@ -126,7 +116,7 @@ const completedRoute = createRoute({
   loader: async () => {
     await appServices.queryClient.prefetchQuery(dashboardQueryOptions(appServices.repository));
   },
-  component: () => <CompletedPage />,
+  component: () => <Lazy><CompletedPage /></Lazy>,
 });
 
 const progressRoute = createRoute({
@@ -135,29 +125,29 @@ const progressRoute = createRoute({
   loader: async () => {
     await appServices.queryClient.prefetchQuery(dashboardQueryOptions(appServices.repository));
   },
-  component: () => <ProgressPage />,
+  component: () => <Lazy><ProgressPage /></Lazy>,
 });
 
 const supportRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: 'support',
-  component: () => <SupportPage />,
+  component: () => <Lazy><SupportPage /></Lazy>,
 });
 
 const authCallbackRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: 'auth/callback',
-  component: AuthCallbackPage,
+  component: () => <Lazy><AuthCallbackPage /></Lazy>,
 });
 
 const signInRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: 'sign-in',
-  component: SignInPage,
+  component: () => <Lazy><SignInPage /></Lazy>,
 });
 
-const sharedWithMeRoute = createRoute({ getParentRoute: () => rootRoute, path: 'shared-with-me', component: SharedWithMePage });
-const acceptShareRoute = createRoute({ getParentRoute: () => rootRoute, path: 'share/accept', component: AcceptSharePage });
+const sharedWithMeRoute = createRoute({ getParentRoute: () => rootRoute, path: 'shared-with-me', component: () => <Lazy><SharedWithMePage /></Lazy> });
+const acceptShareRoute = createRoute({ getParentRoute: () => rootRoute, path: 'share/accept', component: () => <Lazy><AcceptSharePage /></Lazy> });
 
 const routeTree = rootRoute.addChildren([
   indexRoute,
@@ -187,27 +177,27 @@ export const router = createRouter({
 });
 
 function DashboardRoute() {
-  return <DashboardPage />;
+  return <Lazy><DashboardPage /></Lazy>;
 }
 
 function ListDetailRoute() {
   const params = useParams({ strict: false }) as { listId?: string };
-  return <ListDetailPage listId={params.listId ?? ''} />;
+  return <Lazy><ListDetailPage listId={params.listId ?? ''} /></Lazy>;
 }
 
 function TaskFocusRoute() {
   const params = useParams({ strict: false }) as { listId?: string; taskId?: string };
-  return <TaskFocusPage listId={params.listId ?? ''} taskId={params.taskId ?? ''} />;
+  return <Lazy><TaskFocusPage listId={params.listId ?? ''} taskId={params.taskId ?? ''} /></Lazy>;
 }
 
 function SearchRoute() {
-  return <SearchPage />;
+  return <Lazy><SearchPage /></Lazy>;
 }
 
 function ActivityRoute() {
-  return <ActivityPage />;
+  return <Lazy><ActivityPage /></Lazy>;
 }
 
 function SettingsRoute() {
-  return <SettingsPage />;
+  return <Lazy><SettingsPage /></Lazy>;
 }
