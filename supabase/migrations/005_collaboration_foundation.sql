@@ -4,7 +4,8 @@
 -- private, owner-only backups; shared resources are first-class rows so RLS can
 -- authorize individual Lists and Tasks without exposing a whole JSON payload.
 
-create extension if not exists pgcrypto;
+create schema if not exists extensions;
+create extension if not exists pgcrypto with schema extensions;
 create schema if not exists private;
 
 create table if not exists public.collaboration_workspaces (
@@ -262,7 +263,7 @@ begin
   select lower(coalesce(auth.jwt() ->> 'email', '')) into user_email;
   if user_email = '' then raise exception 'An email-verified account is required to accept an invitation'; end if;
   select * into invitation from public.share_invitations
-  where token_digest = encode(digest(p_token, 'sha256'), 'hex') for update;
+  where token_digest = encode(extensions.digest(p_token, 'sha256'), 'hex') for update;
   if not found or invitation.status <> 'pending' then raise exception 'Invitation is unavailable'; end if;
   if invitation.expires_at <= timezone('utc', now()) then
     update public.share_invitations set status = 'expired', updated_at = timezone('utc', now()) where id = invitation.id;
