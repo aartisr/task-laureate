@@ -8,6 +8,12 @@ const digest = (value) => createHash('sha256').update(value).digest('hex');
 const escape = (value) => String(value).replace(/[&<>'"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[character]);
 
 function fail(response, status, message) { return response.status(status).json({ message }); }
+async function responseMessage(result, fallback) {
+  try {
+    const payload = await result.json();
+    return typeof payload?.message === 'string' && payload.message.trim() ? payload.message.trim() : fallback;
+  } catch { return fallback; }
+}
 
 /**
  * Server-only invite delivery. The caller's JWT authorizes the database RPC;
@@ -40,13 +46,20 @@ export default async function handler(request, response) {
     if (!['list', 'task'].includes(resourceType) || !/^[0-9a-f-]{36}$/i.test(resourceId ?? '') || !emailPattern.test(normalizedEmail) || !['editor', 'viewer'].includes(role)) return fail(response, 400, 'The invitation details are invalid.');
     const rawToken = token(); const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
     const inviteResponse = await fetch(`${supabaseUrl}/rest/v1/rpc/create_share_invitation`, { method: 'POST', headers: { ...json, apikey: publishableKey, Authorization: `Bearer ${jwt}` }, body: JSON.stringify({ p_resource_type: resourceType, p_resource_id: resourceId, p_email_normalized: normalizedEmail, p_role: role, p_token_digest: digest(rawToken), p_expires_at: expiresAt }) });
-    if (!inviteResponse.ok) return fail(response, inviteResponse.status, 'You do not have permission to invite people to this resource.');
+    if (!inviteResponse.ok) {
+      const reason = await responseMessage(inviteResponse, 'The collaboration database rejected this invitation.');
+      return fail(response, inviteResponse.status, `Unable to create the invitation: ${reason}`);
+    }
     const invitationId = await inviteResponse.json();
     const inviteUrl = `${appUrl}/share/accept?token=${encodeURIComponent(rawToken)}`;
     const emailResponse = await fetch('https://api.resend.com/emails', { method: 'POST', headers: { ...json, Authorization: `Bearer ${resendKey}`, 'Idempotency-Key': `share-invitation/${invitationId}` }, body: JSON.stringify({ from, ...(replyTo ? { reply_to: replyTo } : {}), to: [normalizedEmail], subject: `You were invited to a Task Laureate ${resourceType}`, tags: [{ name: 'category', value: 'share_invitation' }, { name: 'resource_type', value: resourceType }, { name: 'invitation_id', value: String(invitationId) }], html: `<main style="font-family:Inter,Arial,sans-serif;max-width:560px;margin:auto;color:#172033"><p style="color:#635bff;font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-size:12px">Task Laureate</p><h1 style="font-size:24px">You’ve been invited to collaborate</h1><p>You have <strong>${escape(role === 'editor' ? 'Can update' : 'Read-only')}</strong> access to a shared ${escape(resourceType)}.</p><p><a href="${inviteUrl}" style="display:inline-block;background:#635bff;color:#fff;padding:12px 18px;border-radius:8px;text-decoration:none;font-weight:700">Open shared ${escape(resourceType)}</a></p><p style="color:#64748b;font-size:13px">For your security, sign in with ${escape(normalizedEmail)}. This invitation expires in seven days.</p></main>`, text: `You were invited to a Task Laureate ${resourceType} with ${role === 'editor' ? 'Can update' : 'Read-only'} access. Open: ${inviteUrl}` }) });
     if (!emailResponse.ok) {
       await fetch(`${supabaseUrl}/rest/v1/rpc/revoke_share_invitation`, { method: 'POST', headers: { ...json, apikey: publishableKey, Authorization: `Bearer ${jwt}` }, body: JSON.stringify({ p_invitation_id: invitationId }) });
-      return fail(response, 502, 'The invitation email could not be sent. No access was granted; please try again.');
+      const reason = await responseMessage(emailResponse, 'Resend did not provide a delivery reason.');
+      // Resend error messages identify configuration issues such as a missing
+      // verified sending domain. They contain no credentials, and are far more
+      // useful to an owner than a generic retry prompt.
+      return fail(response, 502, `Resend could not send this invitation: ${reason} No access was granted.`);
     }
     return response.status(201).json({ invitation: { id: invitationId, resource_type: resourceType, resource_id: resourceId, email_normalized: normalizedEmail, role, status: 'pending', invited_by: '', expires_at: expiresAt, created_at: new Date().toISOString(), accepted_by: null }, delivery: 'sent' });
   } catch (error) {

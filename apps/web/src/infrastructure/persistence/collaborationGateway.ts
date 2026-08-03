@@ -83,7 +83,12 @@ export function createSupabaseCollaborationGateway(config: SupabasePersistenceCo
         const accessToken = await config.getAccessToken?.();
         if (!accessToken) throw new Error('Sign in before sharing a List or Task.');
         const response = await request(config.invitationDeliveryUrl, { method: 'POST', headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ resourceType: input.resourceType, resourceId: input.resourceId, email: normalizeInvitationEmail(input.email), role: input.role }) });
-        if (!response.ok) { let payload: { message?: string } = {}; try { payload = await response.json() as typeof payload; } catch { /* non-JSON */ } throw new Error(payload.message ?? 'We could not send the invitation email.'); }
+        if (!response.ok) {
+          let payload: { message?: string } = {};
+          try { payload = await response.json() as typeof payload; } catch { /* a proxy or stale deployment may return HTML */ }
+          const requestId = response.headers.get('x-vercel-id');
+          throw new Error(payload.message ?? `The invitation delivery service returned HTTP ${response.status}.${requestId ? ` Reference: ${requestId}.` : ''}`);
+        }
         const result = await response.json() as { invitation: InvitationRow };
         return { invitation: toInvitation(result.invitation), delivery: 'sent' as const };
       }
