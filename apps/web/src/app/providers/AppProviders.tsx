@@ -16,6 +16,7 @@ export function AppProviders() {
   const [startupError, setStartupError] = useState<Error | null>(null);
   const [persistenceStatus, setPersistenceStatus] = useState<PersistenceStatus>(getPersistenceStatus);
   const [workspaceEpoch, setWorkspaceEpoch] = useState(0);
+  const [startupDelayed, setStartupDelayed] = useState(false);
   const observedAuthUserId = useRef<string | null | undefined>(undefined);
 
   useEffect(() => {
@@ -23,6 +24,12 @@ export function AppProviders() {
   }, []);
 
   useEffect(() => subscribeToPersistenceStatus(setPersistenceStatus), []);
+
+  useEffect(() => {
+    if (ready) { setStartupDelayed(false); return; }
+    const timer = window.setTimeout(() => setStartupDelayed(true), 3500);
+    return () => window.clearTimeout(timer);
+  }, [ready]);
 
   useEffect(() => {
     const reconnect = () => {
@@ -58,6 +65,7 @@ export function AppProviders() {
   const retryStartup = () => {
     setStartupError(null);
     setReady(false);
+    setStartupDelayed(false);
     resetWorkspaceForAuthChange();
     setWorkspaceEpoch((epoch) => epoch + 1);
     void initializePersistence({ force: true })
@@ -68,7 +76,10 @@ export function AppProviders() {
   if (startupError) return <main className="app-startup-error" role="alert">
     <div><p>Workspace unavailable</p><h1>We could not prepare your secure workspace.</h1><span>{startupError.message}</span><button type="button" className="primary-button" onClick={retryStartup}>Try again</button></div>
   </main>;
-  if (!ready) return <div role="status" aria-live="polite">Preparing your secure workspace…</div>;
+  if (!ready) return <main className="app-startup-shell" aria-busy="true" aria-label="Preparing Task Laureate">
+    <aside className="app-startup-shell__sidebar" aria-hidden="true"><div className="app-startup-shell__brand"><img src="/.well-known/logo-small.svg" alt="" /><span>Task Laureate</span></div><div className="app-startup-shell__nav"><b /><b /><b /><b /></div><div className="app-startup-shell__account"><i /><span><b /><b /></span></div></aside>
+    <section className="app-startup-shell__workspace"><header><div><span className="app-startup-shell__eyebrow">Secure workspace</span><h1>Getting your work ready</h1><p role="status" aria-live="polite">Restoring your private session and workspace…</p></div><i aria-hidden="true" /></header><div className="app-startup-shell__stats" aria-hidden="true"><b /><b /><b /></div><div className="app-startup-shell__content" aria-hidden="true"><b /><b /><b /><b /></div>{startupDelayed ? <div className="app-startup-shell__recovery"><span>Still connecting. Your data remains protected while we retry.</span><button type="button" className="secondary-button" onClick={retryStartup}>Retry connection</button></div> : null}</section>
+  </main>;
   return (
     <ErrorBoundary>
       <QueryClientProvider client={appServices.queryClient}>
