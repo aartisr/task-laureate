@@ -1,6 +1,6 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQueries, useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
-import { useState } from 'react';
+import { useDeferredValue, useMemo, useState } from 'react';
 import { appServices } from '../app/runtime/appServices';
 import { dashboardQueryOptions, listTasksQueryOptions } from '../core/contracts/queryKeys';
 import { supportsScalableTaskFeed } from '../core/contracts/repository';
@@ -24,91 +24,88 @@ const STATUS_META: Record<TodoItemStatus, { label: string; cls: string; icon: st
   deleted: { label: 'Deleted',  cls: 'status--deleted', icon: '🗑️' },
 };
 
-function AllTasksLoader(): { tasksByList: Record<string, { title: string; tasks: TodoItem[] }>; loading: boolean; lists: Array<Pick<TodoList, 'id' | 'title'>>; bounded: boolean } {
+type TaskWithListTitle = TodoItem & { listTitle: string };
+type TaskData = { allTasks: TaskWithListTitle[]; loading: boolean; lists: Array<Pick<TodoList, 'id' | 'title'>>; bounded: boolean };
+
+function useAllTasksData(): TaskData {
   const scalableRepository = supportsScalableTaskFeed(appServices.repository) ? appServices.repository : null;
   const scalable = Boolean(scalableRepository);
   const { data: dashboard } = useQuery(dashboardQueryOptions(appServices.repository));
   const feedQuery = useQuery({ queryKey: ['tasks', 'feed', 'initial'], queryFn: () => scalableRepository ? scalableRepository.listTaskFeed({ limit: 100 }) : Promise.resolve(null), enabled: scalable, staleTime: 15_000 });
-  const listIds = (dashboard?.lists ?? []).map((l) => l.id);
+  const lists = dashboard?.lists ?? [];
+  const taskQueries = useQueries({ queries: scalable ? [] : lists.map((list) => ({ ...listTasksQueryOptions(appServices.repository, list.id), enabled: true })) });
+  const taskResults = taskQueries.map((query) => query.data);
 
-  // One query per list — each cached separately
-  const listTaskQueries = listIds.map((id) =>
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    useQuery({ ...listTasksQueryOptions(appServices.repository, id), enabled: !!id && !scalable })
-  );
+  return useMemo(() => {
+    if (scalable) {
+      const items = feedQuery.data?.items ?? [];
+      const listMap = new Map<string, Pick<TodoList, 'id' | 'title'>>();
+      for (const task of items) listMap.set(task.listId, { id: task.listId, title: task.listTitle });
+      return { allTasks: items, loading: feedQuery.isLoading, lists: [...listMap.values()], bounded: Boolean(feedQuery.data?.nextCursor) };
+    }
 
-  if (scalable) {
-    const items = feedQuery.data?.items ?? [];
-    const lists = [...new Map(items.map((task) => [task.listId, { id: task.listId, title: task.listTitle }])).values()];
-    const tasksByList: Record<string, { title: string; tasks: TodoItem[] }> = {};
-    for (const list of lists) tasksByList[list.id] = { title: list.title, tasks: items.filter((task) => task.listId === list.id) };
-    return { tasksByList, loading: feedQuery.isLoading, lists, bounded: Boolean(feedQuery.data?.nextCursor) };
-  }
-
-  const tasksByList: Record<string, { title: string; tasks: TodoItem[] }> = {};
-  listIds.forEach((id, i) => {
-    const list = dashboard!.lists.find((l) => l.id === id)!;
-    tasksByList[id] = {
-      title: list.title,
-      tasks: (listTaskQueries[i].data ?? []).filter((t) => t.deletedAt === null),
-    };
-  });
-
-  const loading = listTaskQueries.some((q) => q.isLoading);
-  return { tasksByList, loading, lists: dashboard?.lists ?? [], bounded: false };
+    const allTasks: TaskWithListTitle[] = [];
+    for (let index = 0; index < lists.length; index += 1) {
+      const list = lists[index];
+      for (const task of taskResults[index] ?? []) {
+        if (task.deletedAt === null) allTasks.push({ ...task, listTitle: list.title });
+      }
+    }
+    return { allTasks, loading: taskQueries.some((query) => query.isLoading), lists, bounded: false };
+  // Each query result is included so this remains stable between unrelated renders.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scalable, feedQuery.data, feedQuery.isLoading, lists, ...taskResults]);
 }
 
 export function TasksPage() {
   usePageSEO(PAGE_SEO.tasks);
-  const { tasksByList, loading, lists, bounded } = AllTasksLoader();
+  const { allTasks, loading, lists, bounded } = useAllTasksData();
   const { completeTask } = useTodoMutations();
   const [statusFilter, setStatusFilter] = useState<TodoItemStatus | 'all'>('all');
   const [priorityFilter, setPriorityFilter] = useState<Priority | 'all'>('all');
   const [groupBy, setGroupBy] = useState<'list' | 'priority' | 'status'>('list');
   const [search, setSearch] = useState('');
+  const deferredSearch = useDeferredValue(search);
+  const { groups, counts } = useMemo(() => {
+    type Group = { key: string; label: string; icon: string; tasks: TaskWithListTitle[] };
+    const normalizedSearch = deferredSearch.trim().toLocaleLowerCase();
+    const groupsByKey = new Map<string, Group>();
+    const listMetadata = new Map(lists.map((list) => [list.id, { label: list.title, icon: '📋' }]));
+    const priorityRank = new Map(PRIORITY_ORDER.map((priority, index) => [priority, index]));
+    const counts = { todo: 0, doing: 0, blocked: 0 };
 
-  const allTasks: Array<TodoItem & { listTitle: string }> = Object.entries(tasksByList).flatMap(
-    ([_listId, { title, tasks }]) => tasks.map((t) => ({ ...t, listTitle: title }))
-  );
+    for (const task of allTasks) {
+      if (task.status === 'todo') counts.todo += 1;
+      if (task.status === 'doing') counts.doing += 1;
+      if (task.status === 'blocked') counts.blocked += 1;
+      if (statusFilter !== 'all' && task.status !== statusFilter) continue;
+      if (priorityFilter !== 'all' && task.priority !== priorityFilter) continue;
+      if (normalizedSearch && !task.title.toLocaleLowerCase().includes(normalizedSearch) && !task.listTitle.toLocaleLowerCase().includes(normalizedSearch)) continue;
 
-  const filtered = allTasks
-    .filter((t) => statusFilter === 'all' || t.status === statusFilter)
-    .filter((t) => priorityFilter === 'all' || t.priority === priorityFilter)
-    .filter((t) => !search || t.title.toLowerCase().includes(search.toLowerCase()) || t.listTitle.toLowerCase().includes(search.toLowerCase()));
+      const key = groupBy === 'list' ? task.listId : groupBy === 'priority' ? task.priority : task.status;
+      const metadata = groupBy === 'list'
+        ? listMetadata.get(task.listId) ?? { label: task.listTitle, icon: '📋' }
+        : groupBy === 'priority'
+          ? { label: PRIORITY_META[task.priority].label, icon: PRIORITY_META[task.priority].icon }
+          : { label: STATUS_META[task.status].label, icon: STATUS_META[task.status].icon };
+      const group = groupsByKey.get(key) ?? { key, ...metadata, tasks: [] };
+      group.tasks.push(task);
+      groupsByKey.set(key, group);
+    }
 
-  // Compute groups
-  type Group = { key: string; label: string; icon: string; tasks: typeof filtered };
-  let groups: Group[] = [];
-
-  if (groupBy === 'list') {
-    groups = lists.map((l) => ({
-      key: l.id,
-      label: l.title,
-      icon: '📋',
-      tasks: filtered.filter((t) => t.listId === l.id),
-    })).filter((g) => g.tasks.length > 0);
-  } else if (groupBy === 'priority') {
-    groups = PRIORITY_ORDER.map((p) => ({
-      key: p,
-      label: PRIORITY_META[p].label,
-      icon: PRIORITY_META[p].icon,
-      tasks: filtered.filter((t) => t.priority === p),
-    })).filter((g) => g.tasks.length > 0);
-  } else {
-    const statuses: TodoItemStatus[] = ['doing', 'todo', 'blocked', 'done'];
-    groups = statuses.map((s) => ({
-      key: s,
-      label: STATUS_META[s].label,
-      icon: STATUS_META[s].icon,
-      tasks: filtered.filter((t) => t.status === s),
-    })).filter((g) => g.tasks.length > 0);
-  }
+    const order = groupBy === 'list' ? lists.map((list) => list.id) : groupBy === 'priority' ? PRIORITY_ORDER : ['doing', 'todo', 'blocked', 'done'];
+    const groups = order.flatMap((key) => {
+      const group = groupsByKey.get(key);
+      if (!group) return [];
+      group.tasks.sort((left, right) => (priorityRank.get(left.priority) ?? 0) - (priorityRank.get(right.priority) ?? 0));
+      return [group];
+    });
+    return { groups, counts };
+  }, [allTasks, deferredSearch, groupBy, lists, priorityFilter, statusFilter]);
 
   if (loading) return <div className="page-surface">Loading tasks…</div>;
 
-  const todoCount = allTasks.filter((t) => t.status === 'todo').length;
-  const doingCount = allTasks.filter((t) => t.status === 'doing').length;
-  const blockedCount = allTasks.filter((t) => t.status === 'blocked').length;
+  const { todo: todoCount, doing: doingCount, blocked: blockedCount } = counts;
 
   return (
     <section className="page-stack">
@@ -209,9 +206,7 @@ export function TasksPage() {
                 <span className="task-group__count">{group.tasks.length}</span>
               </div>
               <div className="task-group__list">
-                {group.tasks
-                  .sort((a, b) => PRIORITY_ORDER.indexOf(a.priority) - PRIORITY_ORDER.indexOf(b.priority))
-                  .map((task) => (
+                {group.tasks.map((task) => (
                     <TaskRow
                       key={task.id}
                       task={task}

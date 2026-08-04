@@ -38,8 +38,11 @@ function RootLayout() {
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/',
-  loader: async () => {
-    await appServices.queryClient.prefetchQuery(dashboardQueryOptions(appServices.repository));
+  loader: () => {
+    // Navigation must be allowed to commit its lightweight fallback immediately.
+    // React Query fills the destination in the background instead of making the
+    // originating link's interaction wait for a round trip.
+    void appServices.queryClient.prefetchQuery(dashboardQueryOptions(appServices.repository));
   },
   component: DashboardRoute,
 });
@@ -47,11 +50,9 @@ const indexRoute = createRoute({
 const listRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: 'lists/$listId',
-  loader: async ({ params }) => {
-    await Promise.all([
-      appServices.queryClient.prefetchQuery(listQueryOptions(appServices.repository, params.listId)),
-      appServices.queryClient.prefetchQuery(listTasksQueryOptions(appServices.repository, params.listId)),
-    ]);
+  loader: ({ params }) => {
+    void appServices.queryClient.prefetchQuery(listQueryOptions(appServices.repository, params.listId));
+    void appServices.queryClient.prefetchQuery(listTasksQueryOptions(appServices.repository, params.listId));
   },
   component: ListDetailRoute,
 });
@@ -59,11 +60,9 @@ const listRoute = createRoute({
 const taskFocusRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: 'lists/$listId/tasks/$taskId',
-  loader: async ({ params }) => {
-    await Promise.all([
-      appServices.queryClient.prefetchQuery(listQueryOptions(appServices.repository, params.listId)),
-      appServices.queryClient.prefetchQuery(listTasksQueryOptions(appServices.repository, params.listId)),
-    ]);
+  loader: ({ params }) => {
+    void appServices.queryClient.prefetchQuery(listQueryOptions(appServices.repository, params.listId));
+    void appServices.queryClient.prefetchQuery(listTasksQueryOptions(appServices.repository, params.listId));
   },
   component: TaskFocusRoute,
 });
@@ -71,8 +70,8 @@ const taskFocusRoute = createRoute({
 const searchRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: 'search',
-  loader: async () => {
-    await appServices.queryClient.prefetchQuery(searchQueryOptions(appServices.repository, ''));
+  loader: () => {
+    void appServices.queryClient.prefetchQuery(searchQueryOptions(appServices.repository, ''));
   },
   component: SearchRoute,
 });
@@ -80,8 +79,8 @@ const searchRoute = createRoute({
 const activityRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: 'activity',
-  loader: async () => {
-    await appServices.queryClient.prefetchQuery(activityQueryOptions(appServices.repository));
+  loader: () => {
+    void appServices.queryClient.prefetchQuery(activityQueryOptions(appServices.repository));
   },
   component: ActivityRoute,
 });
@@ -95,8 +94,8 @@ const settingsRoute = createRoute({
 const listsOverviewRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: 'lists-overview',
-  loader: async () => {
-    await appServices.queryClient.prefetchQuery(dashboardQueryOptions(appServices.repository));
+  loader: () => {
+    void appServices.queryClient.prefetchQuery(dashboardQueryOptions(appServices.repository));
   },
   component: () => <Lazy><ListsPage /></Lazy>,
 });
@@ -104,8 +103,8 @@ const listsOverviewRoute = createRoute({
 const tasksRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: 'tasks',
-  loader: async () => {
-    await appServices.queryClient.prefetchQuery(dashboardQueryOptions(appServices.repository));
+  loader: () => {
+    void appServices.queryClient.prefetchQuery(dashboardQueryOptions(appServices.repository));
   },
   component: () => <Lazy><TasksPage /></Lazy>,
 });
@@ -113,8 +112,8 @@ const tasksRoute = createRoute({
 const completedRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: 'completed',
-  loader: async () => {
-    await appServices.queryClient.prefetchQuery(dashboardQueryOptions(appServices.repository));
+  loader: () => {
+    void appServices.queryClient.prefetchQuery(dashboardQueryOptions(appServices.repository));
   },
   component: () => <Lazy><CompletedPage /></Lazy>,
 });
@@ -122,8 +121,8 @@ const completedRoute = createRoute({
 const progressRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: 'progress',
-  loader: async () => {
-    await appServices.queryClient.prefetchQuery(dashboardQueryOptions(appServices.repository));
+  loader: () => {
+    void appServices.queryClient.prefetchQuery(dashboardQueryOptions(appServices.repository));
   },
   component: () => <Lazy><ProgressPage /></Lazy>,
 });
