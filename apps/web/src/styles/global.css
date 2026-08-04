@@ -805,6 +805,16 @@ input {
 .brand-mark img { flex: 0 0 auto; inline-size: clamp(1.9rem, 3vw, 2.35rem); block-size: clamp(1.9rem, 3vw, 2.35rem); filter: drop-shadow(0 4px 8px rgba(245, 158, 11, .22)); transition: transform var(--transition-base), filter var(--transition-base); }
 .brand-mark:hover img { transform: rotate(-8deg) scale(1.06); filter: drop-shadow(0 7px 10px rgba(245, 158, 11, .32)); }
 
+/* Keep the product name intact at desktop/tablet crossover widths. The
+   sidebar gets compact spacing first; the brand itself is never ellipsized. */
+.brand-mark span { white-space: nowrap; font-size: clamp(1rem, 1.35vw, 1.25rem); letter-spacing: .01em; }
+@media (min-width: 48rem) and (max-width: 63.9375rem) {
+  .app-shell { grid-template-columns: minmax(15.75rem, 17rem) minmax(0, 1fr); }
+  .sidebar { padding: var(--spacing-4); }
+  .brand-mark { gap: .55rem; padding: .85rem .75rem; }
+  .brand-mark img { inline-size: 2rem; block-size: 2rem; }
+}
+
 .sidebar-nav {
   display: grid;
   gap: var(--spacing-2);
