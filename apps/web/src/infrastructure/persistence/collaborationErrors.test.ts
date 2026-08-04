@@ -6,6 +6,7 @@ describe('collaboration error mapping', () => {
     const error = collaborationError(404, { message: 'Could not find the function' }, '/rpc/create_collaboration_task');
     expect(error.isConfigurationFailure).toBe(true);
     expect(error.message).toContain('schema cache');
+    expect(error.message).not.toContain('invitation service');
   });
 
   it('does not call an unrelated RPC 404 a configuration problem', () => {

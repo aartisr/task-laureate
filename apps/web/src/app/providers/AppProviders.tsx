@@ -55,7 +55,19 @@ export function AppProviders() {
     });
   }, []);
 
-  if (startupError) throw startupError;
+  const retryStartup = () => {
+    setStartupError(null);
+    setReady(false);
+    resetWorkspaceForAuthChange();
+    setWorkspaceEpoch((epoch) => epoch + 1);
+    void initializePersistence({ force: true })
+      .then(() => setReady(true))
+      .catch((error) => setStartupError(error instanceof Error ? error : new Error(String(error))));
+  };
+
+  if (startupError) return <main className="app-startup-error" role="alert">
+    <div><p>Workspace unavailable</p><h1>We could not prepare your secure workspace.</h1><span>{startupError.message}</span><button type="button" className="primary-button" onClick={retryStartup}>Try again</button></div>
+  </main>;
   if (!ready) return <div role="status" aria-live="polite">Preparing your secure workspace…</div>;
   return (
     <ErrorBoundary>

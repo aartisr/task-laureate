@@ -21,7 +21,7 @@ export function collaborationError(status: number, payload: SupabaseErrorPayload
     && endpoint.includes('/rpc/')
     && (/could not find the function|schema cache|pgrst202/.test(detail));
   if (missingRpc) return new CollaborationPersistenceError(
-    'This invitation service is temporarily unavailable. Refresh once, then ask an administrator to reload the Supabase PostgREST schema cache if it persists.',
+    'A required Task service is temporarily unavailable. Refresh once, then ask an administrator to reload the Supabase PostgREST schema cache if it persists.',
     status,
     true,
   );
