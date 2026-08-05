@@ -1,4 +1,5 @@
 import { notePreview, noteReadingMinutes } from '../core/domain/richNote';
+import { formatDateOnly } from '../core/domain/dateOnly';
 import type { TodoItem } from '../core/contracts/domain';
 
 export interface TaskItemProps {
@@ -26,6 +27,6 @@ export function TaskItem({ task, selected = false, onOpen, onComplete, onDelete,
       <span className={`task-item__priority priority--${task.priority}`}>{task.priority}</span>
       <button onClick={() => void onDelete()} className="task-item__icon-button task-item__icon-button--danger" aria-label={`Delete task: ${task.title}`}>🗑️</button>
     </div>
-    <div className="task-item__footer"><div className="task-item__dates">{task.dueDate ? <span className="task-item__due">Due {new Date(task.dueDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span> : null}</div>{task.tags.length ? <div className="task-item__tags">{task.tags.map((tag) => <span key={tag} className="task-item__tag">#{tag}</span>)}</div> : null}</div>
+    <div className="task-item__footer"><div className="task-item__dates">{task.dueDate ? <span className="task-item__due">Due {formatDateOnly(task.dueDate, undefined, { month: 'short', day: 'numeric' })}</span> : null}</div>{task.tags.length ? <div className="task-item__tags">{task.tags.map((tag) => <span key={tag} className="task-item__tag">#{tag}</span>)}</div> : null}</div>
   </article>;
 }

@@ -1,6 +1,7 @@
 import { type FormEvent, type RefObject, useState } from 'react';
 import type { Priority } from '../core/contracts/domain';
 import type { TodoTaskInput } from '../core/contracts/repository';
+import { localDate } from '../core/domain/dateOnly';
 import { MAX_NOTE_LENGTH } from '../core/domain/richNote';
 
 const priorities: Array<{ value: Priority; label: string; symbol: string }> = [
@@ -9,13 +10,6 @@ const priorities: Array<{ value: Priority; label: string; symbol: string }> = [
   { value: 'medium', label: 'Medium', symbol: '◆' },
   { value: 'low', label: 'Low', symbol: '○' },
 ];
-
-function localDate(offsetDays: number) {
-  const date = new Date();
-  date.setDate(date.getDate() + offsetDays);
-  const offset = date.getTimezoneOffset() * 60_000;
-  return new Date(date.getTime() - offset).toISOString().slice(0, 10);
-}
 
 export function TaskComposer({
   listId,

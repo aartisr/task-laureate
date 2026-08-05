@@ -3,6 +3,7 @@ import { Link } from '@tanstack/react-router';
 import { appServices } from '../app/runtime/appServices';
 import { dashboardQueryOptions, listTasksQueryOptions } from '../core/contracts/queryKeys';
 import type { TodoItem, Priority } from '../core/contracts/domain';
+import { formatDateOnly, isDueDateBeforeToday, isDueDateToday } from '../core/domain/dateOnly';
 import { usePageSEO, PAGE_SEO } from '../hooks/usePageSEO';
 
 const PRIORITY_ORDER: Priority[] = ['urgent', 'high', 'medium', 'low'];
@@ -86,11 +87,10 @@ export function ProgressPage() {
 
   // Overdue tasks
   const now = new Date();
-  const overdue = allTasks.filter((t) => t.dueDate && t.status !== 'done' && new Date(t.dueDate) < now);
+  const overdue = allTasks.filter((t) => t.dueDate && t.status !== 'done' && isDueDateBeforeToday(t.dueDate, now));
   const dueToday = allTasks.filter((t) => {
     if (!t.dueDate || t.status === 'done') return false;
-    const d = new Date(t.dueDate);
-    return d.toDateString() === now.toDateString();
+    return isDueDateToday(t.dueDate, now);
   });
 
   // Lists sorted by progress
@@ -267,7 +267,7 @@ export function ProgressPage() {
                       📋 {t.listTitle}
                     </Link>
                     <span className="due-badge due-badge--overdue">
-                      📅 {new Date(t.dueDate!).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} · Overdue
+                      📅 {formatDateOnly(t.dueDate, 'en-US', { month: 'short', day: 'numeric' })} · Overdue
                     </span>
                   </div>
                 </div>

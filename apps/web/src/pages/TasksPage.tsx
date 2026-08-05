@@ -5,6 +5,7 @@ import { appServices } from '../app/runtime/appServices';
 import { dashboardQueryOptions, listTasksQueryOptions } from '../core/contracts/queryKeys';
 import { supportsScalableTaskFeed } from '../core/contracts/repository';
 import type { TodoItem, TodoItemStatus, Priority, TodoList } from '../core/contracts/domain';
+import { formatDateOnly, isDueDateBeforeToday } from '../core/domain/dateOnly';
 import { useTodoMutations } from '../core/mutations/useTodoMutations';
 import { usePageSEO, PAGE_SEO } from '../hooks/usePageSEO';
 
@@ -234,7 +235,7 @@ function TaskRow({
   const isDone = task.status === 'done';
   const pm = PRIORITY_META[task.priority];
   const sm = STATUS_META[task.status];
-  const isOverdue = task.dueDate && !isDone && new Date(task.dueDate) < new Date();
+  const isOverdue = Boolean(task.dueDate && !isDone && isDueDateBeforeToday(task.dueDate));
 
   return (
     <div className={`task-row ${isDone ? 'task-row--done' : ''} ${isOverdue ? 'task-row--overdue' : ''}`}>
@@ -255,7 +256,7 @@ function TaskRow({
           <span className={`status-badge ${sm.cls}`}>{sm.label}</span>
           {task.dueDate && (
             <span className={`due-badge ${isOverdue ? 'due-badge--overdue' : ''}`}>
-              📅 {new Date(task.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+              📅 {formatDateOnly(task.dueDate, 'en-US', { month: 'short', day: 'numeric' })}
               {isOverdue && ' · Overdue'}
             </span>
           )}
