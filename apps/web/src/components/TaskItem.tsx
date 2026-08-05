@@ -19,7 +19,7 @@ export function TaskItem({ task, selected = false, onOpen, onComplete, onDelete,
     <div className="task-item__row">
       <button onClick={() => void onComplete()} aria-checked={completed} aria-label={`Mark task ${completed ? 'incomplete' : 'complete'}: ${task.title}`} role="checkbox" className={`task-item__complete ${completed ? 'is-completed' : ''}`}>{completed ? '✓' : ''}</button>
       <button type="button" onClick={onOpen} className="task-item__open" aria-expanded={selected}>
-        <span className="task-item__title">{task.title}</span>
+        <span className="task-item__title-line"><span className="task-item__title">{task.title}</span><span className="task-item__edit-cta">Open &amp; edit <span aria-hidden="true">→</span></span></span>
         {preview ? <span className="task-item__notes">{preview}</span> : null}
         {task.notes ? <span className="task-item__note-meta">Note · {noteReadingMinutes(task.notes)} min read</span> : null}
       </button>

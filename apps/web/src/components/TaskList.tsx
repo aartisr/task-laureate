@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { Fragment, useCallback, useMemo, useRef, useState } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import { announceToScreenReader, createId } from '../lib/a11y';
 import type { TodoItem } from '../core/contracts/domain';
@@ -101,8 +101,8 @@ export function TaskList({ listId, tasks, isLoading, onTaskUpdate, onTaskComplet
     setPersonalViews(next); localStorage.setItem(personalViewsKey, JSON.stringify(next));
     announceToScreenReader(`Saved personal view ${name.trim()}`);
   };
-  const selectedTask = tasks.find((task) => task.id === selectedId) ?? null;
   const completionPercent = stats.total ? Math.round((stats.completed / stats.total) * 100) : 0;
+  const renderInlineDetail = (task: TodoItem) => <TaskDetailLens mode="inline" task={task} canManageReminders={canManageReminders} onClose={() => setSelectedId(null)} onOpenFocus={() => navigate({ to: '/lists/$listId/tasks/$taskId', params: { listId, taskId: task.id } })} onUpdate={(input) => onTaskUpdate(task.id, input)} onComplete={() => onTaskComplete(task.id)} />;
 
   if (isLoading) return <section className="task-list task-list--loading" aria-busy="true" aria-live="polite"><p>Loading tasks…</p></section>;
 
@@ -131,15 +131,12 @@ export function TaskList({ listId, tasks, isLoading, onTaskUpdate, onTaskComplet
       <div className="task-list__views"><select aria-label="Open a saved personal view" defaultValue="" onChange={(event) => { const view = personalViews.find((item) => item.id === event.target.value); if (view) { setFilterBy(view.filterBy); setSortBy(view.sortBy); announceToScreenReader(`Opened ${view.name}`); } event.currentTarget.value = ''; }}><option value="">Personal views</option>{personalViews.map((view) => <option key={view.id} value={view.id}>{view.name}</option>)}</select><button type="button" onClick={savePersonalView}>Save view</button></div>
     </div>
 
-    <div className="task-lens-layout">
     {groups.length ? <div className="task-list__groups">{groups.map((group) => <section className="task-list__group" key={group.name ?? 'all'} aria-label={group.name ?? 'Tasks'}>
       {group.name ? <h3 className={`task-list__group-title task-list__group-title--${group.name.toLowerCase().replaceAll(' ', '-')}`}>{group.name}<span>{group.tasks.length}</span></h3> : null}
-      {(sortBy !== 'focus' && group.tasks.length > 120) ? <VirtualTaskItems tasks={group.tasks} render={(task) => <TaskItem key={task.id} task={task} selected={selectedId === task.id} onOpen={() => selectTask(task.id)} onComplete={() => onTaskComplete(task.id)} onDelete={() => onTaskDelete(task.id)} onRestore={() => onTaskRestore(task.id)} />} /> : <div role="list" className="task-list__items">{group.tasks.map((task) => {
+      {(sortBy !== 'focus' && group.tasks.length > 120) ? <VirtualTaskItems tasks={group.tasks} selectedId={selectedId} renderDetail={renderInlineDetail} render={(task) => <TaskItem task={task} selected={selectedId === task.id} onOpen={() => selectTask(task.id)} onComplete={() => onTaskComplete(task.id)} onDelete={() => onTaskDelete(task.id)} onRestore={() => onTaskRestore(task.id)} />} /> : <div role="list" className="task-list__items">{group.tasks.map((task) => {
         const sourceIndex = tasks.findIndex((candidate) => candidate.id === task.id);
-        return <DraggableItem key={task.id} index={sourceIndex} isDragging={draggedIndex === sourceIndex} isDragOver={dragOverIndex === sourceIndex} onDragStart={handleDragStart} onDragOver={handleDragOver} onDragEnd={handleDragEnd} onDragLeave={handleDragLeave} className="move-handle"><div role="listitem"><TaskItem task={task} selected={selectedId === task.id} onOpen={() => selectTask(task.id)} onComplete={() => onTaskComplete(task.id)} onDelete={() => onTaskDelete(task.id)} onRestore={() => onTaskRestore(task.id)} /></div></DraggableItem>;
+        return <Fragment key={task.id}><DraggableItem index={sourceIndex} isDragging={draggedIndex === sourceIndex} isDragOver={dragOverIndex === sourceIndex} onDragStart={handleDragStart} onDragOver={handleDragOver} onDragEnd={handleDragEnd} onDragLeave={handleDragLeave} className="move-handle"><div role="listitem"><TaskItem task={task} selected={selectedId === task.id} onOpen={() => selectTask(task.id)} onComplete={() => onTaskComplete(task.id)} onDelete={() => onTaskDelete(task.id)} onRestore={() => onTaskRestore(task.id)} /></div></DraggableItem>{selectedId === task.id ? <div className="task-list__inline-detail">{renderInlineDetail(task)}</div> : null}</Fragment>;
       })}</div>}
     </section>)}</div> : <div className="task-list__empty" role="status"><span aria-hidden="true">✦</span><h3>{filterBy === 'active' ? 'Nothing is waiting' : filterBy === 'completed' ? 'No completed tasks yet' : 'No tasks yet'}</h3><p>{filterBy === 'active' ? 'Enjoy the clear runway, or add the next task above.' : 'Try another view or add a task above.'}</p></div>}
-    {selectedTask ? <TaskDetailLens task={selectedTask} canManageReminders={canManageReminders} onClose={() => setSelectedId(null)} onOpenFocus={() => navigate({ to: '/lists/$listId/tasks/$taskId', params: { listId, taskId: selectedTask.id } })} onUpdate={(input) => onTaskUpdate(selectedTask.id, input)} onComplete={() => onTaskComplete(selectedTask.id)} /> : null}
-    </div>
   </section>;
 }

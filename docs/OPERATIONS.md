@@ -33,6 +33,14 @@ The current normalized model is:
 
 Use the Supabase CLI or SQL Editor according to your team’s migration process. The application cannot create schema at runtime.
 
+### Resetting an early-stage environment
+
+[`supabase/scripts/reset_application_data.sql`](../supabase/scripts/reset_application_data.sql) resets all Task-Laureate application records in one transaction while retaining the database schema, RLS policies, RPCs, Auth settings, and `auth.users` accounts. It deliberately has a confirmation interlock: change its `CHANGE_ME` value to the exact phrase documented in the script before running it with a privileged role in the Supabase SQL Editor. It requires the collaboration core and safely skips optional notification, push, or reminder tables that are absent from an older project; the final notice reports zero counts for every table it cleared.
+
+The reset is irreversible for Lists, Tasks, shares, invitation state, reminders, notifications, and push subscriptions. Export or back up anything worth retaining first. It intentionally does not delete Supabase Auth users; delete test accounts separately from **Authentication → Users** if that is also required.
+
+[`supabase/scripts/seed_test_matrix.sql`](../supabase/scripts/seed_test_matrix.sql) is a companion local/staging-only coverage seed. Create three Supabase Auth test accounts first, substitute their UUIDs and the explicit environment confirmation in the script, reset the application data, then run the seed. It creates deterministic data for owner/editor/viewer permissions, List and Task lifecycle states, rich notes, reminders, notifications, push records, and invitation states. Its synthetic invitations intentionally cannot be redeemed; create a new invitation through the UI to test the real token and email flow.
+
 ## Vercel configuration
 
 Set the Vercel Root Directory to `apps/web`. The committed [`apps/web/vercel.json`](../apps/web/vercel.json) is the source of truth for the build, SPA fallback, security headers, and daily cron.

@@ -7,7 +7,7 @@ import { TaskReminderControl } from './TaskReminderControl';
 export interface TaskDetailLensProps {
   task: TodoItem;
   listTitle?: string;
-  mode?: 'panel' | 'focus';
+  mode?: 'panel' | 'inline' | 'focus';
   readOnly?: boolean;
   canManageReminders?: boolean;
   onClose?: () => void;
@@ -51,9 +51,10 @@ export function TaskDetailLens({ task, listTitle, mode = 'panel', readOnly = fal
 
   return <aside className={`task-detail-lens task-detail-lens--${mode}`} aria-label={`Task details: ${task.title}`}>
     <header className="task-detail-lens__header">
-      <div className="task-detail-lens__crumb">{listTitle ? `In ${listTitle}` : 'Task details'}</div>
+      <div className="task-detail-lens__context"><div className="task-detail-lens__crumb">{listTitle ? `In ${listTitle}` : 'Task details'}</div><span className={`task-detail-lens__edit-status${readOnly ? ' is-readonly' : editing ? ' is-editing' : ''}`} role="status">{readOnly ? 'Read-only' : editing ? 'Editing now' : 'Ready to edit'}</span></div>
       <div className="task-detail-lens__header-actions">
-        {onOpenFocus && mode === 'panel' ? <button type="button" className="task-detail-lens__utility" onClick={onOpenFocus}>Open focus</button> : null}
+        {!readOnly && !editing ? <button type="button" className="task-detail-lens__edit-trigger" onClick={() => setEditing(true)}>Edit task</button> : null}
+        {onOpenFocus && mode !== 'focus' ? <button type="button" className="task-detail-lens__utility" onClick={onOpenFocus}>Open focus</button> : null}
         {onClose ? <button type="button" className="task-detail-lens__close" onClick={onClose} aria-label="Close task details">×</button> : null}
       </div>
     </header>
@@ -66,9 +67,12 @@ export function TaskDetailLens({ task, listTitle, mode = 'panel', readOnly = fal
         <section className="task-detail-lens__edit-note" aria-label="Task note"><div><span>Working context</span><h3>Notes</h3><p>Keep the details, decisions, and next steps together.</p></div><RichNoteEditor value={notes} onChange={setNotes} disabled={saving} /></section>
         <footer className="task-detail-lens__edit-actions"><div><strong>{notes.length.toLocaleString()}</strong><span> / {MAX_NOTE_LENGTH.toLocaleString()} characters</span></div><div><button type="button" className="secondary-button" onClick={cancel} disabled={saving}>Discard</button><button type="button" className="primary-button" onClick={() => void save()} disabled={!title.trim() || saving}>{saving ? 'Saving…' : 'Save changes'}</button></div></footer>
       </div> : <>
+        <section className={`task-detail-lens__edit-guidance${readOnly ? ' is-read-only' : ''}`} aria-label={readOnly ? 'Task access' : 'Editing this task'}>
+          <div><strong>{readOnly ? 'View-only access' : 'Edit this task here'}</strong><span>{readOnly ? 'You can review the details, but only an owner or editor can make changes.' : 'Use the Edit task button above to change the title, priority, or rich note without leaving this spot.'}</span></div>
+        </section>
         <div className="task-detail-lens__title-row"><button type="button" className={`task-detail-lens__complete ${completed ? 'is-complete' : ''}`} onClick={() => void onComplete()} disabled={readOnly} aria-pressed={completed} aria-label={completed ? 'Mark task incomplete' : 'Mark task complete'}>{completed ? '✓' : ''}</button><h2>{task.title}</h2></div>
         <div className="task-detail-lens__properties"><span className={`priority-badge priority--${task.priority}`}>{task.priority}</span>{task.dueDate ? <span>Due {new Date(task.dueDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span> : null}{task.tags.map((tag) => <span key={tag}>#{tag}</span>)}</div>
-        <section className="task-detail-lens__note" aria-label="Task note"><div className="task-detail-lens__note-heading"><div><h3>Note</h3>{hasNotes ? <p>{noteMeta}</p> : null}</div>{!readOnly ? <button type="button" className="secondary-button" onClick={() => setEditing(true)}>Edit task</button> : null}</div>{hasNotes ? <RichNoteReader value={notes} /> : <p className="task-detail-lens__empty">No note yet. Keep the list concise; put the durable context here.</p>}</section>
+        <section className="task-detail-lens__note" aria-label="Task note"><div className="task-detail-lens__note-heading"><div><h3>Note</h3>{hasNotes ? <p>{noteMeta}</p> : null}</div>{!readOnly ? <button type="button" className="secondary-button" onClick={() => setEditing(true)}>Edit details</button> : null}</div>{hasNotes ? <RichNoteReader value={notes} /> : <p className="task-detail-lens__empty">No note yet. Choose <strong>Edit task</strong> above to add durable context.</p>}</section>
       </>}
       {canManageReminders && !readOnly ? <TaskReminderControl taskId={task.id} /> : null}
       {error ? <p className="task-detail-lens__error" role="alert">{error}</p> : null}
