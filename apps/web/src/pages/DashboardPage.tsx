@@ -1,6 +1,6 @@
 import { useMemo, useState, useRef } from 'react';
 import { useSuspenseQuery } from '@tanstack/react-query';
-import { useNavigate } from '@tanstack/react-router';
+import { Link, useNavigate } from '@tanstack/react-router';
 import { PageContainer, EmptyState, LoadingState, Grid, Card, Section } from '../components/layouts';
 import { queryKeys } from '../core/contracts/queryKeys';
 import { getDashboardCompletionPercent } from '../core/domain/logic';
@@ -202,6 +202,11 @@ export function DashboardPage() {
           <p className="text-xs text-[var(--color-text-tertiary)] mt-2">View insights →</p>
         </Card>
       </Grid>
+
+      <section className="panel mt-6 flex flex-wrap items-center justify-between gap-4" aria-label="Try Task-Laureate before signing in">
+        <div><h2 className="mb-1 text-lg">New to Task-Laureate?</h2><p className="mb-0 text-sm text-[var(--color-text-secondary)]">Explore a private, non-persistent sample before you decide whether to sign in and sync.</p></div>
+        <Link to="/sample" className="secondary-button">Try the interactive sample</Link>
+      </section>
 
       {/* Quick Actions */}
       {(isCreatingList || pendingList) ? <ListComposer titleInputRef={listTitleInputRef} initialInput={pendingList?.input} restoredDraft={Boolean(pendingList)} onCreate={handleCreateList} onCancel={() => { clearPendingSaveIntent(); setIsCreatingList(false); }} /> : null}

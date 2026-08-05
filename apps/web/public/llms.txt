@@ -17,9 +17,9 @@
 
 ## Public pages
 
-- Product overview: https://task-laureate.vercel.app/about/
-- Support: https://task-laureate.vercel.app/support
-- Application: https://task-laureate.vercel.app/
+- Product overview: https://tasks.ai-aarti.com/about/
+- Support: https://tasks.ai-aarti.com/support
+- Application: https://tasks.ai-aarti.com/
 - Source repository: https://github.com/aartisr/task-laureate
 
 ## Primary audience

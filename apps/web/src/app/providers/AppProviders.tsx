@@ -10,6 +10,7 @@ import { initializePersistence, resetWorkspaceForAuthChange } from '../runtime/a
 import { getPersistenceStatus, subscribeToPersistenceStatus, type PersistenceStatus } from '../../infrastructure/persistence/status';
 import { authProvider } from '../../config/persistence.config';
 import { shouldReinitializeForAuthChange } from '../../core/auth/sessionTransitions';
+import { trackGrowthEvent } from '../../infrastructure/analytics/growthTelemetry';
 
 export function AppProviders() {
   const [ready, setReady] = useState(false);
@@ -24,6 +25,10 @@ export function AppProviders() {
   }, []);
 
   useEffect(() => subscribeToPersistenceStatus(setPersistenceStatus), []);
+
+  useEffect(() => {
+    if (persistenceStatus.phase === 'error') trackGrowthEvent('sync_failed', { surface: 'startup' });
+  }, [persistenceStatus.phase]);
 
   useEffect(() => {
     if (ready) { setStartupDelayed(false); return; }

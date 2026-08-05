@@ -1,11 +1,11 @@
 # robots.txt for Task-Laureate
-# https://task-laureate.vercel.app/
+# https://tasks.ai-aarti.com/
 
 User-agent: *
 Allow: /
 
 # Sitemaps
-Sitemap: https://task-laureate.vercel.app/sitemap.xml
+Sitemap: https://tasks.ai-aarti.com/sitemap.xml
 
 # AI Crawlers — allow for GEO (Generative Engine Optimization)
 User-agent: GPTBot

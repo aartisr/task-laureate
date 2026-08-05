@@ -6,17 +6,17 @@
 
   <!-- Public product home -->
   <url>
-    <loc>https://task-laureate.vercel.app/</loc>
+    <loc>https://tasks.ai-aarti.com/</loc>
     <lastmod>2026-08-02</lastmod>
   </url>
 
   <!-- Crawlable product story and help -->
   <url>
-    <loc>https://task-laureate.vercel.app/about/</loc>
+    <loc>https://tasks.ai-aarti.com/about/</loc>
     <lastmod>2026-08-02</lastmod>
   </url>
   <url>
-    <loc>https://task-laureate.vercel.app/support</loc>
+    <loc>https://tasks.ai-aarti.com/support</loc>
     <lastmod>2026-08-02</lastmod>
   </url>
 

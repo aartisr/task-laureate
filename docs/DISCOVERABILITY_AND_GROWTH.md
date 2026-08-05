@@ -6,7 +6,7 @@ This guide makes Task-Laureate easier for people, search engines, and AI-assiste
 
 ## What is already implemented
 
-- A public, crawlable product overview at [`/about/`](https://task-laureate.vercel.app/about/) with a plain-language description and no account-specific data.
+- A public, crawlable product overview at [`/about/`](https://tasks.ai-aarti.com/about/) with a plain-language description and no account-specific data.
 - A JavaScript-free summary on the app shell for crawlers and visitors who do not run JavaScript.
 - Accurate page titles, descriptions, canonical URLs, Open Graph/Twitter metadata, and a small `WebApplication` JSON-LD record.
 - [`robots.txt`](../apps/web/public/robots.txt), a focused [`sitemap.xml`](../apps/web/public/sitemap.xml), and [`llms.txt`](../apps/web/public/llms.txt). The sitemap deliberately excludes private workspace, search, settings, and activity routes.
@@ -23,7 +23,7 @@ This approach follows Google's guidance to make content helpful, reliable, and p
    - `/robots.txt`
    - `/sitemap.xml`
    - `/llms.txt`
-2. Confirm every canonical URL and sitemap URL uses the real production domain. The default in this repository is `https://task-laureate.vercel.app`. If a custom domain is connected, replace that hostname consistently in `apps/web/index.html`, `apps/web/public/about/index.html`, `apps/web/public/robots.txt`, `apps/web/public/sitemap.xml`, `apps/web/public/llms.txt`, and `src/hooks/usePageSEO.ts` before deploying.
+2. Confirm every canonical URL and sitemap URL uses the real production domain. The repository default is `https://tasks.ai-aarti.com`; set `VITE_PUBLIC_SITE_URL` for a different deployment. Static public files (`apps/web/index.html`, `apps/web/public/about/index.html`, `apps/web/public/robots.txt`, `apps/web/public/sitemap.xml`, and `apps/web/public/llms.txt`) must use that same origin before deployment.
 3. Use Google Search Console to verify the domain, submit `/sitemap.xml`, and inspect the home and about URLs. Use Bing Webmaster Tools to verify the same domain and submit the same sitemap. Verification and submission request discovery; they do not guarantee indexing or ranking.
 4. Validate structured data with a schema-aware validator and keep it aligned with the public page. Never add ratings, customer counts, press mentions, pricing claims, or features that cannot be proven on the page.
 5. Test sharing the public URLs in the channels you care about. Open Graph data controls link previews where platforms choose to use it; each platform controls its own cache and presentation.

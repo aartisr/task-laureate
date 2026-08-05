@@ -3,6 +3,7 @@ import { CloudSyncAuthPanel } from '../components/CloudSyncAuthPanel';
 import { authProvider } from '../config/persistence.config';
 import { getPendingSaveIntent, pendingSaveSummary } from '../core/auth/pendingSave';
 import { normalizeOAuthReturnTo } from '../infrastructure/persistence/supabaseAuth';
+import { trackGrowthEvent } from '../infrastructure/analytics/growthTelemetry';
 
 /** A calm, reversible entry point to private cloud sync. */
 export function SignInPage() {
@@ -12,6 +13,7 @@ export function SignInPage() {
     // Password authentication completes on this page (unlike OAuth, which has
     // its own callback route). Replace rather than push so Back never returns
     // a signed-in person to a stale sign-in form.
+    trackGrowthEvent('signup_completed', { method: 'password' });
     window.location.replace(returnTo);
   };
 

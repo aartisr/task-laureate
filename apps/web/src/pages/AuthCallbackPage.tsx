@@ -3,6 +3,7 @@ import { authProvider } from '../config/persistence.config';
 import { consumeOAuthReturnTo } from '../infrastructure/persistence/supabaseAuth';
 import { supportsSocialAuth } from '../core/contracts/auth';
 import { initializePersistence } from '../app/runtime/appServices';
+import { trackGrowthEvent } from '../infrastructure/analytics/growthTelemetry';
 
 /** Completes a PKCE callback before returning the person to a safe in-app path. */
 export function AuthCallbackPage() {
@@ -29,6 +30,7 @@ export function AuthCallbackPage() {
         // exchange and prevents the destination from showing a stale session.
         await initializePersistence({ force: true });
         if (!active) return;
+        trackGrowthEvent('signup_completed', { method: 'oauth' });
         window.location.replace(consumeOAuthReturnTo());
       })
       .catch((error) => {

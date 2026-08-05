@@ -1,6 +1,6 @@
 # Task-Laureate
 
-[**Open Task-Laureate →**](https://tasks.ai-aarti.com) · [AI Aarti deployment](https://tasks.ai-aarti.com) · [PCSSII Robotics deployment](https://tasks.pcssiirobotics.org)
+[**Open Task-Laureate →**](https://tasks.ai-aarti.com) · [**Try the interactive sample →**](https://tasks.ai-aarti.com/sample) · [AI Aarti deployment](https://tasks.ai-aarti.com) · [PCSSII Robotics deployment](https://tasks.pcssiirobotics.org)
 
 Task-Laureate is a private, keyboard-friendly task workspace for planning lists, tracking progress, searching work, reviewing activity, and recovering from mistakes with undo. It is built as an extensible React application: feature modules and persistence adapters can evolve without rewriting the UI shell.
 

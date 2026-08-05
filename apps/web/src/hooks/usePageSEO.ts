@@ -7,6 +7,7 @@
  * Zero dependencies beyond React.
  */
 import { useEffect } from 'react';
+import { SITE_NAME, SITE_URL } from '../config/site';
 
 export interface PageSEOMeta {
   title: string;
@@ -21,8 +22,7 @@ export interface PageSEOMeta {
   noindex?: boolean;
 }
 
-const SITE_NAME = 'Task-Laureate';
-const BASE_URL = 'https://task-laureate.vercel.app';
+const BASE_URL = SITE_URL;
 const DEFAULT_IMAGE = '/og-image.svg';
 const AUTHOR_NAME = 'Aarti S Ravikumar';
 const AUTHOR_URL = 'https://ai-aarti.com';

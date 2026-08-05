@@ -6,14 +6,15 @@ import {
   useParams,
   useRouterState,
 } from '@tanstack/react-router';
-import { lazy, Suspense, type ComponentType, type ReactNode } from 'react';
+import { lazy, Suspense, useEffect, type ComponentType, type ReactNode } from 'react';
 import { appServices } from './runtime/appServices';
 import { AppShell } from '../components/AppShell';
 import { BackgroundWatermark } from '../components/BackgroundWatermark';
 import { listQueryOptions, listTasksQueryOptions, dashboardQueryOptions, activityQueryOptions, searchQueryOptions } from '../core/contracts/queryKeys';
+import { trackGrowthEvent } from '../infrastructure/analytics/growthTelemetry';
 
 const page = <T extends Record<string, ComponentType<any>>>(load: () => Promise<T>, name: keyof T) => lazy(async () => ({ default: (await load())[name] }));
-const ActivityPage = page(() => import('../pages/ActivityPage'), 'ActivityPage'); const DashboardPage = page(() => import('../pages/DashboardPage'), 'DashboardPage'); const ListDetailPage = page(() => import('../pages/ListDetailPage'), 'ListDetailPage'); const ListsPage = page(() => import('../pages/ListsPage'), 'ListsPage'); const TasksPage = page(() => import('../pages/TasksPage'), 'TasksPage'); const CompletedPage = page(() => import('../pages/CompletedPage'), 'CompletedPage'); const ProgressPage = page(() => import('../pages/ProgressPage'), 'ProgressPage'); const SearchPage = page(() => import('../pages/SearchPage'), 'SearchPage'); const SettingsPage = page(() => import('../pages/SettingsPage'), 'SettingsPage'); const SupportPage = page(() => import('../pages/SupportPage'), 'SupportPage'); const AuthCallbackPage = page(() => import('../pages/AuthCallbackPage'), 'AuthCallbackPage'); const SignInPage = page(() => import('../pages/SignInPage'), 'SignInPage'); const TaskFocusPage = page(() => import('../pages/TaskFocusPage'), 'TaskFocusPage'); const SharedWithMePage = page(() => import('../pages/SharedWithMePage'), 'SharedWithMePage'); const AcceptSharePage = page(() => import('../pages/AcceptSharePage'), 'AcceptSharePage');
+const ActivityPage = page(() => import('../pages/ActivityPage'), 'ActivityPage'); const DashboardPage = page(() => import('../pages/DashboardPage'), 'DashboardPage'); const ListDetailPage = page(() => import('../pages/ListDetailPage'), 'ListDetailPage'); const ListsPage = page(() => import('../pages/ListsPage'), 'ListsPage'); const TasksPage = page(() => import('../pages/TasksPage'), 'TasksPage'); const CompletedPage = page(() => import('../pages/CompletedPage'), 'CompletedPage'); const ProgressPage = page(() => import('../pages/ProgressPage'), 'ProgressPage'); const SearchPage = page(() => import('../pages/SearchPage'), 'SearchPage'); const SettingsPage = page(() => import('../pages/SettingsPage'), 'SettingsPage'); const SupportPage = page(() => import('../pages/SupportPage'), 'SupportPage'); const AuthCallbackPage = page(() => import('../pages/AuthCallbackPage'), 'AuthCallbackPage'); const SignInPage = page(() => import('../pages/SignInPage'), 'SignInPage'); const TaskFocusPage = page(() => import('../pages/TaskFocusPage'), 'TaskFocusPage'); const SharedWithMePage = page(() => import('../pages/SharedWithMePage'), 'SharedWithMePage'); const AcceptSharePage = page(() => import('../pages/AcceptSharePage'), 'AcceptSharePage'); const SampleWorkspacePage = page(() => import('../pages/SampleWorkspacePage'), 'SampleWorkspacePage');
 const Lazy = ({ children }: { children: ReactNode }) => <Suspense fallback={<main className="page-surface" aria-busy="true">Loading…</main>}>{children}</Suspense>;
 
 const rootRoute = createRootRouteWithContext<{
@@ -24,9 +25,13 @@ const rootRoute = createRootRouteWithContext<{
 
 function RootLayout() {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
+  useEffect(() => {
+    if (pathname === '/') trackGrowthEvent('landing_viewed', { surface: 'workspace' });
+    if (pathname === '/sample') trackGrowthEvent('demo_started', { surface: 'sample_workspace' });
+  }, [pathname]);
   // OAuth callbacks are deliberately free of navigation chrome so the person
   // sees one unambiguous completion state while the session is exchanged.
-  if (pathname === '/auth/callback' || pathname === '/sign-in' || pathname === '/share/accept') return <><BackgroundWatermark /><Outlet /></>;
+  if (pathname === '/auth/callback' || pathname === '/sign-in' || pathname === '/share/accept' || pathname === '/sample') return <><BackgroundWatermark /><Outlet /></>;
   return <>
     <BackgroundWatermark />
     <AppShell navItems={appServices.registry.getNavItems()}>
@@ -144,6 +149,7 @@ const signInRoute = createRoute({
   path: 'sign-in',
   component: () => <Lazy><SignInPage /></Lazy>,
 });
+const sampleWorkspaceRoute = createRoute({ getParentRoute: () => rootRoute, path: 'sample', component: () => <Lazy><SampleWorkspacePage /></Lazy> });
 
 const sharedWithMeRoute = createRoute({ getParentRoute: () => rootRoute, path: 'shared-with-me', component: () => <Lazy><SharedWithMePage /></Lazy> });
 const acceptShareRoute = createRoute({ getParentRoute: () => rootRoute, path: 'share/accept', component: () => <Lazy><AcceptSharePage /></Lazy> });
@@ -162,6 +168,7 @@ const routeTree = rootRoute.addChildren([
   supportRoute,
   authCallbackRoute,
   signInRoute,
+  sampleWorkspaceRoute,
   sharedWithMeRoute,
   acceptShareRoute,
 ]);
