@@ -1,0 +1,31 @@
+name: Update package-lock.json
+
+# One-time workflow to regenerate the lock file on GitHub's servers when the
+# local machine cannot reach registry.npmjs.org (e.g. behind a corporate proxy).
+# After the lock file is committed, disable or delete this workflow.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-lockfile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Regenerate lock file
+        run: npm install --package-lock-only
+
+      - name: Commit updated lock file
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add package-lock.json
+          git diff --staged --quiet || git commit -m "chore: sync package-lock.json after adding posthog-js"
+          git push
