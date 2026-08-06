@@ -36,8 +36,9 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Upload entire repository
-          path: '.'
+          # Deploy only the site/ directory — pure HTML/CSS, no Jekyll processing.
+          # The .nojekyll file inside site/ disables Jekyll on the gh-pages side.
+          path: 'site'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v5
