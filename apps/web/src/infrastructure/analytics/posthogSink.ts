@@ -14,8 +14,6 @@
  * is the only change needed to switch vendors or fully disable PostHog.
  */
 
-import posthogLib from 'posthog-js';
-import type { PostHog } from 'posthog-js';
 import type {
   AnalyticsSink,
   ApprovedGrowthEvent,
@@ -34,21 +32,40 @@ import {
   type PostHogLike,
 } from './posthogClient';
 
-// Verify structural compatibility between local stub and real PostHog type at compile time
-type _CompatCheck = PostHogLike extends PostHog ? true : true; // both are compatible enough
+// ---------------------------------------------------------------------------
+// Lazy loader
+// ---------------------------------------------------------------------------
+// posthog-js is imported with /* @vite-ignore */ so Rollup skips static analysis.
+// When VITE_POSTHOG_ENABLED=false the import never executes and posthog-js bytes
+// are never delivered to the browser. When enabled, the SDK is loaded once after
+// the user grants consent.
+// ---------------------------------------------------------------------------
 
-async function getPostHogClient(config: AnalyticsConfig): Promise<PostHog | null> {
+async function loadPostHogLib(): Promise<PostHogLike | null> {
+  try {
+    // @vite-ignore prevents Rollup from bundling posthog-js in disabled builds.
+    const mod = await import(/* @vite-ignore */ 'posthog-js') as { default: PostHogLike };
+    return mod.default;
+  } catch (err) {
+    if (import.meta.env.DEV) console.warn('[posthog] SDK load failed – is posthog-js installed?', err);
+    return null;
+  }
+}
+
+async function getPostHogClient(config: AnalyticsConfig): Promise<PostHogLike | null> {
   if (!shouldInitPostHog(config)) return null;
 
-  const cached = getCachedPostHogInstance() as PostHog | null;
+  const cached = getCachedPostHogInstance();
   if (cached) return cached;
 
   const existing = getInitPromise();
   if (existing) return existing;
 
-  const promise: Promise<PostHog | null> = (async () => {
+  const promise: Promise<PostHogLike | null> = (async () => {
+    const lib = await loadPostHogLib();
+    if (!lib) return null;
     try {
-      posthogLib.init(config.key, {
+      lib.init(config.key, {
         api_host: config.host,
         autocapture: false,
         capture_pageview: false,
@@ -57,17 +74,18 @@ async function getPostHogClient(config: AnalyticsConfig): Promise<PostHog | null
         disable_session_recording: true,
         person_profiles: 'identified_only',
         opt_out_capturing_by_default: true,
+        // Memory persistence until consent: no cookies or localStorage written.
         persistence: 'memory',
-        loaded(ph: PostHog) {
+        loaded(ph: PostHogLike) {
           if (import.meta.env.DEV) {
-            console.debug('[posthog] initialized at', config.host, 'id:', ph.get_distinct_id());
+            console.debug('[posthog] ready at', config.host, 'id:', ph.get_distinct_id());
           }
         },
       });
-      setCachedPostHogInstance(posthogLib);
-      return posthogLib;
+      setCachedPostHogInstance(lib);
+      return lib;
     } catch (err) {
-      if (import.meta.env.DEV) console.warn('[posthog] initialization failed', err);
+      if (import.meta.env.DEV) console.warn('[posthog] init failed', err);
       clearInitPromise();
       return null;
     }
@@ -89,7 +107,7 @@ export function createPostHogSink(config: AnalyticsConfig): AnalyticsSink {
   let clientReady = false;
   const pendingCaptures: ApprovedGrowthEvent[] = [];
 
-  async function flushQueue(ph: PostHog): Promise<void> {
+  async function flushQueue(ph: PostHogLike): Promise<void> {
     const queued = pendingCaptures.splice(0);
     for (const event of queued) {
       ph.capture(event.name, event.properties ?? {});
