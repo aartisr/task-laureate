@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Task-Laureate — Private, keyboard-friendly task workspace</title>
+  <meta name="description" content="Task-Laureate is a calm, private, keyboard-friendly task workspace for planning lists, tracking progress, collaborating with teams, and recovering from mistakes with undo. Built by a student, open-source on GitHub." />
+  <meta name="author" content="Aarti S Ravikumar" />
+  <meta name="keywords" content="task manager, todo app, productivity, open source, task tracking, team collaboration, keyboard shortcuts, undo, Supabase, React, TypeScript" />
+  <link rel="canonical" href="https://aartisr.github.io/task-laureate/" />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://aartisr.github.io/task-laureate/" />
+  <meta property="og:title" content="Task-Laureate — Private, keyboard-friendly task workspace" />
+  <meta property="og:description" content="A calm, private task workspace for planning, tracking, and collaborating — with undo for everything. Free, open-source, live at tasks.ai-aarti.com." />
+  <meta property="og:image" content="https://tasks.ai-aarti.com/og-image.svg" />
+  <meta property="og:site_name" content="Task-Laureate" />
+
+  <!-- Twitter / X -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Task-Laureate — Private, keyboard-friendly task workspace" />
+  <meta name="twitter:description" content="A calm, private task workspace for planning, tracking, and collaborating — with undo for everything." />
+  <meta name="twitter:image" content="https://tasks.ai-aarti.com/og-image.svg" />
+
+  <!-- Structured data — SoftwareApplication -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Task-Laureate",
+    "description": "A private, keyboard-friendly task workspace for planning lists, tracking progress, collaborating with teams, and recovering from mistakes with undo.",
+    "url": "https://tasks.ai-aarti.com",
+    "applicationCategory": "ProductivityApplication",
+    "operatingSystem": "Web",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "author": {
+      "@type": "Person",
+      "name": "Aarti S Ravikumar",
+      "url": "https://ai-aarti.com"
+    },
+    "codeRepository": "https://github.com/aartisr/task-laureate",
+    "license": "https://github.com/aartisr/task-laureate/blob/master/LICENSE",
+    "keywords": "task manager, productivity, open source, React, TypeScript, Supabase",
+    "screenshot": "https://tasks.ai-aarti.com/og-image.svg"
+  }
+  </script>
+
+  <style>
+    /* Design tokens */
+    :root {
+      --bg: #0f172a;
+      --bg-card: #1e293b;
+      --bg-card-hover: #243044;
+      --border: rgba(139,92,246,.18);
+      --violet: #8b5cf6;
+      --violet-light: #a78bfa;
+      --violet-dim: rgba(139,92,246,.12);
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --green: #34d399;
+      --radius: 14px;
+      --radius-sm: 8px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Layout ── */
+    .container { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+
+    /* ── Nav ── */
+    nav {
+      position: sticky; top: 0; z-index: 10;
+      background: rgba(15,23,42,.88);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 0;
+    }
+    .nav-inner { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+    .nav-brand { font-size: 1.05rem; font-weight: 700; color: var(--text); text-decoration: none; display: flex; align-items: center; gap: 8px; }
+    .nav-brand svg { width: 22px; height: 22px; }
+    .nav-links { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 18px; border-radius: 9999px; font-size: .875rem; font-weight: 600;
+      text-decoration: none; transition: all .18s;
+      white-space: nowrap;
+    }
+    .btn-primary { background: var(--violet); color: #fff; }
+    .btn-primary:hover { background: var(--violet-light); transform: translateY(-1px); }
+    .btn-ghost { color: var(--text-muted); border: 1px solid var(--border); }
+    .btn-ghost:hover { color: var(--text); border-color: var(--violet-light); }
+
+    /* ── Hero ── */
+    .hero { padding: 100px 0 80px; text-align: center; }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 5px 14px; border-radius: 9999px;
+      background: var(--violet-dim); border: 1px solid var(--border);
+      font-size: .8rem; font-weight: 600; color: var(--violet-light);
+      margin-bottom: 28px;
+    }
+    .hero-badge span { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+    h1 {
+      font-size: clamp(2.4rem, 6vw, 4rem);
+      font-weight: 800; line-height: 1.12; letter-spacing: -.03em;
+      margin-bottom: 20px;
+    }
+    .grad { background: linear-gradient(135deg, #a78bfa 0%, #60a5fa 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .hero-sub {
+      font-size: clamp(1.05rem, 2.5vw, 1.25rem);
+      color: var(--text-muted); max-width: 620px; margin: 0 auto 40px;
+      line-height: 1.7;
+    }
+    .hero-cta { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+    .btn-lg { padding: 13px 28px; font-size: 1rem; border-radius: var(--radius); }
+
+    /* ── Stats ── */
+    .stats {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 1px; background: var(--border);
+      border: 1px solid var(--border); border-radius: var(--radius);
+      overflow: hidden; margin: 64px 0;
+    }
+    .stat {
+      background: var(--bg-card); padding: 28px 20px; text-align: center;
+    }
+    .stat-value { font-size: 2rem; font-weight: 800; color: var(--violet-light); line-height: 1; margin-bottom: 6px; }
+    .stat-label { font-size: .8rem; color: var(--text-dim); font-weight: 500; text-transform: uppercase; letter-spacing: .08em; }
+
+    /* ── Section headings ── */
+    .section { padding: 72px 0; }
+    .section-eyebrow { font-size: .75rem; font-weight: 700; color: var(--violet); text-transform: uppercase; letter-spacing: .14em; margin-bottom: 12px; }
+    .section-title { font-size: clamp(1.7rem, 4vw, 2.5rem); font-weight: 800; line-height: 1.2; margin-bottom: 16px; }
+    .section-sub { font-size: 1.05rem; color: var(--text-muted); max-width: 540px; line-height: 1.7; margin-bottom: 48px; }
+
+    /* ── Feature grid ── */
+    .feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+    .feature-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 28px;
+      transition: border-color .18s, background .18s;
+    }
+    .feature-card:hover { border-color: var(--violet); background: var(--bg-card-hover); }
+    .feature-icon { font-size: 1.75rem; margin-bottom: 14px; }
+    .feature-title { font-size: 1rem; font-weight: 700; margin-bottom: 8px; }
+    .feature-desc { font-size: .9rem; color: var(--text-muted); line-height: 1.6; }
+
+    /* ── How it works ── */
+    .steps { display: grid; gap: 16px; }
+    .step {
+      display: flex; gap: 20px; align-items: flex-start;
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 24px;
+    }
+    .step-num {
+      flex-shrink: 0; width: 36px; height: 36px; border-radius: 50%;
+      background: var(--violet-dim); border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: .85rem; font-weight: 800; color: var(--violet-light);
+    }
+    .step-body h3 { font-size: 1rem; font-weight: 700; margin-bottom: 6px; }
+    .step-body p { font-size: .9rem; color: var(--text-muted); line-height: 1.6; }
+
+    /* ── Tech stack pills ── */
+    .tech-list { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 28px; }
+    .tech-pill {
+      padding: 6px 14px; border-radius: 9999px;
+      background: var(--bg-card); border: 1px solid var(--border);
+      font-size: .8rem; font-weight: 600; color: var(--text-muted);
+    }
+
+    /* ── Promise section ── */
+    .promise {
+      background: linear-gradient(135deg, rgba(139,92,246,.08) 0%, rgba(96,165,250,.05) 100%);
+      border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 48px 40px; margin: 64px 0;
+    }
+    .promise blockquote {
+      font-size: clamp(1.15rem, 2.5vw, 1.4rem); font-style: italic;
+      color: var(--text-muted); line-height: 1.7; max-width: 700px;
+    }
+    .promise cite { display: block; margin-top: 16px; font-size: .875rem; font-style: normal; color: var(--violet-light); font-weight: 600; }
+
+    /* ── Deployments ── */
+    .deploy-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+    .deploy-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 24px; text-decoration: none;
+      display: block; transition: all .18s;
+    }
+    .deploy-card:hover { border-color: var(--violet); transform: translateY(-2px); }
+    .deploy-dot { display: inline-flex; align-items: center; gap: 6px; font-size: .75rem; font-weight: 600; color: var(--green); margin-bottom: 10px; }
+    .deploy-dot::before { content: ''; display: block; width: 7px; height: 7px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1}50%{opacity:.4} }
+    .deploy-card h3 { font-size: 1rem; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+    .deploy-card p { font-size: .85rem; color: var(--text-muted); }
+    .deploy-url { font-size: .8rem; color: var(--violet-light); margin-top: 10px; font-weight: 600; }
+
+    /* ── CTA ── */
+    .cta-section {
+      text-align: center; padding: 80px 0 100px;
+      border-top: 1px solid var(--border);
+    }
+    .cta-section h2 { font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 800; margin-bottom: 16px; }
+    .cta-section p { font-size: 1.1rem; color: var(--text-muted); margin-bottom: 36px; }
+
+    /* ── Footer ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 32px 0;
+    }
+    .footer-inner { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; justify-content: space-between; }
+    .footer-links { display: flex; flex-wrap: wrap; gap: 20px; }
+    .footer-links a { font-size: .875rem; color: var(--text-dim); text-decoration: none; transition: color .15s; }
+    .footer-links a:hover { color: var(--violet-light); }
+    .footer-copy { font-size: .8rem; color: var(--text-dim); }
+
+    /* ── Responsive ── */
+    @media (max-width: 640px) {
+      .hero { padding: 72px 0 56px; }
+      .nav-links .btn-ghost { display: none; }
+      .promise { padding: 32px 24px; }
+      .step { flex-direction: column; gap: 12px; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Nav -->
+  <nav>
+    <div class="container nav-inner">
+      <a href="https://aartisr.github.io/task-laureate/" class="nav-brand">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
+        </svg>
+        Task-Laureate
+      </a>
+      <div class="nav-links">
+        <a href="https://github.com/aartisr/task-laureate" class="btn btn-ghost" rel="noopener noreferrer" target="_blank">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
+          GitHub
+        </a>
+        <a href="https://tasks.ai-aarti.com" class="btn btn-primary" rel="noopener noreferrer" target="_blank">
+          Open App →
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <header class="hero">
+    <div class="container">
+      <div class="hero-badge">
+        <span aria-hidden="true"></span>
+        Live &amp; open-source
+      </div>
+      <h1>
+        The task workspace that<br />
+        <span class="grad">respects your privacy</span>
+      </h1>
+      <p class="hero-sub">
+        Task-Laureate is a calm, keyboard-friendly workspace for planning lists,
+        tracking progress, collaborating with teammates, and recovering from any mistake — with undo.
+        Private by default. Honest about your data.
+      </p>
+      <div class="hero-cta">
+        <a href="https://tasks.ai-aarti.com" class="btn btn-primary btn-lg" rel="noopener noreferrer" target="_blank">
+          Try Task-Laureate free →
+        </a>
+        <a href="https://tasks.ai-aarti.com/sample" class="btn btn-ghost btn-lg" rel="noopener noreferrer" target="_blank">
+          Explore sample workspace
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="container">
+
+      <!-- Stats -->
+      <div class="stats" role="list" aria-label="Key numbers">
+        <div class="stat" role="listitem">
+          <div class="stat-value">100%</div>
+          <div class="stat-label">Private by default</div>
+        </div>
+        <div class="stat" role="listitem">
+          <div class="stat-value">0</div>
+          <div class="stat-label">Ads or tracking</div>
+        </div>
+        <div class="stat" role="listitem">
+          <div class="stat-value">∞</div>
+          <div class="stat-label">Undo history</div>
+        </div>
+        <div class="stat" role="listitem">
+          <div class="stat-value">2</div>
+          <div class="stat-label">Live deployments</div>
+        </div>
+        <div class="stat" role="listitem">
+          <div class="stat-value">OSS</div>
+          <div class="stat-label">Open source</div>
+        </div>
+      </div>
+
+      <!-- Features -->
+      <section class="section" aria-labelledby="features-heading">
+        <p class="section-eyebrow">What's inside</p>
+        <h2 class="section-title" id="features-heading">Everything a focused team needs</h2>
+        <p class="section-sub">
+          No bloat, no dark patterns, no misleading save states.
+          Every feature earns its place by reducing mental overhead.
+        </p>
+        <div class="feature-grid">
+          <article class="feature-card">
+            <div class="feature-icon" aria-hidden="true">✅</div>
+            <h3 class="feature-title">Lists, tasks, and priorities</h3>
+            <p class="feature-desc">Organize work into lists. Set priorities (low → urgent), due dates, tags, and rich notes. Filter and sort in milliseconds.</p>
+          </article>
+          <article class="feature-card">
+            <div class="feature-icon" aria-hidden="true">↩️</div>
+            <h3 class="feature-title">Undo journal for everything</h3>
+            <p class="feature-desc">Every task and list mutation is reversible. Create, rename, reorder, complete, or delete — then undo it. No destructive surprises.</p>
+          </article>
+          <article class="feature-card">
+            <div class="feature-icon" aria-hidden="true">🤝</div>
+            <h3 class="feature-title">Real-time collaboration</h3>
+            <p class="feature-desc">Share lists and tasks via one-time invitation links. Owner, editor, and viewer roles enforced at the database level with RLS.</p>
+          </article>
+          <article class="feature-card">
+            <div class="feature-icon" aria-hidden="true">🔔</div>
+            <h3 class="feature-title">Reminders that reach you</h3>
+            <p class="feature-desc">Assignment-aware reminders delivered in-app, by email, or by SMS. Configurable offsets, per-channel opt-in, and delivery receipts.</p>
+          </article>
+          <article class="feature-card">
+            <div class="feature-icon" aria-hidden="true">🔍</div>
+            <h3 class="feature-title">Full-workspace search</h3>
+            <p class="feature-desc">Search across all lists and tasks instantly. Activity history shows every change so nothing is ever silently lost.</p>
+          </article>
+          <article class="feature-card">
+            <div class="feature-icon" aria-hidden="true">🎨</div>
+            <h3 class="feature-title">Premium themes & accessibility</h3>
+            <p class="feature-desc">Multiple hand-crafted themes with WCAG AAA contrast. Fully keyboard-navigable. Instant switching with no reload.</p>
+          </article>
+          <article class="feature-card">
+            <div class="feature-icon" aria-hidden="true">🔒</div>
+            <h3 class="feature-title">Honest about durability</h3>
+            <p class="feature-desc">Local, saving, synced, and error states are always visible. The app never claims a cloud save succeeded when it did not.</p>
+          </article>
+          <article class="feature-card">
+            <div class="feature-icon" aria-hidden="true">📦</div>
+            <h3 class="feature-title">Workspace export &amp; import</h3>
+            <p class="feature-desc">Export your entire workspace as a versioned JSON file. Import it anywhere. Your data is yours — no lock-in.</p>
+          </article>
+          <article class="feature-card">
+            <div class="feature-icon" aria-hidden="true">⚡</div>
+            <h3 class="feature-title">Works before sign-in</h3>
+            <p class="feature-desc">Explore and create tasks without creating an account. Sign in when you're ready and your drafts travel with you.</p>
+          </article>
+        </div>
+      </section>
+
+      <!-- How it works -->
+      <section class="section" aria-labelledby="how-heading">
+        <p class="section-eyebrow">How it works</p>
+        <h2 class="section-title" id="how-heading">From idea to done in seconds</h2>
+        <p class="section-sub">No onboarding video. No tour overlay. Just a workspace that works.</p>
+        <div class="steps">
+          <div class="step">
+            <div class="step-num" aria-hidden="true">1</div>
+            <div class="step-body">
+              <h3>Open the app — no account required</h3>
+              <p>Start creating tasks immediately. Explore the sample workspace to see every feature in action before committing to an account.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num" aria-hidden="true">2</div>
+            <div class="step-body">
+              <h3>Create lists and add tasks</h3>
+              <p>Organize work into named lists. Add tasks with priorities, due dates, rich notes, and tags. Keyboard shortcuts keep your hands off the mouse.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num" aria-hidden="true">3</div>
+            <div class="step-body">
+              <h3>Sign in to sync and collaborate</h3>
+              <p>Sign in with email or a social provider. Your local work syncs instantly. Share lists with teammates via one-time invitation links.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num" aria-hidden="true">4</div>
+            <div class="step-body">
+              <h3>Track, search, and review</h3>
+              <p>Monitor progress, search across everything, review the full activity history, and undo any mistake — at any time.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div><!-- /container -->
+
+    <!-- Promise quote -->
+    <div class="container">
+      <div class="promise">
+        <blockquote>
+          "Your work deserves clarity. Your data deserves an accurate status. Your attention is valuable.
+           Task-Laureate is designed around a conviction: a task manager should reduce mental overhead,
+           not become another place to manage."
+          <cite>— Aarti S Ravikumar, creator · <a href="https://ai-aarti.com" style="color:inherit" rel="noopener noreferrer" target="_blank">ai-aarti.com</a></cite>
+        </blockquote>
+      </div>
+    </div>
+
+    <div class="container">
+
+      <!-- Tech stack -->
+      <section class="section" aria-labelledby="tech-heading">
+        <p class="section-eyebrow">Built on</p>
+        <h2 class="section-title" id="tech-heading">A modern, inspectable stack</h2>
+        <p class="section-sub">Every dependency earns its place. No black boxes. The entire implementation lives in the public repository.</p>
+        <div class="tech-list" role="list" aria-label="Technology stack">
+          <span class="tech-pill" role="listitem">React 18</span>
+          <span class="tech-pill" role="listitem">TypeScript</span>
+          <span class="tech-pill" role="listitem">Vite</span>
+          <span class="tech-pill" role="listitem">TanStack Router</span>
+          <span class="tech-pill" role="listitem">TanStack Query</span>
+          <span class="tech-pill" role="listitem">Supabase</span>
+          <span class="tech-pill" role="listitem">PostgreSQL + RLS</span>
+          <span class="tech-pill" role="listitem">Vitest</span>
+          <span class="tech-pill" role="listitem">Vercel</span>
+          <span class="tech-pill" role="listitem">PostHog Analytics</span>
+          <span class="tech-pill" role="listitem">Web Push API</span>
+          <span class="tech-pill" role="listitem">Resend</span>
+        </div>
+      </section>
+
+      <!-- Live deployments -->
+      <section class="section" aria-labelledby="deploy-heading">
+        <p class="section-eyebrow">Live now</p>
+        <h2 class="section-title" id="deploy-heading">Two public deployments</h2>
+        <p class="section-sub">Task-Laureate is deployed and actively used. Both serve the same codebase from this repository.</p>
+        <div class="deploy-grid">
+          <a href="https://tasks.ai-aarti.com" class="deploy-card" rel="noopener noreferrer" target="_blank" aria-label="Open AI Aarti deployment">
+            <div class="deploy-dot" aria-label="Live">Live</div>
+            <h3>AI Aarti deployment</h3>
+            <p>Personal productivity workspace by Aarti S Ravikumar, student developer and researcher.</p>
+            <div class="deploy-url">tasks.ai-aarti.com →</div>
+          </a>
+          <a href="https://tasks.pcssiirobotics.org" class="deploy-card" rel="noopener noreferrer" target="_blank" aria-label="Open PCSSII Robotics deployment">
+            <div class="deploy-dot" aria-label="Live">Live</div>
+            <h3>PCSSII Robotics deployment</h3>
+            <p>Team coordination workspace for Pioneer Charter School of Science II Robotics.</p>
+            <div class="deploy-url">tasks.pcssiirobotics.org →</div>
+          </a>
+        </div>
+      </section>
+
+    </div><!-- /container -->
+
+    <!-- CTA -->
+    <div class="container">
+      <section class="cta-section" aria-labelledby="cta-heading">
+        <h2 id="cta-heading">Ready to make your work visible?</h2>
+        <p>Free to use. No credit card. No lock-in. Open source.</p>
+        <div class="hero-cta">
+          <a href="https://tasks.ai-aarti.com" class="btn btn-primary btn-lg" rel="noopener noreferrer" target="_blank">
+            Open Task-Laureate →
+          </a>
+          <a href="https://github.com/aartisr/task-laureate" class="btn btn-ghost btn-lg" rel="noopener noreferrer" target="_blank">
+            View source on GitHub
+          </a>
+        </div>
+      </section>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container footer-inner">
+      <nav class="footer-links" aria-label="Footer navigation">
+        <a href="https://tasks.ai-aarti.com" rel="noopener noreferrer" target="_blank">Live App</a>
+        <a href="https://tasks.ai-aarti.com/sample" rel="noopener noreferrer" target="_blank">Sample Workspace</a>
+        <a href="https://github.com/aartisr/task-laureate" rel="noopener noreferrer" target="_blank">GitHub</a>
+        <a href="https://github.com/aartisr/task-laureate/blob/master/docs/ARCHITECTURE_GUIDE.md" rel="noopener noreferrer" target="_blank">Architecture</a>
+        <a href="https://ai-aarti.com" rel="noopener noreferrer" target="_blank">Aarti S Ravikumar</a>
+        <a href="https://saugus.pioneercss.org" rel="noopener noreferrer" target="_blank">PCSSII</a>
+      </nav>
+      <p class="footer-copy">
+        Built by <a href="https://ai-aarti.com" style="color:inherit" rel="noopener noreferrer" target="_blank">Aarti S Ravikumar</a>
+        · Open source on <a href="https://github.com/aartisr/task-laureate" style="color:inherit" rel="noopener noreferrer" target="_blank">GitHub</a>
+      </p>
+    </div>
+  </footer>
+
+</body>
+</html>
