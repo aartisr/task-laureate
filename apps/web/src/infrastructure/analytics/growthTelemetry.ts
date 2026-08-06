@@ -2,9 +2,18 @@
  *
  * Events contain only a controlled name and allow-listed scalar properties.
  * Task content, email addresses, raw IDs, and authentication tokens are never
- * accepted. An optional same-origin or trusted endpoint makes this portable to
- * any analytics provider without coupling product code to that provider.
+ * accepted.
+ *
+ * Events are dispatched to three channels:
+ *   1. A window CustomEvent  (local observability, tests, other listeners)
+ *   2. An optional same-origin beacon endpoint (VITE_GROWTH_ANALYTICS_ENDPOINT)
+ *   3. The registered AnalyticsDispatcher (PostHog or any other sink)
+ *
+ * Product features call trackGrowthEvent() and never import posthog-js directly.
  */
+
+import { getAnalyticsDispatcher } from './analytics';
+
 export type GrowthEventName =
   | 'landing_viewed' | 'demo_started' | 'signup_started' | 'signup_completed'
   | 'first_list_created' | 'first_task_created' | 'first_due_date_set'
@@ -30,7 +39,14 @@ function sanitize(properties: Record<string, unknown> | undefined): Record<strin
 
 export function trackGrowthEvent(name: GrowthEventName, properties?: Record<string, unknown>) {
   const event: GrowthEvent = { name, properties: sanitize(properties), occurredAt: new Date().toISOString() };
+
+  // Channel 1: local CustomEvent (for tests and same-page listeners)
   window.dispatchEvent(new CustomEvent<GrowthEvent>('task-laureate:growth-event', { detail: event }));
+
+  // Channel 2: vendor-specific sinks (PostHog, future vendors)
+  getAnalyticsDispatcher().capture(event);
+
+  // Channel 3: optional beacon endpoint
   if (!endpoint || !navigator.sendBeacon) return;
   try {
     navigator.sendBeacon(endpoint, new Blob([JSON.stringify(event)], { type: 'application/json' }));

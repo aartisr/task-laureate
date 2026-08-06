@@ -11,6 +11,14 @@ import { getPersistenceStatus, subscribeToPersistenceStatus, type PersistenceSta
 import { authProvider } from '../../config/persistence.config';
 import { shouldReinitializeForAuthChange } from '../../core/auth/sessionTransitions';
 import { trackGrowthEvent } from '../../infrastructure/analytics/growthTelemetry';
+import { initializeAnalytics } from '../../infrastructure/analytics/analyticsSetup';
+import { getAnalyticsDispatcher } from '../../infrastructure/analytics/analytics';
+
+// Initialize the analytics dispatcher once at module load time (browser only).
+// This ensures the dispatcher is registered before any trackGrowthEvent() call.
+if (typeof window !== 'undefined') {
+  initializeAnalytics();
+}
 
 export function AppProviders() {
   const [ready, setReady] = useState(false);
@@ -55,14 +63,20 @@ export function AppProviders() {
     return authProvider.subscribe((session) => {
       const nextUserId = session?.user.id ?? null;
       if (observedAuthUserId.current === undefined) {
+        // Baseline INITIAL_SESSION – identify if already signed in
         observedAuthUserId.current = nextUserId;
+        if (nextUserId) getAnalyticsDispatcher().identify({ userId: nextUserId });
         return;
       }
       if (!shouldReinitializeForAuthChange(observedAuthUserId.current, nextUserId, window.location.pathname)) {
         observedAuthUserId.current = nextUserId;
         return;
       }
+      // Auth transition: reset identity before clearing the workspace cache,
+      // then identify the new user if one signed in.
+      getAnalyticsDispatcher().reset();
       observedAuthUserId.current = nextUserId;
+      if (nextUserId) getAnalyticsDispatcher().identify({ userId: nextUserId });
       reconnect();
     });
   }, []);

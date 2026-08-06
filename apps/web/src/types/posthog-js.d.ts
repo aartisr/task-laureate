@@ -1,11 +1,14 @@
-/// <reference types="vite/client" />
+/**
+ * Minimal posthog-js type stub.
+ *
+ * This file provides just enough types for the analytics infrastructure to
+ * compile before `posthog-js` is installed. Once `npm install` runs and the
+ * real package is present in node_modules, TypeScript will prefer the official
+ * declarations and this stub can be removed.
+ *
+ * @see https://posthog.com/docs/libraries/js
+ */
 
-// ---------------------------------------------------------------------------
-// posthog-js type stub
-// Provides compile-time types before `npm install` installs the real package.
-// Once posthog-js is present in node_modules its own types take precedence
-// because TypeScript prefers node_modules over ambient declarations.
-// ---------------------------------------------------------------------------
 declare module 'posthog-js' {
   export interface PostHogConfig {
     api_host?: string;

@@ -9,6 +9,7 @@ import { UndoCenter } from '../components/UndoCenter';
 import { authProvider } from '../config/persistence.config';
 import { NotificationInbox } from '../components/NotificationInbox';
 import { ReminderDeliveryPreferences } from '../components/ReminderDeliveryPreferences';
+import { AnalyticsConsentControl } from '../components/AnalyticsConsentControl';
 
 /**
  * Premium Settings Page
@@ -190,6 +191,12 @@ export function SettingsPage() {
         <NotificationInbox />
 
         <ReminderDeliveryPreferences />
+
+        <div style={{
+          borderTop: '1px solid var(--color-border-light)',
+        }} />
+
+        <AnalyticsConsentControl />
 
         <div style={{
           borderTop: '1px solid var(--color-border-light)',
