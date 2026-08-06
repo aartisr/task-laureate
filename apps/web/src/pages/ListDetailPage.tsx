@@ -96,7 +96,7 @@ export function ListDetailPage({ listId }: ListDetailPageProps) {
 
   if (listLoading) {
     return (
-      <section className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 p-8" aria-label="List editor">
+      <section className="list-detail-page" aria-label="List editor">
         <div className="text-center">
           <p className="text-gray-500" aria-live="polite" aria-busy="true">Loading list...</p>
         </div>
@@ -106,7 +106,7 @@ export function ListDetailPage({ listId }: ListDetailPageProps) {
 
   if (!list) {
     return (
-      <section className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 p-8" aria-label="List editor">
+      <section className="list-detail-page" aria-label="List editor">
         <div className="text-center">
           <p className="text-gray-500">List not found</p>
           <button
@@ -197,8 +197,8 @@ export function ListDetailPage({ listId }: ListDetailPageProps) {
   };
 
   return (
-    <section className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 p-8" aria-label={`${list.title} list editor`}>
-      <div className="max-w-4xl mx-auto">
+    <section className="list-detail-page" aria-label={`${list.title} list editor`}>
+      <div className="list-detail-container">
         {/* Header with Back Button */}
         <header className="mb-8">
           <button
@@ -210,8 +210,8 @@ export function ListDetailPage({ listId }: ListDetailPageProps) {
           </button>
 
           {/* Title Section */}
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex-1">
+          <div className="list-detail-header">
+            <div className="list-detail-heading">
               {editingTitle ? (
                 <div className="space-y-2">
                   <input
