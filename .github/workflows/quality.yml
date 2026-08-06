@@ -19,7 +19,7 @@ jobs:
         with:
           node-version: 20.19.0
           cache: npm
-      - run: npm ci --include=optional
+      - run: npm install --include=optional
       - run: npm run verify:production
       - run: npm run lint
       - run: npm test
