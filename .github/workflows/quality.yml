@@ -20,7 +20,17 @@ jobs:
           node-version: 20.19.0
           cache: npm
       - run: npm ci --include=optional
-      - run: npm run verify:production
-      - run: npm run lint
-      - run: npm test
-      - run: npm run build
+      - run: npm run quality:gate
+
+  security:
+    name: Production dependency security scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20.19.0
+          cache: npm
+      - run: npm ci --include=optional
+      - run: npm run check:security

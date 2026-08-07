@@ -253,7 +253,14 @@ describe('createNoopSink()', () => {
 // ---------------------------------------------------------------------------
 
 describe('createPostHogSink() – consent gate', () => {
-  beforeEach(() => _resetPostHogClientForTest());
+  beforeEach(() => {
+    _resetPostHogClientForTest();
+    vi.stubEnv('VITE_POSTHOG_FORCE_LOCAL', 'true');
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
 
   it('returns a no-op sink when config is invalid', () => {
     const sink = createPostHogSink({

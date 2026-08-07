@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "postbuild": "node scripts/mirror-build-output.mjs",
+    "check:perf-budgets": "node scripts/check-performance-budgets.mjs",
     "preview": "vite preview",
     "test": "vitest run",
     "test:supabase": "RUN_SUPABASE_INTEGRATION=true vitest run src/infrastructure/persistence/supabase.integration.test.ts",
