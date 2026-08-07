@@ -19,7 +19,7 @@ jobs:
         with:
           node-version: 20.19.0
           cache: npm
-      - run: npm ci --include=optional
+      - run: npm ci --include=dev --include=optional
       - run: npm run quality:gate
 
   security:
