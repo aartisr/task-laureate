@@ -90,6 +90,12 @@ export function AnalyticsConsentControl() {
     refreshDiagnostics();
   }, [decision]);
 
+  useEffect(() => {
+    if (!analyticsConfigured) return;
+    if (decision !== 'granted') return;
+    getAnalyticsDispatcher().setConsent({ granted: true, version: config.consentVersion });
+  }, [analyticsConfigured, decision, config.consentVersion]);
+
   const handleGrant = async () => {
     if (!analyticsConfigured) {
       setStatusMessage(`Analytics is currently unavailable: ${config.reason}`);

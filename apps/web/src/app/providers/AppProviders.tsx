@@ -13,6 +13,8 @@ import { shouldReinitializeForAuthChange } from '../../core/auth/sessionTransiti
 import { trackGrowthEvent } from '../../infrastructure/analytics/growthTelemetry';
 import { initializeAnalytics } from '../../infrastructure/analytics/analyticsSetup';
 import { getAnalyticsDispatcher } from '../../infrastructure/analytics/analytics';
+import { getAnalyticsConfig } from '../../infrastructure/analytics/analyticsConfig';
+import { getConsentDecision } from '../../core/privacy/analyticsConsent';
 
 // Initialize the analytics dispatcher once at module load time (browser only).
 // This ensures the dispatcher is registered before any trackGrowthEvent() call.
@@ -75,6 +77,9 @@ export function AppProviders() {
       // Auth transition: reset identity before clearing the workspace cache,
       // then identify the new user if one signed in.
       getAnalyticsDispatcher().reset();
+      const consentVersion = getAnalyticsConfig().consentVersion;
+      const consentGranted = getConsentDecision(consentVersion) === 'granted';
+      getAnalyticsDispatcher().setConsent({ granted: consentGranted, version: consentVersion });
       observedAuthUserId.current = nextUserId;
       if (nextUserId) getAnalyticsDispatcher().identify({ userId: nextUserId });
       reconnect();
