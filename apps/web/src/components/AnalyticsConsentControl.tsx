@@ -15,6 +15,21 @@ import { useState, useEffect } from 'react';
 import { getConsentDecision, setConsentDecision, withdrawConsent, subscribeToConsent, type ConsentDecision } from '../core/privacy/analyticsConsent';
 import { getAnalyticsConfig } from '../infrastructure/analytics/analyticsConfig';
 import { getAnalyticsDispatcher } from '../infrastructure/analytics/analytics';
+import { getCachedPostHogInstance, getInitPromise, shouldInitPostHog } from '../infrastructure/analytics/posthogClient';
+
+interface AnalyticsDiagnostics {
+  readonly consentDecision: ConsentDecision;
+  readonly configValid: boolean;
+  readonly configReason: string;
+  readonly shouldInitNow: boolean;
+  readonly cachedClient: boolean;
+  readonly initInFlight: boolean;
+  readonly tokenPrefix: string;
+  readonly host: string;
+  readonly distinctId: string;
+  readonly optedOut: string;
+  readonly checkedAt: string;
+}
 
 function useConsentState(): [ConsentDecision, boolean] {
   const config = getAnalyticsConfig();
@@ -40,6 +55,40 @@ export function AnalyticsConsentControl() {
   // We need separate state for the button loading state
   const [submitting, setSubmitting] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
+  const [diagnostics, setDiagnostics] = useState<AnalyticsDiagnostics | null>(null);
+
+  const refreshDiagnostics = () => {
+    const cachedClient = getCachedPostHogInstance();
+    let distinctId = 'n/a';
+    let optedOut = 'n/a';
+    try {
+      if (cachedClient) {
+        distinctId = String(cachedClient.get_distinct_id?.() ?? 'unknown');
+        optedOut = String(cachedClient.has_opted_out_capturing?.() ?? 'unknown');
+      }
+    } catch {
+      distinctId = 'error reading client';
+      optedOut = 'error reading client';
+    }
+
+    setDiagnostics({
+      consentDecision: decision,
+      configValid: config.isValid,
+      configReason: config.reason,
+      shouldInitNow: shouldInitPostHog(config),
+      cachedClient: Boolean(cachedClient),
+      initInFlight: Boolean(getInitPromise()),
+      tokenPrefix: config.key ? `${config.key.slice(0, 8)}…` : '(missing)',
+      host: config.host,
+      distinctId,
+      optedOut,
+      checkedAt: new Date().toLocaleString(),
+    });
+  };
+
+  useEffect(() => {
+    refreshDiagnostics();
+  }, [decision]);
 
   const handleGrant = async () => {
     if (!analyticsConfigured) {
@@ -237,6 +286,46 @@ export function AnalyticsConsentControl() {
           {statusMessage}
         </p>
       )}
+
+      <section
+        aria-labelledby="analytics-diagnostics-heading"
+        style={{
+          display: 'grid',
+          gap: 'var(--spacing-3)',
+          padding: 'var(--spacing-4)',
+          borderRadius: 'var(--radius-lg)',
+          border: '1px solid var(--color-border-light)',
+          backgroundColor: 'var(--color-bg-primary)',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--spacing-3)', flexWrap: 'wrap' }}>
+          <h3
+            id="analytics-diagnostics-heading"
+            style={{ margin: 0, fontSize: '0.95rem', fontWeight: 'var(--font-weight-bold)', color: 'var(--color-text-primary)' }}
+          >
+            Analytics diagnostics
+          </h3>
+          <button type="button" className="secondary-button" onClick={refreshDiagnostics} style={{ minWidth: 'max-content' }}>
+            Refresh diagnostics
+          </button>
+        </div>
+
+        {diagnostics && (
+          <div style={{ display: 'grid', gap: 'var(--spacing-2)', fontSize: '0.85rem' }}>
+            <p style={{ margin: 0, color: 'var(--color-text-secondary)' }}><strong>Checked:</strong> {diagnostics.checkedAt}</p>
+            <p style={{ margin: 0, color: 'var(--color-text-secondary)' }}><strong>Consent decision:</strong> {diagnostics.consentDecision}</p>
+            <p style={{ margin: 0, color: diagnostics.configValid ? 'var(--color-status-success)' : 'var(--color-status-error, #e53e3e)' }}><strong>Config valid:</strong> {String(diagnostics.configValid)}</p>
+            <p style={{ margin: 0, color: 'var(--color-text-secondary)' }}><strong>Config reason:</strong> {diagnostics.configReason}</p>
+            <p style={{ margin: 0, color: 'var(--color-text-secondary)' }}><strong>Should init now:</strong> {String(diagnostics.shouldInitNow)}</p>
+            <p style={{ margin: 0, color: 'var(--color-text-secondary)' }}><strong>SDK init in-flight:</strong> {String(diagnostics.initInFlight)}</p>
+            <p style={{ margin: 0, color: diagnostics.cachedClient ? 'var(--color-status-success)' : 'var(--color-text-secondary)' }}><strong>Cached PostHog client:</strong> {String(diagnostics.cachedClient)}</p>
+            <p style={{ margin: 0, color: 'var(--color-text-secondary)' }}><strong>Distinct ID:</strong> {diagnostics.distinctId}</p>
+            <p style={{ margin: 0, color: 'var(--color-text-secondary)' }}><strong>Opted out:</strong> {diagnostics.optedOut}</p>
+            <p style={{ margin: 0, color: 'var(--color-text-secondary)' }}><strong>Host:</strong> {diagnostics.host}</p>
+            <p style={{ margin: 0, color: 'var(--color-text-secondary)' }}><strong>Token prefix:</strong> {diagnostics.tokenPrefix}</p>
+          </div>
+        )}
+      </section>
 
       <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--color-text-tertiary, var(--color-text-secondary))' }}>
         {analyticsConfigured
