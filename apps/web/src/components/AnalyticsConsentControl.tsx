@@ -32,6 +32,7 @@ function useConsentState(): [ConsentDecision, boolean] {
 
 export function AnalyticsConsentControl() {
   const config = getAnalyticsConfig();
+  const analyticsConfigured = config.isValid;
   const [decision, setBusy] = useConsentState();
   const [busy] = [false]; // keep API consistent; remove lint warning below
   void busy; // consumed above
@@ -41,6 +42,10 @@ export function AnalyticsConsentControl() {
   const [statusMessage, setStatusMessage] = useState('');
 
   const handleGrant = async () => {
+    if (!analyticsConfigured) {
+      setStatusMessage(`Analytics is currently unavailable: ${config.reason}`);
+      return;
+    }
     setSubmitting(true);
     setConsentDecision('granted', config.consentVersion);
     getAnalyticsDispatcher().setConsent({ granted: true, version: config.consentVersion });
@@ -151,6 +156,22 @@ export function AnalyticsConsentControl() {
         {decision === 'unknown' && '○ Not yet decided – analytics is off until you choose.'}
       </div>
 
+      {!analyticsConfigured && (
+        <div
+          role="alert"
+          style={{
+            padding: 'var(--spacing-3) var(--spacing-4)',
+            borderRadius: 'var(--radius-lg)',
+            backgroundColor: 'color-mix(in srgb, var(--color-status-error, #e53e3e) 10%, transparent)',
+            border: '1px solid color-mix(in srgb, var(--color-status-error, #e53e3e) 30%, transparent)',
+            color: 'var(--color-text-primary)',
+            fontSize: '0.875rem',
+          }}
+        >
+          Analytics is unavailable in this deployment: {config.reason}.
+        </div>
+      )}
+
       {/* Action buttons */}
       <div
         style={{
@@ -163,7 +184,7 @@ export function AnalyticsConsentControl() {
         {decision !== 'granted' && (
           <button
             type="button"
-            disabled={submitting}
+            disabled={submitting || !analyticsConfigured}
             onClick={() => void handleGrant()}
             className="primary-button"
             style={{ minWidth: 'max-content' }}
@@ -174,6 +195,7 @@ export function AnalyticsConsentControl() {
         {decision === 'unknown' && (
           <button
             type="button"
+            disabled={!analyticsConfigured}
             onClick={handleDeny}
             className="secondary-button"
             style={{ minWidth: 'max-content' }}
@@ -184,6 +206,7 @@ export function AnalyticsConsentControl() {
         {decision === 'granted' && (
           <button
             type="button"
+            disabled={!analyticsConfigured}
             onClick={handleWithdraw}
             className="secondary-button"
             style={{ minWidth: 'max-content' }}
@@ -195,7 +218,7 @@ export function AnalyticsConsentControl() {
           <button
             type="button"
             onClick={() => void handleGrant()}
-            disabled={submitting}
+            disabled={submitting || !analyticsConfigured}
             className="secondary-button"
             style={{ minWidth: 'max-content' }}
           >
@@ -216,7 +239,9 @@ export function AnalyticsConsentControl() {
       )}
 
       <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--color-text-tertiary, var(--color-text-secondary))' }}>
-        Usage data is sent to PostHog{config.host !== 'https://us.i.posthog.com' ? ` at ${config.host}` : ''}.
+        {analyticsConfigured
+          ? `Usage data is sent to PostHog${config.host !== 'https://us.i.posthog.com' ? ` at ${config.host}` : ''}.`
+          : 'Analytics is disabled in this deployment until PostHog environment variables are configured.'}
         You can withdraw at any time. Your tasks and notes are never shared with any analytics provider.
       </p>
     </section>
