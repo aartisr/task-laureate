@@ -13,7 +13,7 @@ Task-Laureate is live at two public addresses:
 - [tasks.ai-aarti.com](https://tasks.ai-aarti.com) — AI Aarti deployment
 - [tasks.pcssiirobotics.org](https://tasks.pcssiirobotics.org) — PCSSII Robotics deployment
 
-Both links should serve the same Task-Laureate experience. If you are configuring a new deployment, follow the [Vercel deployment guide](docs/VERCEL_DEPLOYMENT.md) and add the exact deployed origin to Supabase Auth redirect URLs.
+Both links should serve the same Task-Laureate experience. If you are configuring a new deployment, follow the [production operations runbook](docs/OPERATIONS.md) and add the exact deployed origin to Supabase Auth redirect URLs.
 
 ## Why Task-Laureate exists
 
@@ -89,6 +89,16 @@ docs/                     Architecture, feature, QA, and setup documentation
 ```
 
 ## Documentation
+
+### Must-read first (community quick path)
+
+- [Quick feature guide](docs/QUICK_FEATURE_GUIDE.md)
+- [Architecture guide](docs/ARCHITECTURE_GUIDE.md)
+- [Production operations runbook](docs/OPERATIONS.md)
+- [PostHog integration guide](docs/POSTHOG_CONFIGURATION_GUIDE.md)
+- [QA and production readiness](docs/QA_AND_PRODUCTION_READINESS.md)
+
+### Full docs index
 
 - [Production operations](docs/OPERATIONS.md)
 - [Architecture guide](docs/ARCHITECTURE_GUIDE.md)
