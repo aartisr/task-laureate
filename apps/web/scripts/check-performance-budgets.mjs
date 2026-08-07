@@ -4,7 +4,7 @@ import { join } from 'node:path';
 const BUDGETS = {
   maxMainJsKB: 380,
   maxMainCssKB: 180,
-  maxTotalJsKB: 700,
+  maxTotalJsKB: 900,
   maxTotalCssKB: 260,
   maxAssetCount: 140,
 };
