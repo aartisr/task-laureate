@@ -22,7 +22,6 @@
     "generate:vapid": "node scripts/generate-vapid-keys.mjs"
   },
   "devDependencies": {
-    "jsdom": "^26.1.0",
     "supabase": "^2.110.0"
   }
 }
