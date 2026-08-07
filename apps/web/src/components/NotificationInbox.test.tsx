@@ -21,6 +21,8 @@ describe('NotificationInbox', () => {
   beforeEach(() => {
     (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
     vi.clearAllMocks();
+    vi.stubEnv('VITE_SUPABASE_URL', 'https://example.supabase.co');
+    vi.stubEnv('VITE_SUPABASE_PUBLISHABLE_KEY', 'publishable-key');
     mocked.getSession.mockResolvedValue(session);
     fetchMock = vi.fn()
       .mockResolvedValueOnce(jsonResponse([{ id: 'notice-1', title: 'Due today: Submit report', body: 'Open Task-Laureate to review and complete this task.', kind: 'due_soon', created_at: '2026-08-02T13:00:00.000Z', read_at: null }]))
@@ -34,6 +36,7 @@ describe('NotificationInbox', () => {
   afterEach(async () => {
     await act(async () => root.unmount());
     host.remove();
+    vi.unstubAllEnvs();
     vi.unstubAllGlobals();
   });
 
@@ -44,7 +47,11 @@ describe('NotificationInbox', () => {
       await Promise.resolve();
     });
 
-    expect(host.textContent).toContain('Due today: Submit report');
+    await vi.waitFor(() => {
+      expect(host.textContent).toContain('Due today: Submit report');
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+    });
+
     expect(fetchMock.mock.calls[0][0]).toContain('/rest/v1/notification_events?');
     expect(fetchMock.mock.calls[1][0]).toContain('/rest/v1/notification_preferences?');
     expect(fetchMock.mock.calls[0][1].headers.Authorization).toBe('Bearer session-token');
@@ -67,9 +74,13 @@ describe('NotificationInbox', () => {
       await Promise.resolve();
     });
 
+    await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+
     fetchMock.mockResolvedValueOnce(jsonResponse([]));
     const button = Array.from(host.querySelectorAll('button')).find((candidate) => candidate.textContent === 'Mark read');
     await act(async () => button?.click());
+
+    await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3));
 
     const [url, options] = fetchMock.mock.calls[2];
     expect(url).toContain('notification_events?id=eq.notice-1');

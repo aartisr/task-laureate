@@ -14,7 +14,7 @@ describe('date-only helpers', () => {
   });
 
   it('calculates quick choices as local calendar days', () => {
-    expect(localDate(1, new Date('2026-08-05T23:30:00-04:00'))).toBe('2026-08-06');
+    expect(localDate(1, new Date(2026, 7, 5, 12, 0, 0))).toBe('2026-08-06');
   });
 
   it('compares and formats calendar days without treating them as UTC instants', () => {
