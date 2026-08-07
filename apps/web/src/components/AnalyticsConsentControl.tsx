@@ -230,7 +230,7 @@ export function AnalyticsConsentControl() {
           alignItems: 'center',
         }}
       >
-        {decision !== 'granted' && (
+        {decision === 'unknown' && (
           <button
             type="button"
             disabled={submitting || !analyticsConfigured}
@@ -252,6 +252,17 @@ export function AnalyticsConsentControl() {
             No thanks
           </button>
         )}
+        {decision === 'denied' && (
+          <button
+            type="button"
+            onClick={() => void handleGrant()}
+            disabled={submitting || !analyticsConfigured}
+            className="primary-button"
+            style={{ minWidth: 'max-content' }}
+          >
+            {submitting ? 'Enabling…' : 'Enable analytics'}
+          </button>
+        )}
         {decision === 'granted' && (
           <button
             type="button"
@@ -261,17 +272,6 @@ export function AnalyticsConsentControl() {
             style={{ minWidth: 'max-content' }}
           >
             Withdraw consent
-          </button>
-        )}
-        {decision === 'denied' && (
-          <button
-            type="button"
-            onClick={() => void handleGrant()}
-            disabled={submitting || !analyticsConfigured}
-            className="secondary-button"
-            style={{ minWidth: 'max-content' }}
-          >
-            Enable analytics
           </button>
         )}
       </div>
