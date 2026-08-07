@@ -97,6 +97,7 @@ docs/                     Architecture, feature, QA, and setup documentation
 - [Quick feature guide](docs/QUICK_FEATURE_GUIDE.md)
 - [Architecture guide](docs/ARCHITECTURE_GUIDE.md)
 - [Production operations runbook](docs/OPERATIONS.md)
+- [Performance and reliability gates](docs/PERFORMANCE_MONITORING.md) (includes why Total JS budget is `900 KB` in production CI)
 - [PostHog integration guide](docs/POSTHOG_CONFIGURATION_GUIDE.md)
 - [QA and production readiness](docs/QA_AND_PRODUCTION_READINESS.md)
 

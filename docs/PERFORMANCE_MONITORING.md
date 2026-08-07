@@ -27,7 +27,7 @@ It runs two jobs:
 
 Runs:
 
-- `npm ci --include=optional`
+- `npm ci --include=dev --include=optional`
 - `npm run quality:gate`
 
 `quality:gate` expands to:
@@ -57,9 +57,14 @@ Current thresholds:
 
 - Main JS bundle (`index-*.js`) <= `380 KB`
 - Main CSS bundle (`index-*.css`) <= `180 KB`
-- Total JS bundles <= `700 KB`
+- Total JS bundles <= `900 KB`
 - Total CSS bundles <= `260 KB`
 - Total asset count <= `140 files`
+
+Why total JS is `900 KB`:
+
+- CI and production builds resolve the real `posthog-js` package (instead of the local no-op fallback), which emits a dedicated analytics chunk.
+- That chunk is intentional production functionality, so the budget is calibrated to include it while still protecting against accidental regressions.
 
 If any threshold is exceeded, CI fails.
 
