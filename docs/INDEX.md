@@ -17,6 +17,15 @@ This folder is intentionally curated for high-value, community-useful references
 | [DISCOVERABILITY_AND_GROWTH.md](DISCOVERABILITY_AND_GROWTH.md) | Product discoverability and growth strategy notes |
 | [CHANGELOG.md](CHANGELOG.md) | Public-facing change history |
 
+## Snippet topics
+
+Use these when you want focused examples instead of the full snippets index:
+
+- [CODE_SNIPPETS_PAGES_AND_DATA.md](CODE_SNIPPETS_PAGES_AND_DATA.md)
+- [CODE_SNIPPETS_MUTATIONS_AND_KEYBOARD.md](CODE_SNIPPETS_MUTATIONS_AND_KEYBOARD.md)
+- [CODE_SNIPPETS_LAYOUT_THEME_A11Y.md](CODE_SNIPPETS_LAYOUT_THEME_A11Y.md)
+- [CODE_SNIPPETS_TESTING_AND_ANTI_PATTERNS.md](CODE_SNIPPETS_TESTING_AND_ANTI_PATTERNS.md)
+
 ## Archive
 
 Historical plans, research notes, implementation status snapshots, and one-off diagnostics were moved to:
