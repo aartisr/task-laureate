@@ -1,8 +1,10 @@
-# PostHog Integration Plan
+# PostHog Integration Plan (Historical)
 
 ## Status and scope
 
-**Status: planned; no PostHog SDK, project token, or data collection is enabled by this document.**
+**Status: implemented.** This file is retained as planning history.
+
+Use [docs/POSTHOG_CONFIGURATION_GUIDE.md](docs/POSTHOG_CONFIGURATION_GUIDE.md) as the canonical, current-state integration and operations reference.
 
 This plan adds PostHog product analytics to Task-Laureate without weakening its privacy promise. The product handles inherently sensitive task titles, notes, tags, due dates, collaborator information, and invitation links. PostHog must therefore receive only a small, explicitly allowed event vocabulary—never general UI autocapture or session replay by default.
 
