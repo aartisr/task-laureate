@@ -27,6 +27,7 @@ const STATUS_META: Record<TodoItemStatus, { label: string; cls: string; icon: st
 
 type TaskWithListTitle = TodoItem & { listTitle: string };
 type TaskData = { allTasks: TaskWithListTitle[]; loading: boolean; lists: Array<Pick<TodoList, 'id' | 'title'>>; bounded: boolean };
+type TaskStatusFilter = TodoItemStatus | 'all' | 'open';
 
 function useAllTasksData(): TaskData {
   const scalableRepository = supportsScalableTaskFeed(appServices.repository) ? appServices.repository : null;
@@ -62,7 +63,7 @@ export function TasksPage() {
   usePageSEO(PAGE_SEO.tasks);
   const { allTasks, loading, lists, bounded } = useAllTasksData();
   const { completeTask } = useTodoMutations();
-  const [statusFilter, setStatusFilter] = useState<TodoItemStatus | 'all'>('all');
+  const [statusFilter, setStatusFilter] = useState<TaskStatusFilter>('open');
   const [priorityFilter, setPriorityFilter] = useState<Priority | 'all'>('all');
   const [groupBy, setGroupBy] = useState<'list' | 'priority' | 'status'>('list');
   const [search, setSearch] = useState('');
@@ -79,7 +80,7 @@ export function TasksPage() {
       if (task.status === 'todo') counts.todo += 1;
       if (task.status === 'doing') counts.doing += 1;
       if (task.status === 'blocked') counts.blocked += 1;
-      if (statusFilter !== 'all' && task.status !== statusFilter) continue;
+      if (statusFilter !== 'all' && (statusFilter === 'open' ? task.status === 'done' || task.status === 'deleted' : task.status !== statusFilter)) continue;
       if (priorityFilter !== 'all' && task.priority !== priorityFilter) continue;
       if (normalizedSearch && !task.title.toLocaleLowerCase().includes(normalizedSearch) && !task.listTitle.toLocaleLowerCase().includes(normalizedSearch)) continue;
 
@@ -150,52 +151,28 @@ export function TasksPage() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-        <div className="filter-group">
-          <span className="filter-group__label">Status</span>
-          {(['all', 'todo', 'doing', 'done', 'blocked'] as Array<TodoItemStatus | 'all'>).map((s) => (
+        <div className="filter-group" aria-label="Task state">
+          <span className="filter-group__label">Show</span>
+          {(['open', 'all', 'done'] as TaskStatusFilter[]).map((s) => (
             <button
               key={s}
               type="button"
               onClick={() => setStatusFilter(s)}
               className={`filter-pill ${statusFilter === s ? 'filter-pill--active' : ''}`}
             >
-              {s === 'all' ? 'All' : STATUS_META[s as TodoItemStatus].label}
+              {s === 'open' ? 'Open' : s === 'all' ? 'All' : STATUS_META[s as TodoItemStatus].label}
             </button>
           ))}
         </div>
-        <div className="filter-group">
-          <span className="filter-group__label">Priority</span>
-          {(['all', 'urgent', 'high', 'medium', 'low'] as Array<Priority | 'all'>).map((p) => (
-            <button
-              key={p}
-              type="button"
-              onClick={() => setPriorityFilter(p)}
-              className={`filter-pill ${priorityFilter === p ? 'filter-pill--active' : ''} ${p !== 'all' ? PRIORITY_META[p as Priority].cls : ''}`}
-            >
-              {p === 'all' ? 'All' : PRIORITY_META[p as Priority].label}
-            </button>
-          ))}
-        </div>
-        <div className="filter-group">
-          <span className="filter-group__label">Group</span>
-          {(['list', 'priority', 'status'] as const).map((g) => (
-            <button
-              key={g}
-              type="button"
-              onClick={() => setGroupBy(g)}
-              className={`filter-pill ${groupBy === g ? 'filter-pill--active' : ''}`}
-            >
-              {g.charAt(0).toUpperCase() + g.slice(1)}
-            </button>
-          ))}
-        </div>
+        <details className="task-view-options"><summary>Refine view</summary><div className="task-view-options__body"><div className="filter-group"><span className="filter-group__label">Priority</span>{(['all', 'urgent', 'high', 'medium', 'low'] as Array<Priority | 'all'>).map((p) => <button key={p} type="button" onClick={() => setPriorityFilter(p)} className={`filter-pill ${priorityFilter === p ? 'filter-pill--active' : ''} ${p !== 'all' ? PRIORITY_META[p as Priority].cls : ''}`}>{p === 'all' ? 'All' : PRIORITY_META[p as Priority].label}</button>)}</div><div className="filter-group"><span className="filter-group__label">Group</span>{(['list', 'priority', 'status'] as const).map((g) => <button key={g} type="button" onClick={() => setGroupBy(g)} className={`filter-pill ${groupBy === g ? 'filter-pill--active' : ''}`}>{g.charAt(0).toUpperCase() + g.slice(1)}</button>)}</div>{(priorityFilter !== 'all' || groupBy !== 'list' || search) ? <button type="button" className="secondary-button" onClick={() => { setPriorityFilter('all'); setGroupBy('list'); setSearch(''); }}>Reset refinements</button> : null}</div></details>
       </div>
 
       {/* Groups */}
       {groups.length === 0 ? (
         <div className="empty-state">
           <span className="empty-state__icon">✓</span>
-          <p>No tasks match your filters.</p>
+          <p>No tasks match this view.</p>
+          {(statusFilter !== 'open' || priorityFilter !== 'all' || search || groupBy !== 'list') ? <button type="button" className="secondary-button" onClick={() => { setStatusFilter('open'); setPriorityFilter('all'); setGroupBy('list'); setSearch(''); }}>Show open tasks</button> : null}
         </div>
       ) : (
         <div className="task-groups">

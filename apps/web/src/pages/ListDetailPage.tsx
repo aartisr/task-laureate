@@ -427,9 +427,9 @@ export function ListDetailPage({ listId }: ListDetailPageProps) {
           />
         </section>
 
-        {/* Keyboard Shortcuts Hint */}
-        <footer className="text-center mt-12 pt-8 border-t border-gray-200">
-          <p className="text-xs text-gray-500 mb-2">⌨️ Keyboard Shortcuts</p>
+        <footer className="mt-12 pt-8 border-t border-gray-200">
+          <details className="page-shortcuts">
+            <summary>Keyboard shortcuts</summary>
           <nav className="flex flex-wrap gap-4 justify-center text-xs text-gray-600" aria-label="Keyboard shortcuts">
             <div>
               <kbd className="bg-gray-100 px-2 py-1 rounded">⌘T</kbd> New Task
@@ -441,6 +441,7 @@ export function ListDetailPage({ listId }: ListDetailPageProps) {
               <kbd className="bg-gray-100 px-2 py-1 rounded">⌘H</kbd> Home
             </div>
           </nav>
+          </details>
         </footer>
         {showSharing && supportsCollaboration(repository) ? <ShareResourcePanel repository={repository} resource={{ resourceType: 'list', resourceId: list.id }} resourceName={list.title} onClose={() => setShowSharing(false)} /> : null}
         {shareNotice ? <div className="mt-4 rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm text-indigo-950" role="status"><div className="flex items-start justify-between gap-3"><span>{shareNotice}</span><button type="button" className="font-semibold underline" onClick={() => setShareNotice(null)}>Dismiss</button></div></div> : null}

@@ -49,6 +49,14 @@ export function TaskDetailLens({ task, listTitle, mode = 'panel', readOnly = fal
     finally { setSaving(false); }
   };
   const cancel = () => { setTitle(task.title); setNotes(task.notes); setPriority(task.priority); setDueDate(toDateInputValue(task.dueDate)); setEditing(false); setError(null); };
+  const changeWorkState = async (status: 'todo' | 'doing') => {
+    if (saving || task.status === status) return;
+    try {
+      setSaving(true); setError(null);
+      await onUpdate({ status });
+    } catch (reason) { setError(reason instanceof Error ? reason.message : 'We could not update the task status.'); }
+    finally { setSaving(false); }
+  };
   const completed = task.status === 'done';
   const completionBlocked = dependencySummary !== null && !dependencySummary.isReadyToComplete;
   const priorityOptions: Array<{ value: TodoItem['priority']; label: string; detail: string }> = [
@@ -80,6 +88,7 @@ export function TaskDetailLens({ task, listTitle, mode = 'panel', readOnly = fal
         </section>
         <div className="task-detail-lens__title-row"><button type="button" className={`task-detail-lens__complete ${completed ? 'is-complete' : ''}`} onClick={() => void onComplete()} disabled={readOnly || (!completed && completionBlocked)} aria-pressed={completed} aria-label={completed ? 'Mark task incomplete' : completionBlocked ? `Cannot complete: ${dependencySummary.unresolvedPrerequisiteCount} prerequisite tasks remain` : 'Mark task complete'}>{completed ? '✓' : ''}</button><h2>{task.title}</h2></div>
         <div className="task-detail-lens__properties"><span className={`priority-badge priority--${task.priority}`}>{task.priority}</span>{task.dueDate ? <span>Due {formatDateOnly(task.dueDate, undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span> : null}{task.tags.map((tag) => <span key={tag}>#{tag}</span>)}</div>
+        {!readOnly && !completed && (task.status === 'todo' || task.status === 'doing') ? <div className="task-detail-lens__work-state" role="group" aria-label="Task work state"><span>{task.status === 'doing' ? 'Work is in progress' : 'Work has not started'}</span><button type="button" className={task.status === 'doing' ? 'secondary-button' : 'primary-button'} onClick={() => void changeWorkState(task.status === 'doing' ? 'todo' : 'doing')} disabled={saving}>{saving ? 'Updating…' : task.status === 'doing' ? 'Move to to do' : 'Start work'}</button></div> : null}
         <section className="task-detail-lens__note" aria-label="Task note"><div className="task-detail-lens__note-heading"><div><h3>Note</h3>{hasNotes ? <p>{noteMeta}</p> : null}</div>{!readOnly ? <button type="button" className="secondary-button" onClick={() => setEditing(true)}>Edit details</button> : null}</div>{hasNotes ? <RichNoteReader value={notes} /> : <p className="task-detail-lens__empty">No note yet. Choose <strong>Edit task</strong> above to add durable context.</p>}</section>
       </>}
       {canManageReminders && !readOnly ? <TaskReminderControl taskId={task.id} /> : null}

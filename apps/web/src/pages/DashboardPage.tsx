@@ -94,17 +94,13 @@ export function DashboardPage() {
   }
 
   const footer = (
-    <div className="text-center text-sm text-[var(--color-text-secondary)]">
-      <p className="mb-3">⌨️ Keyboard Shortcuts</p>
+    <details className="page-shortcuts">
+      <summary>Keyboard shortcuts</summary>
       <nav className="flex flex-wrap gap-4 justify-center text-xs" aria-label="Keyboard shortcuts">
-        <div>
-          <kbd className="bg-[var(--color-bg-secondary)] px-2 py-1 rounded">⌘N</kbd> New List
-        </div>
-        <div>
-          <kbd className="bg-[var(--color-bg-secondary)] px-2 py-1 rounded">⌘F</kbd> Search
-        </div>
+        <div><kbd className="bg-[var(--color-bg-secondary)] px-2 py-1 rounded">⌘N</kbd> New List</div>
+        <div><kbd className="bg-[var(--color-bg-secondary)] px-2 py-1 rounded">⌘F</kbd> Search</div>
       </nav>
-    </div>
+    </details>
   );
 
   return (

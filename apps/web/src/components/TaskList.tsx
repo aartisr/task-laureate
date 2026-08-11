@@ -85,7 +85,8 @@ export function TaskList({ listId, tasks, isLoading, onTaskUpdate, onTaskComplet
   const stats = useMemo(() => {
     const completed = tasks.filter((task) => task.completedAt !== null).length;
     const overdue = tasks.filter((task) => groupForTask(task, today) === 'Overdue').length;
-    return { total: tasks.length, completed, active: tasks.length - completed, overdue };
+    const inProgress = tasks.filter((task) => task.status === 'doing').length;
+    return { total: tasks.length, completed, active: tasks.length - completed, overdue, inProgress };
   }, [tasks, today]);
 
   const visibleTasks = useMemo(() => tasks
@@ -125,7 +126,7 @@ export function TaskList({ listId, tasks, isLoading, onTaskUpdate, onTaskComplet
 
   return <section id={regionId} className="task-list" aria-label="Tasks">
     <header className="task-list__header">
-      <div><p className="task-list__eyebrow">Your list</p><h2>Tasks</h2><p>{stats.active === 1 ? '1 task remains' : `${stats.active} tasks remain`}{stats.overdue ? ` · ${stats.overdue} overdue` : ''}</p></div>
+      <div><p className="task-list__eyebrow">Your list</p><h2>Tasks</h2><p>{stats.active === 1 ? '1 task remains' : `${stats.active} tasks remain`}{stats.inProgress ? ` · ${stats.inProgress} in progress` : ''}{stats.overdue ? ` · ${stats.overdue} overdue` : ''}</p></div>
       <div className="task-list__progress" aria-label={`${completionPercent}% complete`}>
         <span>{completionPercent}% complete</span><div role="progressbar" aria-valuenow={completionPercent} aria-valuemin={0} aria-valuemax={100}><i style={{ width: `${completionPercent}%` }} /></div>
       </div>
@@ -135,19 +136,14 @@ export function TaskList({ listId, tasks, isLoading, onTaskUpdate, onTaskComplet
       <div className="task-list__filters" role="group" aria-label="Filter tasks">
         {([['active', 'Open', stats.active], ['blocked', 'Blocked', tasks.filter((task) => (dependencySummaries[task.id]?.unresolvedPrerequisiteCount ?? 0) > 0).length], ['all', 'All', stats.total], ['completed', 'Done', stats.completed]] as const).map(([value, label, count]) => <button key={value} type="button" aria-pressed={filterBy === value} className={filterBy === value ? 'is-active' : ''} onClick={() => { setFilterBy(value); announceToScreenReader(`Showing ${label.toLowerCase()} tasks`); }}>{label} <span>{count}</span></button>)}
       </div>
-      <label className="task-list__sort" htmlFor="task-list-sort">Order
-        <select id="task-list-sort" value={sortBy} onChange={(event) => { setSortBy(event.target.value as SortOption); announceToScreenReader(`Tasks ordered by ${event.target.selectedOptions[0].text}`); }}>
-          <option value="focus">What needs attention</option><option value="priority">Priority</option><option value="dueDate">Due date</option><option value="createdAt">Recently added</option><option value="alphabetical">Name A–Z</option>
-        </select>
-      </label>
-      <div className="task-list__views"><select aria-label="Open a saved personal view" defaultValue="" onChange={(event) => { const view = personalViews.find((item) => item.id === event.target.value); if (view) { setFilterBy(view.filterBy); setSortBy(view.sortBy); announceToScreenReader(`Opened ${view.name}`); } event.currentTarget.value = ''; }}><option value="">Personal views</option>{personalViews.map((view) => <option key={view.id} value={view.id}>{view.name}</option>)}</select><button type="button" onClick={savePersonalView}>Save view</button></div>
+      <details className="task-list__view-options"><summary>View options</summary><div><label className="task-list__sort" htmlFor="task-list-sort">Order<select id="task-list-sort" value={sortBy} onChange={(event) => { setSortBy(event.target.value as SortOption); announceToScreenReader(`Tasks ordered by ${event.target.selectedOptions[0].text}`); }}><option value="focus">What needs attention</option><option value="priority">Priority</option><option value="dueDate">Due date</option><option value="createdAt">Recently added</option><option value="alphabetical">Name A–Z</option></select></label><div className="task-list__views"><select aria-label="Open a saved personal view" defaultValue="" onChange={(event) => { const view = personalViews.find((item) => item.id === event.target.value); if (view) { setFilterBy(view.filterBy); setSortBy(view.sortBy); announceToScreenReader(`Opened ${view.name}`); } event.currentTarget.value = ''; }}><option value="">Personal views</option>{personalViews.map((view) => <option key={view.id} value={view.id}>{view.name}</option>)}</select><button type="button" onClick={savePersonalView}>Save view</button></div></div></details>
     </div>
 
     {groups.length ? <div className="task-list__groups">{groups.map((group) => <section className="task-list__group" key={group.name ?? 'all'} aria-label={group.name ?? 'Tasks'}>
       {group.name ? <h3 className={`task-list__group-title task-list__group-title--${group.name.toLowerCase().replaceAll(' ', '-')}`}>{group.name}<span>{group.tasks.length}</span></h3> : null}
-      {(sortBy !== 'focus' && group.tasks.length > 120) ? <VirtualTaskItems tasks={group.tasks} selectedId={selectedId} renderDetail={renderInlineDetail} render={(task) => <TaskItem task={task} selected={selectedId === task.id} dependencySummary={dependencySummaries[task.id]} onOpen={() => selectTask(task.id)} onComplete={() => onTaskComplete(task.id)} onDelete={() => onTaskDelete(task.id)} onRestore={() => onTaskRestore(task.id)} />} /> : <div role="list" className="task-list__items">{group.tasks.map((task) => {
+      {(sortBy !== 'focus' && group.tasks.length > 120) ? <VirtualTaskItems tasks={group.tasks} selectedId={selectedId} renderDetail={renderInlineDetail} render={(task) => <TaskItem task={task} selected={selectedId === task.id} dependencySummary={dependencySummaries[task.id]} onOpen={() => selectTask(task.id)} onComplete={() => onTaskComplete(task.id)} onDelete={() => onTaskDelete(task.id)} onRestore={() => onTaskRestore(task.id)} onStart={() => onTaskUpdate(task.id, { status: 'doing' })} />} /> : <div role="list" className="task-list__items">{group.tasks.map((task) => {
         const sourceIndex = tasks.findIndex((candidate) => candidate.id === task.id);
-        return <Fragment key={task.id}><DraggableItem index={sourceIndex} isDragging={draggedIndex === sourceIndex} isDragOver={dragOverIndex === sourceIndex} onDragStart={handleDragStart} onDragOver={handleDragOver} onDragEnd={handleDragEnd} onDragLeave={handleDragLeave} className="move-handle"><div role="listitem"><TaskItem task={task} selected={selectedId === task.id} dependencySummary={dependencySummaries[task.id]} onOpen={() => selectTask(task.id)} onComplete={() => onTaskComplete(task.id)} onDelete={() => onTaskDelete(task.id)} onRestore={() => onTaskRestore(task.id)} /></div></DraggableItem>{selectedId === task.id ? <div className="task-list__inline-detail">{renderInlineDetail(task)}</div> : null}</Fragment>;
+        return <Fragment key={task.id}><DraggableItem index={sourceIndex} isDragging={draggedIndex === sourceIndex} isDragOver={dragOverIndex === sourceIndex} onDragStart={handleDragStart} onDragOver={handleDragOver} onDragEnd={handleDragEnd} onDragLeave={handleDragLeave} className="move-handle"><div role="listitem"><TaskItem task={task} selected={selectedId === task.id} dependencySummary={dependencySummaries[task.id]} onOpen={() => selectTask(task.id)} onComplete={() => onTaskComplete(task.id)} onDelete={() => onTaskDelete(task.id)} onRestore={() => onTaskRestore(task.id)} onStart={() => onTaskUpdate(task.id, { status: 'doing' })} /></div></DraggableItem>{selectedId === task.id ? <div className="task-list__inline-detail">{renderInlineDetail(task)}</div> : null}</Fragment>;
       })}</div>}
     </section>)}</div> : <div className="task-list__empty" role="status"><span aria-hidden="true">✦</span><h3>{filterBy === 'active' ? 'Nothing is waiting' : filterBy === 'completed' ? 'No completed tasks yet' : 'No tasks yet'}</h3><p>{filterBy === 'active' ? 'Enjoy the clear runway, or add the next task above.' : 'Try another view or add a task above.'}</p></div>}
   </section>;
