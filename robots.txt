@@ -1,0 +1,5 @@
+# Crawl policy for the Task-Laureate GitHub Pages product overview.
+User-agent: *
+Allow: /
+
+Sitemap: https://aartisr.github.io/task-laureate/sitemap.xml
