@@ -7,6 +7,8 @@
  */
 const DATE_ONLY_PATTERN = /^(\d{4}-\d{2}-\d{2})/;
 
+export type DueDateState = 'overdue' | 'today' | 'upcoming' | 'none';
+
 function isValidDateOnly(value: string): boolean {
   const date = new Date(`${value}T00:00:00.000Z`);
   return !Number.isNaN(date.getTime()) && date.toISOString().startsWith(value);
@@ -27,12 +29,24 @@ export function formatDateOnly(value: string | null | undefined, locales: Intl.L
 }
 
 export function isDueDateBeforeToday(value: string | null | undefined, now = new Date()): boolean {
-  const dateOnly = toDateInputValue(value);
-  return Boolean(dateOnly && dateOnly < localDate(0, now));
+  return getDueDateState(value, now) === 'overdue';
 }
 
 export function isDueDateToday(value: string | null | undefined, now = new Date()): boolean {
-  return toDateInputValue(value) === localDate(0, now);
+  return getDueDateState(value, now) === 'today';
+}
+
+/**
+ * Classifies a due date against the user's local calendar day. A due date has
+ * no time-of-day, so it remains due today until the next local calendar day.
+ */
+export function getDueDateState(value: string | null | undefined, now = new Date()): DueDateState {
+  const dateOnly = toDateInputValue(value);
+  if (!dateOnly) return 'none';
+  const today = localDate(0, now);
+  if (dateOnly < today) return 'overdue';
+  if (dateOnly === today) return 'today';
+  return 'upcoming';
 }
 
 /** Creates a local calendar date suitable for a native `input[type=date]`. */

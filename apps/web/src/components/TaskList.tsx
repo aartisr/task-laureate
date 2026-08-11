@@ -7,6 +7,7 @@ import { TaskDetailLens } from './TaskDetailLens';
 import { DraggableItem } from './DraggableItem';
 import { useDragDrop } from '../hooks/useDragDrop';
 import { VirtualTaskItems } from './VirtualTaskItems';
+import { getDueDateState, localDate, toDateInputValue } from '../core/domain/dateOnly';
 import './TaskList.css';
 
 export interface TaskListProps {
@@ -37,22 +38,21 @@ function loadPersonalViews(): PersonalView[] {
 const priorityOrder: Record<TodoItem['priority'], number> = { urgent: 0, high: 1, medium: 2, low: 3 };
 
 function dateKey(value: string | null) {
-  return value ? value.slice(0, 10) : null;
+  return toDateInputValue(value) || null;
 }
 
 function todayKey() {
-  const now = new Date();
-  const offset = now.getTimezoneOffset() * 60_000;
-  return new Date(now.getTime() - offset).toISOString().slice(0, 10);
+  return localDate();
 }
 
 function groupForTask(task: TodoItem, today: string): TaskGroup {
   if (task.completedAt) return 'Completed';
-  const due = dateKey(task.dueDate);
-  if (!due) return 'No due date';
-  if (due < today) return 'Overdue';
-  if (due === today) return 'Due today';
-  return 'Upcoming';
+  switch (getDueDateState(task.dueDate, new Date(`${today}T12:00:00`))) {
+    case 'overdue': return 'Overdue';
+    case 'today': return 'Due today';
+    case 'upcoming': return 'Upcoming';
+    case 'none': return 'No due date';
+  }
 }
 
 const groupOrder: TaskGroup[] = ['Overdue', 'Due today', 'Upcoming', 'No due date', 'Completed'];

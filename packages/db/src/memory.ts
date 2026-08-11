@@ -352,9 +352,12 @@ export class InMemoryRepository implements IRepository {
 
     const allTasks = Array.from(this.tasks.values()).filter((t) => !t.deletedAt);
     const completedTasks = allTasks.filter((t) => t.status === 'DONE').length;
-    const now = new Date();
+    // Keep the in-memory adapter consistent with the database adapter: due
+    // dates are whole calendar days, not deadlines at the start of the day.
+    const todayStartUtc = new Date();
+    todayStartUtc.setUTCHours(0, 0, 0, 0);
     const overdueTasks = allTasks.filter(
-      (t) => t.dueDate && new Date(t.dueDate) < now && t.status !== 'DONE'
+      (t) => t.dueDate && new Date(t.dueDate) < todayStartUtc && t.status !== 'DONE'
     ).length;
 
     return {

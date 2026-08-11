@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatDateOnly, isDueDateBeforeToday, isDueDateToday, localDate, toDateInputValue } from './dateOnly';
+import { formatDateOnly, getDueDateState, isDueDateBeforeToday, isDueDateToday, localDate, toDateInputValue } from './dateOnly';
 
 describe('date-only helpers', () => {
   it('preserves API date values and accepts legacy timestamp values without timezone conversion', () => {
@@ -22,5 +22,14 @@ describe('date-only helpers', () => {
     expect(isDueDateBeforeToday('2026-08-04', now)).toBe(true);
     expect(isDueDateToday('2026-08-05', now)).toBe(true);
     expect(formatDateOnly('2026-08-05', 'en-US', { month: 'short', day: 'numeric', year: 'numeric' })).toBe('Aug 5, 2026');
+  });
+
+  it('does not mark a Sept 7 task overdue at any time on Sept 7 locally', () => {
+    const lateOnDueDate = new Date('2026-09-07T23:59:59-04:00');
+
+    expect(getDueDateState('2026-09-07', lateOnDueDate)).toBe('today');
+    expect(getDueDateState('2026-09-07T00:00:00.000Z', lateOnDueDate)).toBe('today');
+    expect(isDueDateBeforeToday('2026-09-07', lateOnDueDate)).toBe(false);
+    expect(getDueDateState('2026-09-07', new Date('2026-09-08T00:00:00-04:00'))).toBe('overdue');
   });
 });

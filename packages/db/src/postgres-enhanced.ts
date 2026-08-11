@@ -544,6 +544,10 @@ export class PostgresRepository implements IRepository {
     };
     lists: Array<TodoList & { tasks: TodoItem[] }>;
   }> {
+    // Due dates represent full calendar days and are persisted at midnight
+    // UTC. A task is overdue only once its due calendar day has passed.
+    const todayStartUtc = new Date();
+    todayStartUtc.setUTCHours(0, 0, 0, 0);
     return this.withCircuitBreaker(async () => {
       try {
         const [lists, totalTasks, completedTasks, overdueTasks] = await this.executeQuery(() =>
@@ -562,7 +566,7 @@ export class PostgresRepository implements IRepository {
             this.prisma.todoItem.count({
               where: {
                 deletedAt: null,
-                dueDate: { lt: new Date() },
+                dueDate: { lt: todayStartUtc },
                 status: { not: 'DONE' },
               },
             }),
