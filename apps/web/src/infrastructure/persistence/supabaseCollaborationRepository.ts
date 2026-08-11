@@ -142,12 +142,13 @@ export function createSupabaseCollaborationTodoRepository(config: SupabasePersis
       if (!payload.signedURL) throw new Error('A secure attachment link could not be created.');
       return `${storage}${payload.signedURL}`;
     },
-    async deleteAttachment(attachmentId) {
-      const rows = await json<AttachmentRow[]>(`/task_attachments?id=eq.${encodeURIComponent(attachmentId)}&deleted_at=is.null&select=id,task_id,original_name,content_type,byte_size,kind,status,object_path,thumbnail_path,preview_path,created_at`);
-      const attachment = rows[0];
-      if (!attachment) return;
-      await json(`/task_attachments?id=eq.${encodeURIComponent(attachmentId)}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ deleted_at: new Date().toISOString() }) });
-      await storageCall(`/object/task-attachments/${attachment.object_path}`, { method: 'DELETE' });
+    async deleteAttachment(attachment) {
+      const paths = [attachment.objectPath, attachment.thumbnailPath, attachment.previewPath].filter((path): path is string => Boolean(path));
+      // Supabase expressly blocks direct SQL writes to storage.objects. Its
+      // Storage API deletes all variants in one request, after bucket RLS has
+      // authorized every object path.
+      await storageCall('/object/task-attachments', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ prefixes: paths }) });
+      await call(`/task_attachments?id=eq.${encodeURIComponent(attachment.id)}`, { method: 'DELETE' });
     },
     async createTask(input: TodoTaskInput) { const row = rpcRecord(await json<TaskRow | TaskRow[]>('/rpc/create_collaboration_task', { method: 'POST', body: JSON.stringify({ p_list_id: input.listId, p_title: input.title, p_note_document: input.notes ?? '', p_priority: input.priority ?? 'medium', p_due_date: input.dueDate ?? null, p_tags: input.tags ?? [], p_order_key: Date.now() }) })); return taskFromRow(row); },
     async updateTask(id, input: TodoTaskUpdateInput) { const body: Record<string, unknown> = { ...input }; if ('notes' in body) { body.note_document = body.notes; delete body.notes; } if ('dueDate' in body) { body.due_date = body.dueDate; delete body.dueDate; } return updateTask(id, body); },

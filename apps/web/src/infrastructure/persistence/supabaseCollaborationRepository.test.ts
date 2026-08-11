@@ -33,6 +33,26 @@ describe('normalized collaboration repository', () => {
     expect(JSON.parse(String(requests[0].init?.body))).toMatchObject({ p_list_id: 'list-id', p_title: 'Write brief' });
   });
 
+  it('removes attachment variants through the Storage API before deleting metadata', async () => {
+    const requests: Array<{ endpoint: string; init?: RequestInit }> = [];
+    const repository = createSupabaseCollaborationTodoRepository(config, async (url, init) => {
+      const endpoint = String(url); requests.push({ endpoint, init });
+      return new Response(null, { status: 204 });
+    });
+
+    await repository.deleteAttachment({
+      id: 'attachment-id', taskId: 'task-id', name: 'reference.pdf', contentType: 'application/pdf', byteSize: 20,
+      kind: 'pdf', status: 'ready', objectPath: 'tasks/task-id/attachment-id/original', thumbnailPath: 'tasks/task-id/attachment-id/thumbnail', previewPath: null, createdAt: '2026-08-01T00:00:00Z',
+    });
+
+    expect(requests).toHaveLength(2);
+    expect(requests[0].endpoint).toContain('/storage/v1/object/task-attachments');
+    expect(requests[0].init?.method).toBe('DELETE');
+    expect(JSON.parse(String(requests[0].init?.body))).toEqual({ prefixes: ['tasks/task-id/attachment-id/original', 'tasks/task-id/attachment-id/thumbnail'] });
+    expect(requests[1].endpoint).toContain('/task_attachments?id=eq.attachment-id');
+    expect(requests[1].init?.method).toBe('DELETE');
+  });
+
   it('fails fast after discovering a missing collaboration migration', async () => {
     let calls = 0;
     const repository = createSupabaseCollaborationTodoRepository(config, async () => {

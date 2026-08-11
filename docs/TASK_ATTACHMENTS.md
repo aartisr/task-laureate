@@ -7,7 +7,8 @@ user's source file.
 
 ## Enable it
 
-1. Apply `supabase/migrations/016_task_attachments.sql` after migrations 005–015.
+1. Apply migrations `016_task_attachments.sql` through
+   `023_delete_attachment_metadata_instead_of_soft_delete.sql` after migrations 005–015.
 2. Keep the `task-attachments` bucket private. The migration configures its
    allowlist and 100 MB object limit.
 3. Deploy the web application. Signed preview URLs expire after five minutes;

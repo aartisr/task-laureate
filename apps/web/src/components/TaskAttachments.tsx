@@ -36,8 +36,8 @@ export function TaskAttachments({ taskId, readOnly = false }: { taskId: string; 
   };
   const remove = async (attachment: TaskAttachment) => {
     if (!window.confirm(`Remove ${attachment.name}?`)) return;
-    try { await attachmentRepository!.deleteAttachment(attachment.id); setItems((current) => current.filter((item) => item.id !== attachment.id)); }
-    catch { setMessage('The attachment could not be removed.'); }
+    try { await attachmentRepository!.deleteAttachment(attachment); setItems((current) => current.filter((item) => item.id !== attachment.id)); }
+    catch (error) { setMessage(error instanceof Error ? error.message : 'The attachment could not be removed.'); }
   };
 
   if (!supported) return null;

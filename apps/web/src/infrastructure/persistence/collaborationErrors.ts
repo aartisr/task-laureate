@@ -27,6 +27,14 @@ export function collaborationError(status: number, payload: SupabaseErrorPayload
   );
   if (status === 401) return new CollaborationPersistenceError('Your session has expired. Sign in again, then retry.', status);
   if (status === 403) {
+    if (endpoint.includes('/rpc/delete_task_attachment')) {
+      const reason = payload.message ?? payload.details ?? 'Supabase did not provide a reason.';
+      return new CollaborationPersistenceError(`Attachment removal was denied by Supabase: ${reason}`, status);
+    }
+    if (endpoint.startsWith('/task_attachments')) {
+      const reason = payload.message ?? payload.details ?? 'Supabase did not provide a reason.';
+      return new CollaborationPersistenceError(`Attachment metadata update was denied by Supabase: ${reason}`, status);
+    }
     if (/permission denied|not authorized/.test(detail)) {
       return new CollaborationPersistenceError('The invitation service denied this request. Confirm you are signed in to the email that received the invitation, then retry.', status);
     }

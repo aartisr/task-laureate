@@ -21,6 +21,20 @@ describe('collaboration error mapping', () => {
     expect(error.message).toContain('signed in to the email');
   });
 
+  it('reports attachment-delete authorization separately from invitation errors', () => {
+    const error = collaborationError(403, { message: 'permission denied for schema private' }, '/rpc/delete_task_attachment');
+    expect(error.isConfigurationFailure).toBe(false);
+    expect(error.message).toContain('Attachment removal was denied by Supabase');
+    expect(error.message).toContain('permission denied for schema private');
+    expect(error.message).not.toContain('invitation service');
+  });
+
+  it('keeps attachment metadata denials actionable', () => {
+    const error = collaborationError(403, { message: 'permission denied for table task_attachments' }, '/task_attachments?id=eq.attachment-id');
+    expect(error.message).toContain('Attachment metadata update was denied by Supabase');
+    expect(error.message).toContain('permission denied for table task_attachments');
+  });
+
   it('does not mislabel a real authorization denial as a setup error', () => {
     const error = collaborationError(403, { message: 'new row violates row-level security policy' }, '/collaboration_lists');
     expect(error.isConfigurationFailure).toBe(false);

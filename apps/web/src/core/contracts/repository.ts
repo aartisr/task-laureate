@@ -133,7 +133,7 @@ export interface AttachmentRepository {
   listAttachments(taskId: string): Promise<TaskAttachment[]>;
   uploadAttachment(taskId: string, file: File, onProgress?: (percent: number) => void): Promise<TaskAttachment>;
   getAttachmentUrl(attachment: TaskAttachment, variant?: 'thumbnail' | 'preview' | 'original'): Promise<string>;
-  deleteAttachment(attachmentId: string): Promise<void>;
+  deleteAttachment(attachment: TaskAttachment): Promise<void>;
 }
 
 export function supportsAttachments(repository: TodoRepository): repository is TodoRepository & AttachmentRepository {
