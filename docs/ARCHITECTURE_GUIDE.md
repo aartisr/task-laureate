@@ -24,6 +24,9 @@ The repository contracts in `apps/web/src/core/contracts` keep UI features indep
 4. Treat migrations as the database API. New mutations use an RPC when a direct table write could bypass a business invariant.
 5. Use opaque cursors and bounded reads for large lists; do not reintroduce whole-workspace fetches in scalable views.
 6. Make UI state explicit: loading, read-only, saving, success, and recoverable failure states must not be conflated.
+7. Model workflow state deliberately: `todo`, `doing`, `blocked`, and `done` communicate whether work has begun without inventing unnecessary stages.
+8. Keep private-object lifecycle in its owning service. Attachment bytes are managed through the Supabase Storage API; task metadata remains RLS-protected application data.
+9. Enforce graph invariants in the database. Dependency cycles and completion gates must hold for imports, REST clients, and future automations—not only the React UI.
 
 ## Extension points
 
@@ -31,5 +34,6 @@ The repository contracts in `apps/web/src/core/contracts` keep UI features indep
 - Add a delivery vendor by implementing the normalized adapter shape in `apps/web/api/notifications/providers.mjs`; do not leak provider semantics into the scheduler or UI.
 - Add a new reminder channel by extending the database channel constraint, queue claim, provider adapter, and recipient consent control together.
 - Add a collaboration permission only after updating the Postgres authorization predicate, RLS policy, RPC boundary, client capability, and tests as one change.
+- Add a dependency-aware persistence adapter by implementing `DependencyRepository`; adapters without it remain compatible and simply omit dependency UI.
 
 See [OPERATIONS.md](OPERATIONS.md) for environment configuration and [QUICK_FEATURE_GUIDE.md](QUICK_FEATURE_GUIDE.md) for visible behavior.

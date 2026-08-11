@@ -14,6 +14,14 @@ user's source file.
 3. Deploy the web application. Signed preview URLs expire after five minutes;
    they are generated only after task access has been checked by Storage RLS.
 
+### Removal lifecycle
+
+Removal uses the supported Supabase Storage API first and then deletes the
+attachment metadata row through RLS. This keeps Storage in charge of private
+object lifecycle and avoids direct SQL writes to `storage.objects`. An
+attachment owner may remove their own file; a list editor may remove any file
+in an editable task. A viewer cannot remove attachments they did not upload.
+
 ## Supported reference files
 
 - Images: JPEG, PNG, WebP, AVIF, HEIC/HEIF, GIF
@@ -25,7 +33,9 @@ task authorization, so browser checks are never a security boundary.
 
 ## Derived previews
 
-The initial deployment serves the original securely and is immediately usable.
+The current deployment securely opens images using a signed preview URL and
+opens other accepted reference files using a signed original URL. It is
+immediately usable without a processing worker.
 For high-volume production, add a trusted worker subscribed to new
 `task_attachments` rows. It should:
 

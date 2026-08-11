@@ -24,10 +24,13 @@ batched projection used by task-list Dependency Pulses.
 
 ## UI
 
-The task detail's **Dependency lens** shows a ready/blocked indicator,
+The task detail's **Work order** section shows a ready/blocked indicator,
 prerequisites, downstream work, and a constrained task picker. It prevents an
 unready task from being completed in the UI; the database trigger independently
-enforces the same invariant.
+enforces the same invariant. List cards show **Blocked** only when a required
+finish-to-start prerequisite is incomplete; they show **Unblocks** for the
+currently opened prerequisite task. The summary is batched so the list does
+not need one dependency query per task.
 
 ## Adapter contract
 

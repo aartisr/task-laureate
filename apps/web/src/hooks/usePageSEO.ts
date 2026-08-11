@@ -23,7 +23,7 @@ export interface PageSEOMeta {
 }
 
 const BASE_URL = SITE_URL;
-const DEFAULT_IMAGE = '/og-image.svg';
+const DEFAULT_IMAGE = '/og-image-v2.png';
 const AUTHOR_NAME = 'Aarti S Ravikumar';
 const AUTHOR_URL = 'https://ai-aarti.com';
 

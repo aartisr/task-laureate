@@ -33,7 +33,7 @@
       ]
     },
     {
-      "source": "/(robots.txt|sitemap.xml|manifest.json|llms.txt|og-image.svg|favicon.svg)",
+      "source": "/(robots.txt|sitemap.xml|manifest.json|llms.txt|og-image.svg|og-image-v2.png|favicon.svg)",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=86400" },
         { "key": "Access-Control-Allow-Origin", "value": "*" }

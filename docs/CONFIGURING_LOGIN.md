@@ -263,12 +263,11 @@ SUPABASE_TEST_ACCESS_TOKEN='user-jwt' npm run test:supabase -w apps/web
 | Callback shows a retry message | `/auth/callback` is not allowed or the authorization code has expired/was reused | Check Supabase Redirect URLs, Vercel route rewrite, then start a fresh sign-in. |
 | Button starts then returns without sign-in | Provider is disabled or credentials are wrong in Supabase | Enable the provider and recheck client ID/secret in Supabase. |
 | Users see no data after successful sign-in | The user has no workspace data yet, or the app points to another Supabase environment | Confirm environment variables, RLS migration, and account email/UUID. |
-| User A sees User B data | This is a security issue | Disable the affected deployment, verify RLS, and follow [Supabase persistence](SUPABASE_PERSISTENCE.md) before re-enabling. |
+| User A sees User B data | This is a security issue | Disable the affected deployment, verify RLS, and follow the [production operations runbook](OPERATIONS.md) before re-enabling. |
 | Vercel works but local does not | Local callback URL was omitted | Add `http://localhost:5173/auth/callback` to Supabase Redirect URLs. |
 
 ## Related documentation
 
-- [OIDC and social sign-in implementation plan](OIDC_SOCIAL_SIGN_IN_IMPLEMENTATION_PLAN.md)
-- [Supabase persistence and RLS setup](SUPABASE_PERSISTENCE.md)
-- [Vercel deployment configuration](VERCEL_DEPLOYMENT.md)
+- [Production operations and Supabase RLS](OPERATIONS.md)
+- [Historical OIDC and social sign-in plan](archive/OIDC_SOCIAL_SIGN_IN_IMPLEMENTATION_PLAN.md)
 - [Supabase social login](https://supabase.com/docs/guides/auth/social-login)

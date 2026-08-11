@@ -7,17 +7,23 @@
   <!-- Public product home -->
   <url>
     <loc>https://tasks.ai-aarti.com/</loc>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-11</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
   </url>
 
   <!-- Crawlable product story and help -->
   <url>
     <loc>https://tasks.ai-aarti.com/about/</loc>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-11</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://tasks.ai-aarti.com/support</loc>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-11</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
   </url>
 
 </urlset>

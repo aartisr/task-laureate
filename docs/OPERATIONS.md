@@ -18,11 +18,13 @@ Task-Laureate is a Vite/React SPA backed by Supabase Auth + Postgres RLS.
 
 Apply migrations in order from [supabase/migrations](../supabase/migrations):
 
-- `001` through `015` for a new environment.
+- `001` through `025` for a new environment.
 
 Important:
 
 - `006_switch_to_collaboration_persistence.sql` retires legacy `workspace_snapshots` and is intentionally destructive for that table.
+- `016` through `023` add private task attachments, the required Storage/RLS lifecycle, and metadata deletion behaviour. Keep the `task-attachments` bucket private.
+- `024` through `025` add the directed acyclic task-dependency graph, database completion gate, and batched list-summary projection.
 - Run `010_reload_postgrest_schema_cache.sql` if PostgREST reports missing RPC/schema drift.
 
 ### Step 2: Vercel project settings
@@ -78,8 +80,12 @@ In Supabase Auth:
    - owner/editor/viewer permissions
    - sharing accept/revoke
    - list/task CRUD
+   - attachment upload, preview, and removal by an attachment owner and list editor
+   - dependency creation, cycle rejection, blocked completion, and unblocking after prerequisite completion
+   - To do → In progress → Done task state transitions
    - reminder dispatch path
 6. Validate deep-link refresh on routes like `/settings` and invitation links.
+7. For public releases, validate `/`, `/about/`, `/support`, `/robots.txt`, `/sitemap.xml`, `/llms.txt`, and `/og-image-v2.png`; then follow [LAUNCH_AND_DISCOVERY_PLAYBOOK.md](LAUNCH_AND_DISCOVERY_PLAYBOOK.md) for account-owner search and launch work.
 
 ## 4) Reminder operations runbook
 

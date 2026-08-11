@@ -15,6 +15,8 @@ npm run build
 
 ## What automation cannot prove
 
-The local suite cannot confirm your Supabase migrations, RLS deployment, Resend domain, Twilio account, Vercel variables, or cron invocation. Complete the environment-specific release checklist in [OPERATIONS.md](OPERATIONS.md#release-checklist) before calling a deployment ready.
+The local suite cannot confirm your Supabase migrations, RLS deployment, Storage bucket policy, Resend domain, Twilio account, Vercel variables, or cron invocation. Complete the environment-specific [release runbook](OPERATIONS.md#3-release-runbook-every-deployment) before calling a deployment ready.
+
+For the current collaboration model, manually prove attachment upload/removal and dependency completion gates with owner, editor, and viewer accounts. For a public release, also confirm the crawl files and social-preview image listed in [the launch playbook](LAUNCH_AND_DISCOVERY_PLAYBOOK.md).
 
 Do not claim coverage percentages, response-time guarantees, provider delivery, or production security posture without measured evidence from the target environment.

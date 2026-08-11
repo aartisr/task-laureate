@@ -1,35 +1,41 @@
 # Documentation
 
-This folder is intentionally curated for high-value, community-useful references.
+Start with one guide that matches what you need. The detailed references are
+kept below for when they become relevant.
 
-## Core guides
-
-| Document | Use it for |
+| I want to… | Start here |
 | --- | --- |
-| [QUICK_FEATURE_GUIDE.md](QUICK_FEATURE_GUIDE.md) | End-user feature walkthrough and current UX capabilities |
-| [ARCHITECTURE_GUIDE.md](ARCHITECTURE_GUIDE.md) | System boundaries, layering rules, and extension points |
-| [OPERATIONS.md](OPERATIONS.md) | Production operations, release process, and incident response |
-| [CONFIGURING_LOGIN.md](CONFIGURING_LOGIN.md) | Authentication setup and login provider configuration |
-| [POSTHOG_CONFIGURATION_GUIDE.md](POSTHOG_CONFIGURATION_GUIDE.md) | Canonical PostHog integration, diagnostics, and runbook |
-| [PERFORMANCE_MONITORING.md](PERFORMANCE_MONITORING.md) | Performance baselines, optimization, and monitoring practices |
-| [CODE_SNIPPETS.md](CODE_SNIPPETS.md) | Reusable implementation patterns and code examples |
-| [QA_AND_PRODUCTION_READINESS.md](QA_AND_PRODUCTION_READINESS.md) | Validation checklist for shipping and production confidence |
-| [DISCOVERABILITY_AND_GROWTH.md](DISCOVERABILITY_AND_GROWTH.md) | Product discoverability and growth strategy notes |
-| [CHANGELOG.md](CHANGELOG.md) | Public-facing change history |
+| Use Task-Laureate | [Quick feature guide](QUICK_FEATURE_GUIDE.md) |
+| Run or deploy it | [Production operations](OPERATIONS.md) |
+| Change or extend it | [Architecture guide](ARCHITECTURE_GUIDE.md) |
+| See what changed | [Changelog](CHANGELOG.md) |
 
-## Snippet topics
+<details>
+<summary>Deployment, quality, and growth references</summary>
 
-Use these when you want focused examples instead of the full snippets index:
+- [QA and production readiness](QA_AND_PRODUCTION_READINESS.md)
+- [Performance monitoring](PERFORMANCE_MONITORING.md)
+- [Login configuration](CONFIGURING_LOGIN.md)
+- [PostHog configuration](POSTHOG_CONFIGURATION_GUIDE.md)
+- [Discoverability and sustainable growth](DISCOVERABILITY_AND_GROWTH.md)
+- [Launch and discovery playbook](LAUNCH_AND_DISCOVERY_PLAYBOOK.md)
+</details>
 
-- [CODE_SNIPPETS_PAGES_AND_DATA.md](CODE_SNIPPETS_PAGES_AND_DATA.md)
-- [CODE_SNIPPETS_MUTATIONS_AND_KEYBOARD.md](CODE_SNIPPETS_MUTATIONS_AND_KEYBOARD.md)
-- [CODE_SNIPPETS_LAYOUT_THEME_A11Y.md](CODE_SNIPPETS_LAYOUT_THEME_A11Y.md)
-- [CODE_SNIPPETS_TESTING_AND_ANTI_PATTERNS.md](CODE_SNIPPETS_TESTING_AND_ANTI_PATTERNS.md)
+<details>
+<summary>Feature and implementation references</summary>
 
-## Archive
+- [Task attachments](TASK_ATTACHMENTS.md)
+- [Task dependencies](TASK_DEPENDENCIES.md)
+- [Code snippets](CODE_SNIPPETS.md)
+  - [Pages and data](CODE_SNIPPETS_PAGES_AND_DATA.md)
+  - [Mutations and keyboard](CODE_SNIPPETS_MUTATIONS_AND_KEYBOARD.md)
+  - [Layouts, themes, and accessibility](CODE_SNIPPETS_LAYOUT_THEME_A11Y.md)
+  - [Testing and anti-pattern fixes](CODE_SNIPPETS_TESTING_AND_ANTI_PATTERNS.md)
+</details>
 
-Historical plans, research notes, implementation status snapshots, and one-off diagnostics were moved to:
+<details>
+<summary>Historical context</summary>
 
-- [archive](archive)
-
-These files are retained for context, but are not the primary docs for day-to-day development or community onboarding.
+[Archive](archive) contains past plans, research, and one-off diagnostics. It
+is retained for context, not day-to-day decisions.
+</details>

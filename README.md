@@ -2,9 +2,11 @@
 
 [![Production quality and security gates](https://github.com/aartisr/task-laureate/actions/workflows/quality.yml/badge.svg)](https://github.com/aartisr/task-laureate/actions/workflows/quality.yml)
 
-[**Open Task-Laureate →**](https://tasks.ai-aarti.com) · [**Try the interactive sample →**](https://tasks.ai-aarti.com/sample) · [AI Aarti deployment](https://tasks.ai-aarti.com) · [PCSSII Robotics deployment](https://tasks.pcssiirobotics.org)
+[**Open Task-Laureate →**](https://tasks.ai-aarti.com) · [**Try the interactive sample →**](https://tasks.ai-aarti.com/sample) · [Product overview](https://aartisr.github.io/task-laureate/) · [AI Aarti deployment](https://tasks.ai-aarti.com) · [PCSSII Robotics deployment](https://tasks.pcssiirobotics.org)
 
-Task-Laureate is a private, keyboard-friendly task workspace for planning lists, tracking progress, searching work, reviewing activity, and recovering from mistakes with undo. It is built as an extensible React application: feature modules and persistence adapters can evolve without rewriting the UI shell.
+> A task manager should give attention back—not ask for more of it.
+
+Task-Laureate is a calm, private, keyboard-friendly workspace for turning a crowded day into one clear next step. It helps people plan lists, track honest progress, keep reference material close, and recover from mistakes with undo. Under the surface, it is an extensible React application whose feature modules and persistence adapters can grow without rewriting the interface people depend on.
 
 Built by [Aarti S Ravikumar](https://ai-aarti.com), a student at [Pioneer Charter School of Science II (PCSSII)](https://saugus.pioneercss.org).
 
@@ -19,11 +21,11 @@ Both links should serve the same Task-Laureate experience. If you are configurin
 
 ## Why Task-Laureate exists
 
-Task-Laureate began with a familiar kind of overwhelm: important work scattered across calendars, notes, email, sticky notes, and apps that promised to sync but did not always earn trust. Research, competitions, projects, and schoolwork were all moving at once. The hard part was not caring enough or working hard enough. The hard part was spending attention trying to remember what mattered.
+Task-Laureate began with a familiar kind of overwhelm: important work scattered across calendars, notes, email, sticky notes, and apps that promised to sync but did not always earn trust. Research, competitions, projects, and schoolwork were all moving at once. I was not short on ambition or willingness to work. I was spending too much of my attention trying to remember what mattered and too little doing the work itself.
 
-That experience shaped a simple conviction: a task manager should reduce mental overhead, not become another place to manage. It should make the next step visible, make progress honest, and make mistakes recoverable. It should respect a person’s privacy and never pretend a change is safely saved when it is not.
+That experience shaped a simple conviction: a task manager should reduce mental overhead, not become another place to manage. It should make the next step visible, show progress without pretending, and make mistakes recoverable. It should respect a person’s privacy and never claim a change is safely saved when it is not.
 
-Task-Laureate is an attempt to build that kind of tool: calm enough for a student with an assignment due tomorrow, reliable enough for someone coordinating ambitious work, and open enough for the people who use it to help improve it.
+Task-Laureate is my attempt to build that tool: calm enough for a student with an assignment due tomorrow, reliable enough for someone coordinating ambitious work, and open enough for the people who use it to question and improve it.
 
 ### A promise to the person using it
 
@@ -37,11 +39,13 @@ So the application is designed around a few non-negotiables:
 - **Forgiving of human mistakes.** List and task changes have an undo journal, and destructive actions are deliberate.
 - **Open to scrutiny and contribution.** The implementation, migration scripts, tests, and deployment contract live in this repository because trust should be inspectable.
 
-This is not a promise that software can eliminate every deadline or every difficult day. It is a promise to make the work in front of you easier to see, safer to organize, and less likely to be lost in the noise.
+This is not a promise that software can eliminate every deadline or difficult day. It is a promise to make the work in front of you easier to see, safer to organize, and less likely to disappear into the noise.
 
 ## Highlights
 
-- Lists, tasks, priorities, due dates, progress, search, and activity history
+- Lists, tasks, priorities, due dates, explicit To do/In progress/Done states, progress, search, and activity history
+- Private task attachments with fast previews and safe removal through the Storage API
+- Required task dependencies with cycle prevention, completion gates, and concise list-level signals
 - Undo journal for task and list mutations
 - Theme system and responsive, accessible UI primitives
 - Versioned workspace export/import format
@@ -75,7 +79,7 @@ Open the local URL printed by Vite (normally <http://localhost:5173>). Run `npm 
 
 The current Supabase implementation stores Lists, Tasks, sharing relationships, and reminders in normalized tables. Browser requests use the signed-in user’s JWT and are authorized by Postgres row-level security. Server-only Vercel functions handle invitation email and scheduled delivery; their service credentials never enter the browser.
 
-Apply migrations `001` through `015` in order for a new environment. Migration `006` retires the legacy snapshot table and is intentionally destructive; use it only after confirming that no snapshot data needs to survive. Full setup, environment variables, delivery-provider configuration, and the release checklist are in [the production operations guide](docs/OPERATIONS.md).
+Apply migrations `001` through `025` in order for a new environment. Migration `006` retires the legacy snapshot table and is intentionally destructive; use it only after confirming that no snapshot data needs to survive. Migrations `016`–`023` add private attachments; migrations `024`–`025` add the dependency graph and list summaries. Full setup, environment variables, delivery-provider configuration, and the release checklist are in [the production operations guide](docs/OPERATIONS.md).
 
 ## Project layout
 
@@ -92,25 +96,16 @@ docs/                     Architecture, feature, QA, and setup documentation
 
 ## Documentation
 
-### Must-read first (community quick path)
+Choose the shortest useful path:
 
-- [Quick feature guide](docs/QUICK_FEATURE_GUIDE.md)
-- [Architecture guide](docs/ARCHITECTURE_GUIDE.md)
-- [Production operations runbook](docs/OPERATIONS.md)
-- [Performance and reliability gates](docs/PERFORMANCE_MONITORING.md) (includes why Total JS budget is `900 KB` in production CI)
-- [PostHog integration guide](docs/POSTHOG_CONFIGURATION_GUIDE.md)
-- [QA and production readiness](docs/QA_AND_PRODUCTION_READINESS.md)
-
-### Full docs index
-
-- [Production operations](docs/OPERATIONS.md)
-- [Architecture guide](docs/ARCHITECTURE_GUIDE.md)
-- [Feature guide](docs/QUICK_FEATURE_GUIDE.md)
-- [Documentation index](docs/INDEX.md)
+- **Use the app:** [Quick feature guide](docs/QUICK_FEATURE_GUIDE.md)
+- **Run or deploy it:** [Production operations](docs/OPERATIONS.md)
+- **Change it:** [Architecture guide](docs/ARCHITECTURE_GUIDE.md)
+- **Find anything else:** [Documentation index](docs/INDEX.md)
 
 ## Contributing
 
-Task-Laureate is better when the people who rely on it can shape it. Bug reports, accessibility observations, documentation improvements, and focused pull requests are all welcome.
+Task-Laureate gets better when the people who rely on it can shape it. A bug report, an accessibility observation, a documentation correction, or a focused pull request can make a real difference for the next person who opens the app already carrying too much.
 
 Before opening a pull request, run the release-quality checks:
 
@@ -125,9 +120,9 @@ Use the project’s [GitHub issue flow](https://github.com/aartisr/task-laureate
 
 ## A note from Aarti
 
-I built Task-Laureate because I know how it feels to have meaningful work and still feel lost in the details. If this project gives someone a little more confidence, a little less friction, or one fewer anxious “what did I forget?” moment, then it is doing the work it was meant to do.
+I built Task-Laureate because I know how it feels to have meaningful work and still feel lost in the details. I wanted a place where the state of work is honest: what has not started, what is in motion, what is blocked, what is complete, and what can safely be undone. If this project gives someone a little more confidence, a little less friction, or one fewer anxious “what did I forget?” moment, then it is doing the work it was meant to do.
 
-If you use it, question it, improve it, or build something new with it: thank you. Good tools are not monuments. They are conversations between the people who make them and the people whose lives they are meant to support.
+If you use it, question it, improve it, or build something new with it: thank you. Good tools are not monuments. They are conversations between the people who make them and the people whose lives they are meant to support. I hope this one earns a place in yours.
 
 ## License
 

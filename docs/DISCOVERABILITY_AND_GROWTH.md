@@ -10,6 +10,8 @@ This guide makes Task-Laureate easier for people, search engines, and AI-assiste
 - A JavaScript-free summary on the app shell for crawlers and visitors who do not run JavaScript.
 - Accurate page titles, descriptions, canonical URLs, Open Graph/Twitter metadata, and a small `WebApplication` JSON-LD record.
 - [`robots.txt`](../apps/web/public/robots.txt), a focused [`sitemap.xml`](../apps/web/public/sitemap.xml), and [`llms.txt`](../apps/web/public/llms.txt). The sitemap deliberately excludes private workspace, search, settings, and activity routes.
+- A distinct GitHub Pages product overview with reciprocal production/source links, its own crawl manifest, sitemap, and AI-readable orientation file.
+- A 1200×630 PNG social-preview image, which is more broadly compatible than an SVG preview across social and search consumers.
 - `noindex, nofollow` metadata on account-specific React routes after the app loads.
 
 This approach follows Google's guidance to make content helpful, reliable, and people-first; to use structured data only for information users can substantiate; and to provide crawlable pages and a sitemap. It is also a practical foundation for AI systems: clear factual pages are easier to quote correctly than marketing claims.
@@ -50,6 +52,10 @@ The robust preparation is to keep public claims concise, dated where relevant, s
 ## Ongoing measurement
 
 Review Search Console and Bing Webmaster data monthly for coverage issues, sitemap fetch failures, mobile problems, and queries that lead visitors to the public pages. Track outcomes that matter: successful activation, returning users, useful documentation visits, source contributions, and support resolution—not vanity impressions alone. When a page underperforms, improve its usefulness and clarity before adding more keywords.
+
+## Human-operated launch work
+
+The account-owner steps for Search Console, Bing Webmaster Tools, GitHub profile/repository settings, launch channels, and ethical reference building are in [LAUNCH_AND_DISCOVERY_PLAYBOOK.md](LAUNCH_AND_DISCOVERY_PLAYBOOK.md). Keep external profiles and public pages factually aligned; the same verifiable story should appear everywhere.
 
 ## Authoritative references
 
