@@ -1,4 +1,4 @@
-import { Fragment, useCallback, useMemo, useRef, useState } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import { announceToScreenReader, createId } from '../lib/a11y';
 import type { TodoItem } from '../core/contracts/domain';
@@ -9,6 +9,9 @@ import { useDragDrop } from '../hooks/useDragDrop';
 import { VirtualTaskItems } from './VirtualTaskItems';
 import { getDueDateState, localDate, toDateInputValue } from '../core/domain/dateOnly';
 import './TaskList.css';
+import { appServices } from '../app/runtime/appServices';
+import { supportsDependencies } from '../core/contracts/repository';
+import type { TaskDependencySummary } from '../core/domain/dependencies';
 
 export interface TaskListProps {
   listId: string;
@@ -26,7 +29,7 @@ export interface TaskListProps {
 }
 
 type SortOption = 'focus' | 'priority' | 'dueDate' | 'createdAt' | 'alphabetical';
-type FilterOption = 'all' | 'active' | 'completed';
+type FilterOption = 'all' | 'active' | 'completed' | 'blocked';
 type TaskGroup = 'Overdue' | 'Due today' | 'Upcoming' | 'No due date' | 'Completed';
 type PersonalView = { id: string; name: string; filterBy: FilterOption; sortBy: SortOption };
 const personalViewsKey = 'task-laureate.personal-task-views.v1';
@@ -63,8 +66,17 @@ export function TaskList({ listId, tasks, isLoading, onTaskUpdate, onTaskComplet
   const [filterBy, setFilterBy] = useState<FilterOption>('active');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [personalViews, setPersonalViews] = useState<PersonalView[]>(loadPersonalViews);
+  const [dependencySummaries, setDependencySummaries] = useState<Record<string, TaskDependencySummary>>({});
   const regionId = useRef(createId('tasklist-region')).current;
   const today = todayKey();
+  const dependencyRepository = supportsDependencies(appServices.repository) ? appServices.repository : null;
+  const taskIdKey = useMemo(() => tasks.filter((task) => task.deletedAt === null).map((task) => task.id).sort().join(','), [tasks]);
+  useEffect(() => {
+    let active = true;
+    if (!dependencyRepository) { setDependencySummaries({}); return () => { active = false; }; }
+    void dependencyRepository.getDependencySummaries(taskIdKey ? taskIdKey.split(',') : []).then((summaries) => { if (active) setDependencySummaries(summaries); }).catch(() => { if (active) setDependencySummaries({}); });
+    return () => { active = false; };
+  }, [dependencyRepository, taskIdKey]);
 
   const { draggedIndex, dragOverIndex, handleDragStart, handleDragOver, handleDragEnd, handleDragLeave } = useDragDrop(tasks, {
     onReorder: () => announceToScreenReader('Tasks reordered'),
@@ -77,7 +89,7 @@ export function TaskList({ listId, tasks, isLoading, onTaskUpdate, onTaskComplet
   }, [tasks, today]);
 
   const visibleTasks = useMemo(() => tasks
-    .filter((task) => filterBy === 'all' || (filterBy === 'active' ? !task.completedAt : Boolean(task.completedAt)))
+    .filter((task) => filterBy === 'all' || (filterBy === 'active' ? !task.completedAt : filterBy === 'completed' ? Boolean(task.completedAt) : (dependencySummaries[task.id]?.unresolvedPrerequisiteCount ?? 0) > 0))
     .sort((a, b) => {
       if (sortBy === 'alphabetical') return a.title.localeCompare(b.title);
       if (sortBy === 'createdAt') return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
@@ -86,7 +98,7 @@ export function TaskList({ listId, tasks, isLoading, onTaskUpdate, onTaskComplet
       const groupDifference = groupOrder.indexOf(groupForTask(a, today)) - groupOrder.indexOf(groupForTask(b, today));
       if (groupDifference !== 0) return groupDifference;
       return priorityOrder[a.priority] - priorityOrder[b.priority] || (dateKey(a.dueDate) ?? '9999-12-31').localeCompare(dateKey(b.dueDate) ?? '9999-12-31');
-    }), [tasks, filterBy, sortBy, today]);
+    }), [tasks, filterBy, sortBy, today, dependencySummaries]);
 
   const groups = useMemo(() => {
     if (sortBy !== 'focus') return [{ name: null, tasks: visibleTasks }];
@@ -121,7 +133,7 @@ export function TaskList({ listId, tasks, isLoading, onTaskUpdate, onTaskComplet
 
     <div className="task-list__toolbar">
       <div className="task-list__filters" role="group" aria-label="Filter tasks">
-        {([['active', 'Open', stats.active], ['all', 'All', stats.total], ['completed', 'Done', stats.completed]] as const).map(([value, label, count]) => <button key={value} type="button" aria-pressed={filterBy === value} className={filterBy === value ? 'is-active' : ''} onClick={() => { setFilterBy(value); announceToScreenReader(`Showing ${label.toLowerCase()} tasks`); }}>{label} <span>{count}</span></button>)}
+        {([['active', 'Open', stats.active], ['blocked', 'Blocked', tasks.filter((task) => (dependencySummaries[task.id]?.unresolvedPrerequisiteCount ?? 0) > 0).length], ['all', 'All', stats.total], ['completed', 'Done', stats.completed]] as const).map(([value, label, count]) => <button key={value} type="button" aria-pressed={filterBy === value} className={filterBy === value ? 'is-active' : ''} onClick={() => { setFilterBy(value); announceToScreenReader(`Showing ${label.toLowerCase()} tasks`); }}>{label} <span>{count}</span></button>)}
       </div>
       <label className="task-list__sort" htmlFor="task-list-sort">Order
         <select id="task-list-sort" value={sortBy} onChange={(event) => { setSortBy(event.target.value as SortOption); announceToScreenReader(`Tasks ordered by ${event.target.selectedOptions[0].text}`); }}>
@@ -133,9 +145,9 @@ export function TaskList({ listId, tasks, isLoading, onTaskUpdate, onTaskComplet
 
     {groups.length ? <div className="task-list__groups">{groups.map((group) => <section className="task-list__group" key={group.name ?? 'all'} aria-label={group.name ?? 'Tasks'}>
       {group.name ? <h3 className={`task-list__group-title task-list__group-title--${group.name.toLowerCase().replaceAll(' ', '-')}`}>{group.name}<span>{group.tasks.length}</span></h3> : null}
-      {(sortBy !== 'focus' && group.tasks.length > 120) ? <VirtualTaskItems tasks={group.tasks} selectedId={selectedId} renderDetail={renderInlineDetail} render={(task) => <TaskItem task={task} selected={selectedId === task.id} onOpen={() => selectTask(task.id)} onComplete={() => onTaskComplete(task.id)} onDelete={() => onTaskDelete(task.id)} onRestore={() => onTaskRestore(task.id)} />} /> : <div role="list" className="task-list__items">{group.tasks.map((task) => {
+      {(sortBy !== 'focus' && group.tasks.length > 120) ? <VirtualTaskItems tasks={group.tasks} selectedId={selectedId} renderDetail={renderInlineDetail} render={(task) => <TaskItem task={task} selected={selectedId === task.id} dependencySummary={dependencySummaries[task.id]} onOpen={() => selectTask(task.id)} onComplete={() => onTaskComplete(task.id)} onDelete={() => onTaskDelete(task.id)} onRestore={() => onTaskRestore(task.id)} />} /> : <div role="list" className="task-list__items">{group.tasks.map((task) => {
         const sourceIndex = tasks.findIndex((candidate) => candidate.id === task.id);
-        return <Fragment key={task.id}><DraggableItem index={sourceIndex} isDragging={draggedIndex === sourceIndex} isDragOver={dragOverIndex === sourceIndex} onDragStart={handleDragStart} onDragOver={handleDragOver} onDragEnd={handleDragEnd} onDragLeave={handleDragLeave} className="move-handle"><div role="listitem"><TaskItem task={task} selected={selectedId === task.id} onOpen={() => selectTask(task.id)} onComplete={() => onTaskComplete(task.id)} onDelete={() => onTaskDelete(task.id)} onRestore={() => onTaskRestore(task.id)} /></div></DraggableItem>{selectedId === task.id ? <div className="task-list__inline-detail">{renderInlineDetail(task)}</div> : null}</Fragment>;
+        return <Fragment key={task.id}><DraggableItem index={sourceIndex} isDragging={draggedIndex === sourceIndex} isDragOver={dragOverIndex === sourceIndex} onDragStart={handleDragStart} onDragOver={handleDragOver} onDragEnd={handleDragEnd} onDragLeave={handleDragLeave} className="move-handle"><div role="listitem"><TaskItem task={task} selected={selectedId === task.id} dependencySummary={dependencySummaries[task.id]} onOpen={() => selectTask(task.id)} onComplete={() => onTaskComplete(task.id)} onDelete={() => onTaskDelete(task.id)} onRestore={() => onTaskRestore(task.id)} /></div></DraggableItem>{selectedId === task.id ? <div className="task-list__inline-detail">{renderInlineDetail(task)}</div> : null}</Fragment>;
       })}</div>}
     </section>)}</div> : <div className="task-list__empty" role="status"><span aria-hidden="true">✦</span><h3>{filterBy === 'active' ? 'Nothing is waiting' : filterBy === 'completed' ? 'No completed tasks yet' : 'No tasks yet'}</h3><p>{filterBy === 'active' ? 'Enjoy the clear runway, or add the next task above.' : 'Try another view or add a task above.'}</p></div>}
   </section>;

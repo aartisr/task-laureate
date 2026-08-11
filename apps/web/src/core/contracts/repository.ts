@@ -11,6 +11,7 @@ import type {
 } from './domain';
 import type { Collaborator, CollaboratorRole, EffectiveRole, ShareInvitation, ShareResourceType, SharedResource } from '../domain/sharing';
 import type { TaskAttachment } from '../domain/attachments';
+import type { TaskDependency, TaskDependencySummary, TaskDependencyType } from '../domain/dependencies';
 
 export interface TodoListInput {
   title: string;
@@ -78,6 +79,19 @@ export interface CollaborationRepository {
 
 export function supportsCollaboration(repository: TodoRepository): repository is TodoRepository & CollaborationRepository {
   return 'listCollaborators' in repository && 'getResourceAccess' in repository && 'createShareInvitation' in repository;
+}
+
+/** Optional graph capability; repositories without it retain their existing task UX. */
+export interface DependencyRepository {
+  listDependencies(taskId: string): Promise<TaskDependency[]>;
+  getDependencySummary(taskId: string): Promise<TaskDependencySummary>;
+  getDependencySummaries(taskIds: string[]): Promise<Record<string, TaskDependencySummary>>;
+  createDependency(input: { prerequisiteTaskId: string; dependentTaskId: string; type?: TaskDependencyType; required?: boolean }): Promise<TaskDependency>;
+  removeDependency(dependencyId: string): Promise<void>;
+}
+
+export function supportsDependencies(repository: TodoRepository): repository is TodoRepository & DependencyRepository {
+  return 'listDependencies' in repository && 'getDependencySummary' in repository && 'createDependency' in repository;
 }
 
 /**

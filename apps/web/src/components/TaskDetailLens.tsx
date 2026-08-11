@@ -5,6 +5,8 @@ import { MAX_NOTE_LENGTH, notePreview, noteReadingMinutes, normalizeNoteForStora
 import { RichNoteEditor, RichNoteReader } from './RichNote';
 import { TaskReminderControl } from './TaskReminderControl';
 import { TaskAttachments } from './TaskAttachments';
+import { TaskDependencies } from './TaskDependencies';
+import type { TaskDependencySummary } from '../core/domain/dependencies';
 
 export interface TaskDetailLensProps {
   task: TodoItem;
@@ -26,10 +28,11 @@ export function TaskDetailLens({ task, listTitle, mode = 'panel', readOnly = fal
   const [dueDate, setDueDate] = useState(() => toDateInputValue(task.dueDate));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [dependencySummary, setDependencySummary] = useState<TaskDependencySummary | null>(null);
   const hasNotes = Boolean(notes.trim());
   const noteMeta = useMemo(() => hasNotes ? `${noteReadingMinutes(notes)} min read · ${notes.length.toLocaleString()} characters` : '', [hasNotes, notes]);
 
-  useEffect(() => { setTitle(task.title); setNotes(task.notes); setPriority(task.priority); setDueDate(toDateInputValue(task.dueDate)); setEditing(false); setError(null); }, [task.id, task.title, task.notes, task.priority, task.dueDate]);
+  useEffect(() => { setTitle(task.title); setNotes(task.notes); setPriority(task.priority); setDueDate(toDateInputValue(task.dueDate)); setEditing(false); setError(null); setDependencySummary(null); }, [task.id, task.title, task.notes, task.priority, task.dueDate]);
   useEffect(() => {
     const close = (event: KeyboardEvent) => { if (event.key === 'Escape' && !editing) onClose?.(); };
     window.addEventListener('keydown', close);
@@ -47,6 +50,7 @@ export function TaskDetailLens({ task, listTitle, mode = 'panel', readOnly = fal
   };
   const cancel = () => { setTitle(task.title); setNotes(task.notes); setPriority(task.priority); setDueDate(toDateInputValue(task.dueDate)); setEditing(false); setError(null); };
   const completed = task.status === 'done';
+  const completionBlocked = dependencySummary !== null && !dependencySummary.isReadyToComplete;
   const priorityOptions: Array<{ value: TodoItem['priority']; label: string; detail: string }> = [
     { value: 'low', label: 'Low', detail: 'When time allows' }, { value: 'medium', label: 'Medium', detail: 'Plan for it' },
     { value: 'high', label: 'High', detail: 'Needs attention' }, { value: 'urgent', label: 'Urgent', detail: 'Act now' },
@@ -74,11 +78,12 @@ export function TaskDetailLens({ task, listTitle, mode = 'panel', readOnly = fal
         <section className={`task-detail-lens__edit-guidance${readOnly ? ' is-read-only' : ''}`} aria-label={readOnly ? 'Task access' : 'Editing this task'}>
           <div><strong>{readOnly ? 'View-only access' : 'Edit this task here'}</strong><span>{readOnly ? 'You can review the details, but only an owner or editor can make changes.' : 'Use the Edit task button above to change the title, priority, or rich note without leaving this spot.'}</span></div>
         </section>
-        <div className="task-detail-lens__title-row"><button type="button" className={`task-detail-lens__complete ${completed ? 'is-complete' : ''}`} onClick={() => void onComplete()} disabled={readOnly} aria-pressed={completed} aria-label={completed ? 'Mark task incomplete' : 'Mark task complete'}>{completed ? '✓' : ''}</button><h2>{task.title}</h2></div>
+        <div className="task-detail-lens__title-row"><button type="button" className={`task-detail-lens__complete ${completed ? 'is-complete' : ''}`} onClick={() => void onComplete()} disabled={readOnly || (!completed && completionBlocked)} aria-pressed={completed} aria-label={completed ? 'Mark task incomplete' : completionBlocked ? `Cannot complete: ${dependencySummary.unresolvedPrerequisiteCount} prerequisite tasks remain` : 'Mark task complete'}>{completed ? '✓' : ''}</button><h2>{task.title}</h2></div>
         <div className="task-detail-lens__properties"><span className={`priority-badge priority--${task.priority}`}>{task.priority}</span>{task.dueDate ? <span>Due {formatDateOnly(task.dueDate, undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span> : null}{task.tags.map((tag) => <span key={tag}>#{tag}</span>)}</div>
         <section className="task-detail-lens__note" aria-label="Task note"><div className="task-detail-lens__note-heading"><div><h3>Note</h3>{hasNotes ? <p>{noteMeta}</p> : null}</div>{!readOnly ? <button type="button" className="secondary-button" onClick={() => setEditing(true)}>Edit details</button> : null}</div>{hasNotes ? <RichNoteReader value={notes} /> : <p className="task-detail-lens__empty">No note yet. Choose <strong>Edit task</strong> above to add durable context.</p>}</section>
       </>}
       {canManageReminders && !readOnly ? <TaskReminderControl taskId={task.id} /> : null}
+      {!editing ? <TaskDependencies taskId={task.id} listId={task.listId} readOnly={readOnly} onSummaryChange={setDependencySummary} /> : null}
       {!editing ? <TaskAttachments taskId={task.id} readOnly={readOnly} /> : null}
       {error ? <p className="task-detail-lens__error" role="alert">{error}</p> : null}
       {!editing && hasNotes ? <p className="task-detail-lens__summary" aria-label="Note preview">{notePreview(notes, 360)}</p> : null}

@@ -1,6 +1,7 @@
 import type { ActivityEvent, DashboardSummary, ListTemplate, SearchResult, TodoItem, TodoList } from '../../core/contracts/domain';
-import type { AttachmentRepository, CollaborationRepository, CursorPage, CursorPageInput, ListPageInput, ScalableTaskFeedRepository, TaskFeedInput, TaskFeedPage, TodoListInput, TodoListUpdateInput, TodoRepository, TodoTaskInput, TodoTaskUpdateInput } from '../../core/contracts/repository';
+import type { AttachmentRepository, CollaborationRepository, CursorPage, CursorPageInput, DependencyRepository, ListPageInput, ScalableTaskFeedRepository, TaskFeedInput, TaskFeedPage, TodoListInput, TodoListUpdateInput, TodoRepository, TodoTaskInput, TodoTaskUpdateInput } from '../../core/contracts/repository';
 import { classifyAttachment, type TaskAttachment } from '../../core/domain/attachments';
+import type { DependencyTaskRef, TaskDependency, TaskDependencySummary } from '../../core/domain/dependencies';
 import { createSupabaseCollaborationGateway } from './collaborationGateway';
 import type { SupabasePersistenceConfig } from './config';
 import { collaborationError } from './collaborationErrors';
@@ -13,6 +14,9 @@ type DashboardRpc = { summary: { listCount: number; completedListCount: number; 
 type TaskFeedRow = TaskRow & { list_title: string; next_cursor: string | null };
 type ListPageRow = ListRow & { task_count: number; completed_task_count: number; next_cursor: string | null };
 type AttachmentRow = { id: string; task_id: string; original_name: string; content_type: string; byte_size: number; kind: TaskAttachment['kind']; status: TaskAttachment['status']; object_path: string; thumbnail_path: string | null; preview_path: string | null; created_at: string };
+type DependencyTaskRow = { id: string; title: string; status: TodoItem['status']; due_date: string | null };
+type DependencyRow = { id: string; prerequisite_task_id: string; dependent_task_id: string; dependency_type: TaskDependency['type']; is_required: boolean; created_at: string; prerequisite: DependencyTaskRow; dependent: DependencyTaskRow };
+type DependencySummaryRow = { task_id: string; unresolved_prerequisite_count: number; dependent_count: number };
 const REQUEST_TIMEOUT_MS = 15_000;
 
 function listFromRow(row: ListRow, tasks: TaskRow[]): TodoList {
@@ -26,6 +30,8 @@ function listFromSummaryRow(row: ListRow & { task_count: number; completed_task_
 }
 function taskFromRow(row: TaskRow): TodoItem { return { id: row.id, listId: row.list_id, title: row.title, notes: row.note_document, status: row.status, priority: row.priority, dueDate: row.due_date, tags: row.tags ?? [], order: Number(row.order_key), createdAt: row.created_at, updatedAt: row.updated_at, completedAt: row.completed_at, deletedAt: row.deleted_at }; }
 function attachmentFromRow(row: AttachmentRow): TaskAttachment { return { id: row.id, taskId: row.task_id, name: row.original_name, contentType: row.content_type, byteSize: Number(row.byte_size), kind: row.kind, status: row.status, objectPath: row.object_path, thumbnailPath: row.thumbnail_path, previewPath: row.preview_path, createdAt: row.created_at }; }
+function dependencyTaskFromRow(row: DependencyTaskRow): DependencyTaskRef { return { id: row.id, title: row.title, status: row.status, dueDate: row.due_date }; }
+function dependencyFromRow(row: DependencyRow): TaskDependency { return { id: row.id, prerequisiteTask: dependencyTaskFromRow(row.prerequisite), dependentTask: dependencyTaskFromRow(row.dependent), type: row.dependency_type, required: row.is_required, createdAt: row.created_at }; }
 function first<T>(rows: T[]): T { if (!rows[0]) throw new Error('The requested resource was not returned. It may have changed or you may no longer have access.'); return rows[0]; }
 function rpcRecord<T>(value: T | T[]): T { return Array.isArray(value) ? first(value) : value; }
 
@@ -34,7 +40,7 @@ function rpcRecord<T>(value: T | T[]): T { return Array.isArray(value) ? first(v
  * Postgres; this adapter only maps the public domain contract to Data API calls.
  * It is composed with the collaboration gateway rather than duplicating invite code.
  */
-export function createSupabaseCollaborationTodoRepository(config: SupabasePersistenceConfig, request: FetchLike = fetch): TodoRepository & CollaborationRepository & ScalableTaskFeedRepository & AttachmentRepository {
+export function createSupabaseCollaborationTodoRepository(config: SupabasePersistenceConfig, request: FetchLike = fetch): TodoRepository & CollaborationRepository & ScalableTaskFeedRepository & AttachmentRepository & DependencyRepository {
   if (!config.url || !config.publishableKey) throw new Error('Collaboration persistence requires configured Supabase credentials.');
   const rest = `${config.url.replace(/\/$/, '')}/rest/v1`;
   const storage = `${config.url.replace(/\/$/, '')}/storage/v1`;
@@ -83,6 +89,15 @@ export function createSupabaseCollaborationTodoRepository(config: SupabasePersis
     const row = first(await json<ListRow[]>(`/collaboration_lists?id=eq.${encodeURIComponent(id)}&select=id,title,description,status,created_at,updated_at,deleted_at`, { method: 'PATCH', headers: { Prefer: 'return=representation' }, body: JSON.stringify(body) }));
     return listFromRow(row, await json<TaskRow[]>(`/collaboration_tasks?list_id=eq.${encodeURIComponent(id)}&status=neq.deleted&select=id,list_id,title,note_document,status,priority,due_date,tags,order_key,created_at,updated_at,completed_at,deleted_at&order=order_key.asc`));
   };
+  const dependencySelect = 'id,prerequisite_task_id,dependent_task_id,dependency_type,is_required,created_at,prerequisite:collaboration_tasks!task_dependencies_prerequisite_task_id_fkey(id,title,status,due_date),dependent:collaboration_tasks!task_dependencies_dependent_task_id_fkey(id,title,status,due_date)';
+  const dependenciesForTask = async (taskId: string) => {
+    const encoded = encodeURIComponent(taskId);
+    const [incoming, outgoing] = await Promise.all([
+      json<DependencyRow[]>(`/task_dependencies?dependent_task_id=eq.${encoded}&select=${dependencySelect}&order=created_at.asc`),
+      json<DependencyRow[]>(`/task_dependencies?prerequisite_task_id=eq.${encoded}&select=${dependencySelect}&order=created_at.asc`),
+    ]);
+    return [...incoming, ...outgoing.filter((row) => !incoming.some((existing) => existing.id === row.id))].map(dependencyFromRow);
+  };
   const collaboration = createSupabaseCollaborationGateway(config, request);
 
   return {
@@ -115,6 +130,24 @@ export function createSupabaseCollaborationTodoRepository(config: SupabasePersis
       return { items: rows.map((row) => ({ ...taskFromRow(row), listTitle: row.list_title })), nextCursor };
     },
     async getTask(id) { const rows = await json<TaskRow[]>(`/collaboration_tasks?id=eq.${encodeURIComponent(id)}&select=id,list_id,title,note_document,status,priority,due_date,tags,order_key,created_at,updated_at,completed_at,deleted_at`); return rows[0] ? taskFromRow(rows[0]) : null; },
+    async listDependencies(taskId) { return dependenciesForTask(taskId); },
+    async getDependencySummary(taskId): Promise<TaskDependencySummary> {
+      const dependencies = await dependenciesForTask(taskId);
+      const unresolvedPrerequisiteCount = dependencies.filter((edge) => edge.dependentTask.id === taskId && edge.required && edge.type === 'finish_to_start' && edge.prerequisiteTask.status !== 'done').length;
+      return { unresolvedPrerequisiteCount, dependentCount: dependencies.filter((edge) => edge.prerequisiteTask.id === taskId).length, isReadyToComplete: unresolvedPrerequisiteCount === 0 };
+    },
+    async getDependencySummaries(taskIds) {
+      if (!taskIds.length) return {};
+      const rows = await json<DependencySummaryRow[]>('/rpc/get_task_dependency_summaries', { method: 'POST', body: JSON.stringify({ p_task_ids: taskIds }) });
+      return Object.fromEntries(rows.map((row) => [row.task_id, { unresolvedPrerequisiteCount: Number(row.unresolved_prerequisite_count), dependentCount: Number(row.dependent_count), isReadyToComplete: Number(row.unresolved_prerequisite_count) === 0 }]));
+    },
+    async createDependency(input) {
+      const row = rpcRecord(await json<Pick<DependencyRow, 'id'> | Array<Pick<DependencyRow, 'id'>>>(`/task_dependencies?select=id`, { method: 'POST', headers: { Prefer: 'return=representation' }, body: JSON.stringify({ prerequisite_task_id: input.prerequisiteTaskId, dependent_task_id: input.dependentTaskId, dependency_type: input.type ?? 'finish_to_start', is_required: input.required ?? true }) }));
+      const edge = (await dependenciesForTask(input.dependentTaskId)).find((candidate) => candidate.id === row.id);
+      if (!edge) throw new Error('The dependency was created but could not be read back. Refresh and try again.');
+      return edge;
+    },
+    async removeDependency(dependencyId) { await call(`/task_dependencies?id=eq.${encodeURIComponent(dependencyId)}`, { method: 'DELETE' }); },
     async listAttachments(taskId) {
       const rows = await json<AttachmentRow[]>(`/task_attachments?task_id=eq.${encodeURIComponent(taskId)}&deleted_at=is.null&select=id,task_id,original_name,content_type,byte_size,kind,status,object_path,thumbnail_path,preview_path,created_at&order=created_at.desc`);
       return rows.map(attachmentFromRow);
