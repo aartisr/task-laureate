@@ -4,6 +4,7 @@ import { formatDateOnly, localDate, toDateInputValue } from '../core/domain/date
 import { MAX_NOTE_LENGTH, notePreview, noteReadingMinutes, normalizeNoteForStorage } from '../core/domain/richNote';
 import { RichNoteEditor, RichNoteReader } from './RichNote';
 import { TaskReminderControl } from './TaskReminderControl';
+import { TaskAttachments } from './TaskAttachments';
 
 export interface TaskDetailLensProps {
   task: TodoItem;
@@ -78,6 +79,7 @@ export function TaskDetailLens({ task, listTitle, mode = 'panel', readOnly = fal
         <section className="task-detail-lens__note" aria-label="Task note"><div className="task-detail-lens__note-heading"><div><h3>Note</h3>{hasNotes ? <p>{noteMeta}</p> : null}</div>{!readOnly ? <button type="button" className="secondary-button" onClick={() => setEditing(true)}>Edit details</button> : null}</div>{hasNotes ? <RichNoteReader value={notes} /> : <p className="task-detail-lens__empty">No note yet. Choose <strong>Edit task</strong> above to add durable context.</p>}</section>
       </>}
       {canManageReminders && !readOnly ? <TaskReminderControl taskId={task.id} /> : null}
+      {!editing ? <TaskAttachments taskId={task.id} readOnly={readOnly} /> : null}
       {error ? <p className="task-detail-lens__error" role="alert">{error}</p> : null}
       {!editing && hasNotes ? <p className="task-detail-lens__summary" aria-label="Note preview">{notePreview(notes, 360)}</p> : null}
     </div>

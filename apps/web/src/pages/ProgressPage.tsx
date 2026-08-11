@@ -267,7 +267,7 @@ export function ProgressPage() {
                       📋 {t.listTitle}
                     </Link>
                     <span className="due-badge due-badge--overdue">
-                      📅 {formatDateOnly(t.dueDate, 'en-US', { month: 'short', day: 'numeric' })} · Overdue
+                      📅 {formatDateOnly(t.dueDate, 'en-US', { month: 'short', day: 'numeric', year: 'numeric' })} · Overdue
                     </span>
                   </div>
                 </div>

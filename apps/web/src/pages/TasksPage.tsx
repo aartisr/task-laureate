@@ -256,7 +256,7 @@ function TaskRow({
           <span className={`status-badge ${sm.cls}`}>{sm.label}</span>
           {task.dueDate && (
             <span className={`due-badge ${isOverdue ? 'due-badge--overdue' : ''}`}>
-              📅 {formatDateOnly(task.dueDate, 'en-US', { month: 'short', day: 'numeric' })}
+              📅 {formatDateOnly(task.dueDate, 'en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
               {isOverdue && ' · Overdue'}
             </span>
           )}

@@ -1,5 +1,6 @@
 import type { ActivityEvent, DashboardSummary, ListTemplate, SearchResult, TodoItem, TodoList } from '../../core/contracts/domain';
-import type { CollaborationRepository, CursorPage, CursorPageInput, ListPageInput, ScalableTaskFeedRepository, TaskFeedInput, TaskFeedPage, TodoListInput, TodoListUpdateInput, TodoRepository, TodoTaskInput, TodoTaskUpdateInput } from '../../core/contracts/repository';
+import type { AttachmentRepository, CollaborationRepository, CursorPage, CursorPageInput, ListPageInput, ScalableTaskFeedRepository, TaskFeedInput, TaskFeedPage, TodoListInput, TodoListUpdateInput, TodoRepository, TodoTaskInput, TodoTaskUpdateInput } from '../../core/contracts/repository';
+import { classifyAttachment, type TaskAttachment } from '../../core/domain/attachments';
 import { createSupabaseCollaborationGateway } from './collaborationGateway';
 import type { SupabasePersistenceConfig } from './config';
 import { collaborationError } from './collaborationErrors';
@@ -11,6 +12,7 @@ type WorkspaceRow = { id: string; owner_id: string };
 type DashboardRpc = { summary: { listCount: number; completedListCount: number; taskCount: number; completedCount: number; activeCount: number }; lists: Array<ListRow & { task_count: number; completed_task_count: number }> };
 type TaskFeedRow = TaskRow & { list_title: string; next_cursor: string | null };
 type ListPageRow = ListRow & { task_count: number; completed_task_count: number; next_cursor: string | null };
+type AttachmentRow = { id: string; task_id: string; original_name: string; content_type: string; byte_size: number; kind: TaskAttachment['kind']; status: TaskAttachment['status']; object_path: string; thumbnail_path: string | null; preview_path: string | null; created_at: string };
 const REQUEST_TIMEOUT_MS = 15_000;
 
 function listFromRow(row: ListRow, tasks: TaskRow[]): TodoList {
@@ -23,6 +25,7 @@ function listFromSummaryRow(row: ListRow & { task_count: number; completed_task_
   return { id: row.id, title: row.title, description: row.description, status: row.status, templateId: null, createdAt: row.created_at, updatedAt: row.updated_at, archivedAt: row.status === 'archived' ? row.updated_at : null, completedAt: row.status === 'completed' ? row.updated_at : null, deletedAt: row.deleted_at, taskCount, completedTaskCount, completionPercent: taskCount ? Math.round(completedTaskCount / taskCount * 100) : 0 };
 }
 function taskFromRow(row: TaskRow): TodoItem { return { id: row.id, listId: row.list_id, title: row.title, notes: row.note_document, status: row.status, priority: row.priority, dueDate: row.due_date, tags: row.tags ?? [], order: Number(row.order_key), createdAt: row.created_at, updatedAt: row.updated_at, completedAt: row.completed_at, deletedAt: row.deleted_at }; }
+function attachmentFromRow(row: AttachmentRow): TaskAttachment { return { id: row.id, taskId: row.task_id, name: row.original_name, contentType: row.content_type, byteSize: Number(row.byte_size), kind: row.kind, status: row.status, objectPath: row.object_path, thumbnailPath: row.thumbnail_path, previewPath: row.preview_path, createdAt: row.created_at }; }
 function first<T>(rows: T[]): T { if (!rows[0]) throw new Error('The requested resource was not returned. It may have changed or you may no longer have access.'); return rows[0]; }
 function rpcRecord<T>(value: T | T[]): T { return Array.isArray(value) ? first(value) : value; }
 
@@ -31,9 +34,10 @@ function rpcRecord<T>(value: T | T[]): T { return Array.isArray(value) ? first(v
  * Postgres; this adapter only maps the public domain contract to Data API calls.
  * It is composed with the collaboration gateway rather than duplicating invite code.
  */
-export function createSupabaseCollaborationTodoRepository(config: SupabasePersistenceConfig, request: FetchLike = fetch): TodoRepository & CollaborationRepository & ScalableTaskFeedRepository {
+export function createSupabaseCollaborationTodoRepository(config: SupabasePersistenceConfig, request: FetchLike = fetch): TodoRepository & CollaborationRepository & ScalableTaskFeedRepository & AttachmentRepository {
   if (!config.url || !config.publishableKey) throw new Error('Collaboration persistence requires configured Supabase credentials.');
   const rest = `${config.url.replace(/\/$/, '')}/rest/v1`;
+  const storage = `${config.url.replace(/\/$/, '')}/storage/v1`;
   let configurationFailure: Error | null = null;
   let workspace: WorkspaceRow | null = null;
   const call = async (path: string, init: RequestInit = {}) => {
@@ -59,6 +63,13 @@ export function createSupabaseCollaborationTodoRepository(config: SupabasePersis
     return response;
   };
   const json = async <T>(path: string, init?: RequestInit) => await (await call(path, init)).json() as T;
+  const storageCall = async (path: string, init: RequestInit = {}) => {
+    const accessToken = await config.getAccessToken?.();
+    if (!accessToken) throw new Error('Sign in before uploading an attachment.');
+    const response = await request(`${storage}${path}`, { ...init, headers: { apikey: config.publishableKey!, Authorization: `Bearer ${accessToken}`, ...init.headers } });
+    if (!response.ok) throw new Error(`Attachment request failed (${response.status}).`);
+    return response;
+  };
   const ensureWorkspace = async () => {
     if (workspace) return workspace;
     workspace = rpcRecord(await json<WorkspaceRow | WorkspaceRow[]>('/rpc/ensure_collaboration_workspace', { method: 'POST', body: JSON.stringify({}) }));
@@ -104,6 +115,40 @@ export function createSupabaseCollaborationTodoRepository(config: SupabasePersis
       return { items: rows.map((row) => ({ ...taskFromRow(row), listTitle: row.list_title })), nextCursor };
     },
     async getTask(id) { const rows = await json<TaskRow[]>(`/collaboration_tasks?id=eq.${encodeURIComponent(id)}&select=id,list_id,title,note_document,status,priority,due_date,tags,order_key,created_at,updated_at,completed_at,deleted_at`); return rows[0] ? taskFromRow(rows[0]) : null; },
+    async listAttachments(taskId) {
+      const rows = await json<AttachmentRow[]>(`/task_attachments?task_id=eq.${encodeURIComponent(taskId)}&deleted_at=is.null&select=id,task_id,original_name,content_type,byte_size,kind,status,object_path,thumbnail_path,preview_path,created_at&order=created_at.desc`);
+      return rows.map(attachmentFromRow);
+    },
+    async uploadAttachment(taskId, file, onProgress) {
+      if (file.size <= 0 || file.size > 100 * 1024 * 1024) throw new Error('Attachments must be between 1 byte and 100 MB.');
+      const attachmentId = crypto.randomUUID();
+      const objectPath = `tasks/${taskId}/${attachmentId}/original`;
+      onProgress?.(0);
+      await storageCall(`/object/task-attachments/${objectPath}`, { method: 'POST', headers: { 'Content-Type': file.type, 'x-upsert': 'false', 'cache-control': '31536000' }, body: file });
+      onProgress?.(85);
+      try {
+        const row = rpcRecord(await json<AttachmentRow | AttachmentRow[]>('/task_attachments?select=id,task_id,original_name,content_type,byte_size,kind,status,object_path,thumbnail_path,preview_path,created_at', { method: 'POST', headers: { Prefer: 'return=representation' }, body: JSON.stringify({ id: attachmentId, task_id: taskId, object_path: objectPath, original_name: file.name.slice(0, 255), content_type: file.type, byte_size: file.size, kind: classifyAttachment(file.type), status: 'ready' }) }));
+        onProgress?.(100);
+        return attachmentFromRow(row);
+      } catch (error) {
+        void storageCall(`/object/task-attachments/${objectPath}`, { method: 'DELETE' });
+        throw error;
+      }
+    },
+    async getAttachmentUrl(attachment, variant = 'original') {
+      const path = variant === 'thumbnail' ? attachment.thumbnailPath ?? attachment.objectPath : variant === 'preview' ? attachment.previewPath ?? attachment.objectPath : attachment.objectPath;
+      const response = await storageCall(`/object/sign/task-attachments/${path}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ expiresIn: 300 }) });
+      const payload = await response.json() as { signedURL?: string };
+      if (!payload.signedURL) throw new Error('A secure attachment link could not be created.');
+      return `${storage}${payload.signedURL}`;
+    },
+    async deleteAttachment(attachmentId) {
+      const rows = await json<AttachmentRow[]>(`/task_attachments?id=eq.${encodeURIComponent(attachmentId)}&deleted_at=is.null&select=id,task_id,original_name,content_type,byte_size,kind,status,object_path,thumbnail_path,preview_path,created_at`);
+      const attachment = rows[0];
+      if (!attachment) return;
+      await json(`/task_attachments?id=eq.${encodeURIComponent(attachmentId)}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ deleted_at: new Date().toISOString() }) });
+      await storageCall(`/object/task-attachments/${attachment.object_path}`, { method: 'DELETE' });
+    },
     async createTask(input: TodoTaskInput) { const row = rpcRecord(await json<TaskRow | TaskRow[]>('/rpc/create_collaboration_task', { method: 'POST', body: JSON.stringify({ p_list_id: input.listId, p_title: input.title, p_note_document: input.notes ?? '', p_priority: input.priority ?? 'medium', p_due_date: input.dueDate ?? null, p_tags: input.tags ?? [], p_order_key: Date.now() }) })); return taskFromRow(row); },
     async updateTask(id, input: TodoTaskUpdateInput) { const body: Record<string, unknown> = { ...input }; if ('notes' in body) { body.note_document = body.notes; delete body.notes; } if ('dueDate' in body) { body.due_date = body.dueDate; delete body.dueDate; } return updateTask(id, body); },
     async completeTask(id, isComplete) { return updateTask(id, { status: isComplete ? 'done' : 'todo' }); },

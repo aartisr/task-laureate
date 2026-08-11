@@ -10,6 +10,7 @@ import type {
   Priority,
 } from './domain';
 import type { Collaborator, CollaboratorRole, EffectiveRole, ShareInvitation, ShareResourceType, SharedResource } from '../domain/sharing';
+import type { TaskAttachment } from '../domain/attachments';
 
 export interface TodoListInput {
   title: string;
@@ -125,6 +126,18 @@ export interface ScalableTaskFeedRepository {
 
 export function supportsScalableTaskFeed(repository: TodoRepository): repository is TodoRepository & ScalableTaskFeedRepository {
   return 'listTaskFeed' in repository;
+}
+
+/** Optional capability for storage-backed task references. */
+export interface AttachmentRepository {
+  listAttachments(taskId: string): Promise<TaskAttachment[]>;
+  uploadAttachment(taskId: string, file: File, onProgress?: (percent: number) => void): Promise<TaskAttachment>;
+  getAttachmentUrl(attachment: TaskAttachment, variant?: 'thumbnail' | 'preview' | 'original'): Promise<string>;
+  deleteAttachment(attachmentId: string): Promise<void>;
+}
+
+export function supportsAttachments(repository: TodoRepository): repository is TodoRepository & AttachmentRepository {
+  return 'listAttachments' in repository && 'uploadAttachment' in repository && 'getAttachmentUrl' in repository;
 }
 
 export interface TodoRepository {
