@@ -2,69 +2,97 @@
 
 [![Production quality and security gates](https://github.com/aartisr/task-laureate/actions/workflows/quality.yml/badge.svg)](https://github.com/aartisr/task-laureate/actions/workflows/quality.yml)
 
-[**Open Task-Laureate →**](https://tasks.ai-aarti.com) · [**Try the interactive sample →**](https://tasks.ai-aarti.com/sample) · [Product overview](https://aartisr.github.io/task-laureate/) · [AI Aarti deployment](https://tasks.ai-aarti.com) · [PCSSII Robotics deployment](https://tasks.pcssiirobotics.org)
+[**Open Task-Laureate →**](https://tasks.ai-aarti.com) · [**Try the sample workspace →**](https://tasks.ai-aarti.com/sample) · [Product overview](https://aartisr.github.io/task-laureate/)
 
-> A task manager should give attention back—not ask for more of it.
+> A task manager should return attention to its owner—not demand more of it.
 
-Task-Laureate is a calm, private, keyboard-friendly workspace for turning a crowded day into one clear next step. It helps people plan lists, track honest progress, keep reference material close, and recover from mistakes with undo. Under the surface, it is an extensible React application whose feature modules and persistence adapters can grow without rewriting the interface people depend on.
+Task-Laureate is a calm, private, local-first task workspace for turning an
+overwhelming list into one feasible next action. It combines frictionless
+capture, focused daily execution, honest sync status, collaboration, and an
+opt-in AI decomposition preview—without treating urgency, streaks, or endless
+backlogs as the product.
 
-Built by [Aarti S Ravikumar](https://ai-aarti.com), a student at [Pioneer Charter School of Science II (PCSSII)](https://saugus.pioneercss.org).
+Built by [Aarti S Ravikumar](https://ai-aarti.com), a student at
+[Pioneer Charter School of Science II (PCSSII)](https://saugus.pioneercss.org).
+
+## The personal story
+
+Task-Laureate started with a simple observation: being busy is not the same as
+knowing what to do next. When schoolwork, research, competitions, family
+commitments, messages, and ideas all arrive at once, the most expensive thing
+is often not time—it is attention. Every forgotten detail creates a small
+amount of anxiety; eventually the task list itself becomes something to avoid.
+
+I wanted to build the opposite kind of tool. Not a louder dashboard. Not a
+guilt machine. A quiet, reliable place that asks one humane question: **what is
+the next action you can actually begin?**
+
+That question shapes the product. Capture first, organize later. Let a person
+choose a realistic time and energy level. Break broad work into editable steps.
+Make sync status truthful. Keep an undo path close by. Show progress as useful
+evidence, never as a verdict on someone’s worth.
+
+The ambition is deeply practical: if software can give someone one less
+anxious “what did I forget?” moment, it has made room for better thinking,
+better learning, and better care for the people and work that matter. That is
+the standard Task-Laureate tries to earn every day.
+
+## What it does today
+
+- **Capture in seconds** — natural-language parsing for dates, durations, and
+  tags; local-first delivery; keyboard shortcuts; share-target and extension
+  distribution paths.
+- **Turn intent into action** — deterministic task templates for every task,
+  plus editable, selective AI-generated decompositions for an approved internal
+  Gemini preview cohort.
+- **Protect today’s attention** — Now, quick-win, deep-work, review, and
+  commitment views use time and energy rather than guilt-driven priority noise.
+- **Keep work dependable** — local-first persistence, outbox recovery, clear
+  local/saving/synced/error states, undo for mutations, and resilient
+  deployment-chunk recovery.
+- **Collaborate safely** — normalized Supabase Lists and Tasks, RLS-backed
+  owner/editor/viewer permissions, invitations, shared-work discovery, task
+  dependencies, attachments, reminders, and activity history.
+- **Stay understandable** — responsive semantic themes, keyboard-accessible
+  interactions, contrast-focused styling, exports/imports, and a Puck editor
+  for content pages.
+
+## AI decomposition, with human control
+
+The **Try AI breakdown (preview)** control is available from a task’s
+**Plan and deconstruct** section for signed-in owners and editors when the
+restricted preview is enabled for their account. AI never changes a task by
+itself: every proposed step is visible, editable, selectively includable, and
+discardable before acceptance.
+
+The current Gemini free-tier preview is deliberately narrow:
+
+- server-only Gemini credentials; no `VITE_*` AI secret
+- explicit consent, named-user allowlist, authenticated task authorization,
+  content safeguards, quotas, cache, audit events, and typed fallbacks
+- strict response-schema validation and versioned model/prompt provenance
+- atomic acceptance: all selected child tasks and planning metadata are saved
+  together, or none are
+- template decomposition remains available for every task, including every AI
+  failure or ineligible request
+
+Use only non-sensitive task text in the preview. General-user AI availability
+is intentionally deferred until an approved paid or enterprise provider plan
+exists. Full operations, privacy boundaries, and rollout guidance are in the
+[Gemini free-tier decomposition plan](docs/GEMINI_FREE_TIER_AI_DECOMPOSITION_PLAN.md).
 
 ## Live deployments
 
-Task-Laureate is live at two public addresses:
+- [tasks.ai-aarti.com](https://tasks.ai-aarti.com) — primary deployment
+- [tasks.pcssiirobotics.org](https://tasks.pcssiirobotics.org) — PCSSII
+  Robotics deployment
 
-- [tasks.ai-aarti.com](https://tasks.ai-aarti.com) — AI Aarti deployment
-- [tasks.pcssiirobotics.org](https://tasks.pcssiirobotics.org) — PCSSII Robotics deployment
-
-Both links should serve the same Task-Laureate experience. If you are configuring a new deployment, follow the [production operations runbook](docs/OPERATIONS.md) and add the exact deployed origin to Supabase Auth redirect URLs.
-
-## Why Task-Laureate exists
-
-Task-Laureate began with a familiar kind of overwhelm: important work scattered across calendars, notes, email, sticky notes, and apps that promised to sync but did not always earn trust. Research, competitions, projects, and schoolwork were all moving at once. I was not short on ambition or willingness to work. I was spending too much of my attention trying to remember what mattered and too little doing the work itself.
-
-That experience shaped a simple conviction: a task manager should reduce mental overhead, not become another place to manage. It should make the next step visible, show progress without pretending, and make mistakes recoverable. It should respect a person’s privacy and never claim a change is safely saved when it is not.
-
-Task-Laureate is my attempt to build that tool: calm enough for a student with an assignment due tomorrow, reliable enough for someone coordinating ambitious work, and open enough for the people who use it to question and improve it.
-
-### A promise to the person using it
-
-Your work deserves clarity. Your data deserves an accurate status. Your attention is valuable.
-
-So the application is designed around a few non-negotiables:
-
-- **Useful before demanding commitment.** You can explore the workspace before sign-in. When a List or Task needs to be saved, the app explains why sign-in helps, preserves the complete draft, and returns you to it after authentication.
-- **Private by default.** Signed-in workspaces are scoped to the authenticated account. Local offline copies are account-scoped and cleared on sign-out.
-- **Honest about durability.** The interface distinguishes local, saving, synced, and error states instead of claiming that a cloud save succeeded when it did not.
-- **Forgiving of human mistakes.** List and task changes have an undo journal, and destructive actions are deliberate.
-- **Open to scrutiny and contribution.** The implementation, migration scripts, tests, and deployment contract live in this repository because trust should be inspectable.
-
-This is not a promise that software can eliminate every deadline or difficult day. It is a promise to make the work in front of you easier to see, safer to organize, and less likely to disappear into the noise.
-
-## Highlights
-
-- Lists, tasks, priorities, due dates, explicit To do/In progress/Done states, progress, search, and activity history
-- Private task attachments with fast previews and safe removal through the Storage API
-- Required task dependencies with cycle prevention, completion gates, and concise list-level signals
-- Undo journal for task and list mutations
-- Theme system and responsive, accessible UI primitives
-- Versioned workspace export/import format
-- Normalized Supabase collaboration with owner/editor/viewer access control
-- One-time invitation links, shared-work discovery, and RLS enforcement
-- Assignment-aware in-app, email, and opt-in SMS reminders
-- Bounded keyset reads and virtualized task rendering for large workspaces
-
-## Tech stack
-
-- React 18 and TypeScript
-- Vite
-- TanStack Router and TanStack Query
-- Vitest
-- Supabase PostgREST Data API (optional persistence backend)
+For a new deployment, follow [Production Operations](docs/OPERATIONS.md) and
+add the exact deployed origin to Supabase Auth redirect URLs.
 
 ## Quick start
 
-Requirements: Node.js 20.19 or later.
+Requirements: Node.js 20.19+ and npm.
 
 ```bash
 git clone https://github.com/aartisr/task-laureate.git
@@ -73,56 +101,81 @@ npm install
 npm run dev
 ```
 
-Open the local URL printed by Vite (normally <http://localhost:5173>). Run `npm run build`, `npm run lint`, or `npm run test` from the repository root for the corresponding web-app command.
+Open the URL Vite prints (normally <http://localhost:5173>).
 
-## Production architecture
+### Quality gate
 
-The current Supabase implementation stores Lists, Tasks, sharing relationships, and reminders in normalized tables. Browser requests use the signed-in user’s JWT and are authorized by Postgres row-level security. Server-only Vercel functions handle invitation email and scheduled delivery; their service credentials never enter the browser.
+Run the same production-quality gate used for delivery:
 
-Apply migrations `001` through `025` in order for a new environment. Migration `006` retires the legacy snapshot table and is intentionally destructive; use it only after confirming that no snapshot data needs to survive. Migrations `016`–`023` add private attachments; migrations `024`–`025` add the dependency graph and list summaries. Full setup, environment variables, delivery-provider configuration, and the release checklist are in [the production operations guide](docs/OPERATIONS.md).
+```bash
+npm run quality:gate
+```
 
-## Project layout
+It verifies production configuration and registry safety, TypeScript, the test
+suite, the Vite build, and performance budgets. Supabase live integration tests
+remain explicit opt-in checks because they require a real non-service-role test
+user and environment credentials:
+
+```bash
+npm run test:supabase -w apps/web
+npm run test:supabase:permissions -w apps/web
+```
+
+## Configuration at a glance
+
+Keep secrets in ignored environment files or Vercel’s server-only environment
+settings—never in source control.
+
+| Capability | Browser-safe configuration | Server-only configuration |
+| --- | --- | --- |
+| Core cloud sync | `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY` | — |
+| AI preview UI | `VITE_FEATURE_AI_DECOMPOSITION=true` | `GEMINI_API_KEY`, provider/model/cache settings, allowlist, Supabase server settings |
+| Reminders and invitations | public app URL as needed | delivery-provider credentials |
+| Calendar | none until enabled | OAuth client secret and encrypted-token design |
+
+For the complete, current inventory use
+[Remaining Work and Launch Readiness](docs/REMAINING_WORK_AND_READINESS.md).
+
+## Architecture
 
 ```text
-apps/web/                 Vite web application
-  src/app/                Runtime services, routing, providers
-  src/core/               Domain contracts, mutations, themes, registries
-  src/features/           Feature modules
-  src/infrastructure/     Persistence and repository implementations
-packages/db/              Reusable database abstractions
-supabase/migrations/      Supabase schema and row-level security migration
-docs/                     Architecture, feature, QA, and setup documentation
+apps/web/                 Vite + React application and Vercel functions
+  src/app/                Composition root, runtime services, routing, providers
+  src/core/               Domain contracts, policies, mutations, themes
+  src/features/           Feature-oriented UI modules
+  src/infrastructure/     Persistence, analytics, AI client boundary, adapters
+  api/                    Server-only Vercel endpoints and provider adapters
+supabase/migrations/      Schema, RPCs, and row-level-security changes
+docs/                     Product, operations, Puck, AI, and readiness guides
 ```
+
+The browser uses the authenticated Supabase JWT and Postgres RLS for data
+access. Server-only Vercel functions handle provider credentials and privileged
+operations. The AI provider sits behind a narrow registry/adapter boundary so a
+future paid or enterprise provider can be added without changing the core task
+experience.
+
+Apply migrations `001` through `029` in order for a new Supabase environment.
+Read the migration headers and [Production Operations](docs/OPERATIONS.md)
+before applying them; migration `006` includes a legacy snapshot retirement
+that must be reviewed before use.
 
 ## Documentation
 
-Choose the shortest useful path:
-
 - **Use the app:** [Quick feature guide](docs/QUICK_FEATURE_GUIDE.md)
 - **Run or deploy it:** [Production operations](docs/OPERATIONS.md)
-- **Change it:** [Architecture guide](docs/ARCHITECTURE_GUIDE.md)
-- **Find anything else:** [Documentation index](docs/INDEX.md)
+- **Understand the architecture:** [Architecture guide](docs/ARCHITECTURE_GUIDE.md)
+- **Configure real AI safely:** [Gemini AI decomposition plan](docs/GEMINI_FREE_TIER_AI_DECOMPOSITION_PLAN.md)
+- **Edit Puck-managed pages:** [Puck editor guide](docs/PUCK_EDITOR_GUIDE.md)
+- **See delivery status and future work:** [Readiness tracker](docs/REMAINING_WORK_AND_READINESS.md)
+- **Find everything:** [Documentation index](docs/INDEX.md)
 
 ## Contributing
 
-Task-Laureate gets better when the people who rely on it can shape it. A bug report, an accessibility observation, a documentation correction, or a focused pull request can make a real difference for the next person who opens the app already carrying too much.
-
-Before opening a pull request, run the release-quality checks:
-
-```bash
-npm run verify:production
-npm run lint
-npm test
-npm run build
-```
-
-Use the project’s [GitHub issue flow](https://github.com/aartisr/task-laureate/issues/new) to report a bug or share an idea. Keep credentials and tokens in ignored local environment files; never commit them.
-
-## A note from Aarti
-
-I built Task-Laureate because I know how it feels to have meaningful work and still feel lost in the details. I wanted a place where the state of work is honest: what has not started, what is in motion, what is blocked, what is complete, and what can safely be undone. If this project gives someone a little more confidence, a little less friction, or one fewer anxious “what did I forget?” moment, then it is doing the work it was meant to do.
-
-If you use it, question it, improve it, or build something new with it: thank you. Good tools are not monuments. They are conversations between the people who make them and the people whose lives they are meant to support. I hope this one earns a place in yours.
+Task-Laureate improves when people who use it can shape it. Accessibility
+observations, documentation corrections, concise bug reports, and focused pull
+requests all matter. Please run `npm run quality:gate` before opening a pull
+request, and never commit credentials, tokens, or private user data.
 
 ## License
 

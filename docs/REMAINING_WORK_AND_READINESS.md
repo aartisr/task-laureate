@@ -28,7 +28,6 @@ configurable browser-extension scaffold are in place.
 
 The following features deliberately do **not** pretend to be connected:
 
-- AI decomposition uses a reliable local template fallback; real AI is off.
 - Calendar sync is off and its provider rejects requests until OAuth is
   configured.
 - Product analytics is opt-in and off unless configured.
@@ -47,7 +46,7 @@ variable.
 | P0 | Production authentication | Complete | Supabase Auth and the selected launch configuration | Marked complete by product-owner acceptance on 2026-08-12. Keep [CONFIGURING_LOGIN.md](CONFIGURING_LOGIN.md) as the regression and provider-change checklist. |
 | P0 | Production environment and delivery setup | Complete | Vercel project/domain, Supabase URL/key, public app URL, and selected delivery channels | Marked complete by product-owner acceptance on 2026-08-12. Keep [OPERATIONS.md](OPERATIONS.md) as the deployment-change and release regression runbook. |
 | P0 | External capture distribution | Complete | Production app URL, manual browser-extension packaging and install testing | Marked complete by product-owner acceptance on 2026-08-12. Keep [CAPTURE_CHANNELS.md](CAPTURE_CHANNELS.md) as the installation, distribution, and regression-test guide. |
-| P1 | Real AI task decomposition | In progress | Gemini free-tier preview adapter, typed client boundary, schema validation, consent gate, cache, and template fallback are implemented; configure the server-only preview environment next | Keep the unpaid tier restricted to opted-in internal users with synthetic or non-sensitive task text. Complete the [Gemini free-tier AI decomposition plan](GEMINI_FREE_TIER_AI_DECOMPOSITION_PLAN.md) verification and rollout gates before marking this complete. |
+| P1 | Real AI task decomposition | Complete | Gemini free-tier preview, server-only configuration, restricted internal allowlist, migrations `028`–`029`, consent, validation, cache, quotas, audit trail, and atomic acceptance | Verified and accepted on 2026-08-12. Keep the unpaid preview restricted to opted-in internal users and non-sensitive task text; use the [Gemini plan](GEMINI_FREE_TIER_AI_DECOMPOSITION_PLAN.md) for operational regression and future-provider migration. |
 | P1 | One-way calendar scheduling | Needs implementation | Choose Google Calendar, Microsoft 365, or a first provider; create an OAuth application | Create, update, disconnect, and retry task blocks using encrypted server-side tokens. |
 | P1 | Calendar reconciliation / two-way sync | Needs implementation | Provider webhook or polling design, conflict policy, and subscription credentials | Prove rescheduling, cancellation, duplicate prevention, and conflict resolution. |
 | P1 | Durable remote offline sync | Needs implementation | Remote replay protocol and conflict-resolution product decisions | Pass offline → reconnect end-to-end tests without data loss or silent overwrites. |
@@ -66,7 +65,7 @@ server-only values out of the browser build and out of Git.
 | --- | --- | --- | --- |
 | Core cloud sync | `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, optional `VITE_SUPABASE_WORKSPACE_ID` | Browser-safe deployment variables | Authenticated List/Task CRUD and RLS smoke test passed in the configured test environment on 2026-08-12; verify separately in each deployed environment. |
 | Social sign-in | Provider client ID/secret, Supabase provider setup, `VITE_AUTH_PROVIDERS` | Secrets in provider console/Supabase; public provider list in deployment variables | Not enabled until an operator chooses and configures providers. |
-| AI decomposition | Provider API credential, model/version settings, server-side endpoint, rate limit and budget policy | Server-only secret store and server function | Not configured; do not expose an AI key in `VITE_*`. |
+| AI decomposition | Provider API credential, model/version settings, server-side endpoint, rate limit and budget policy | Server-only secret store and server function | Complete and verified for the restricted Gemini free-tier internal preview on 2026-08-12. Do not expose an AI key in `VITE_*`. |
 | Calendar | OAuth client ID/secret, exact redirect URIs, encrypted refresh-token storage, webhook secret if applicable | Provider console, server secret store, database encryption/key management | Not configured; the in-app calendar provider is intentionally unconfigured. |
 | Browser push | `VITE_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | Public key in browser configuration; private values server-only | Optional and not active without keys. |
 | Email invitations/reminders | `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, optional reply-to, `PUBLIC_APP_URL` | Server-only deployment variables | Optional; needs verified sending domain and test delivery. |
@@ -127,8 +126,9 @@ the target deployment environment.
 
 ## AI: safe path to a real implementation
 
-The existing template decomposer is the required fallback. Do not enable
-`VITE_FEATURE_AI_DECOMPOSITION=true` until all items below are complete.
+The existing template decomposer remains the required fallback. The restricted
+Gemini preview completed the following implementation and release controls on
+2026-08-12; retain them as the regression checklist for future changes.
 
 1. Choose the approved provider, data residency, retention policy, and model
    budget. Decide whether task text may leave the Supabase/Vercel boundary.

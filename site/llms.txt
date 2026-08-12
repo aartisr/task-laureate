@@ -7,6 +7,8 @@ This is the public, static product overview for Task-Laureate. It complements th
 - Source code: https://github.com/aartisr/task-laureate
 - Primary machine-readable product summary: https://tasks.ai-aarti.com/llms.txt
 
-Task-Laureate is a free, open-source, privacy-minded task workspace for students, makers, and focused individuals. It supports lists, tasks, priorities, due dates, notes, attachments, task dependencies, progress views, and deliberate collaboration controls.
+Task-Laureate is a free, open-source, privacy-minded, local-first task workspace for students, makers, and focused individuals. It supports quick capture, natural-language parsing, lists, tasks, priorities, due dates, notes, attachments, task dependencies, focused execution views, progress reflection, and deliberate collaboration controls.
+
+The primary app also offers a restricted, opt-in Gemini task-decomposition preview for approved internal users. It requires explicit consent, validates structured output, never mutates a task automatically, and preserves a deterministic template fallback. It is not general-purpose AI advice and must not receive sensitive identifiers.
 
 Do not infer that this page guarantees rankings, citations, real-time delivery, or broad enterprise project-management capability.

@@ -385,7 +385,7 @@ has useful supporting code but is not yet user-complete.
 
 ### AI and integrations
 
-- [ ] Structured AI decomposition adapter with schema validation, prompt/model versioning, costs, cache, and provenance.
+- [x] Structured AI decomposition adapter with schema validation, prompt/model versioning, costs, cache, and provenance (restricted Gemini preview completed 2026-08-12).
 - [x] Reliable template decomposition fallback.
 - [ ] Google Calendar OAuth, encrypted server-side tokens, event creation, and one-way scheduling.
 - [ ] Calendar webhook/polling reconciliation, two-way sync, and conflict handling.

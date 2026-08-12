@@ -19,6 +19,7 @@
 ## Public pages
 
 - Product overview: https://tasks.ai-aarti.com/about/
+- GitHub Pages product story: https://aartisr.github.io/task-laureate/
 - Support: https://tasks.ai-aarti.com/support
 - Application: https://tasks.ai-aarti.com/
 - Source repository: https://github.com/aartisr/task-laureate

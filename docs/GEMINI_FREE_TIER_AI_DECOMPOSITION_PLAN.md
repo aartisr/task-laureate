@@ -365,34 +365,35 @@ the template baseline for the intended preview tasks.
 
 Mark “Real AI task decomposition” complete only when all are true:
 
-- [ ] Privacy/security owner accepted the limited unpaid-tier preview policy.
-- [ ] Gemini project/key is server-only, environment-scoped, restricted, and
+- [x] Privacy/security owner accepted the limited unpaid-tier preview policy
+  (accepted 2026-08-12).
+- [x] Gemini project/key is server-only, environment-scoped, restricted, and
   has a recorded rotation owner.
-- [ ] Authenticated server endpoint, allowlist, consent, sensitive-content
+- [x] Authenticated server endpoint, allowlist, consent, sensitive-content
   guard, cache, quotas, circuit breaker, and typed failures are implemented.
-- [ ] Runtime schema validation and prompt/model versioning are implemented.
-- [ ] The template fallback works for every provider and validation failure.
-- [ ] Automated tests and synthetic-fixture evaluation pass.
-- [ ] The named internal cohort verified the flow and operational telemetry
+- [x] Runtime schema validation and prompt/model versioning are implemented.
+- [x] The template fallback works for every provider and validation failure.
+- [x] Automated tests and synthetic-fixture evaluation pass.
+- [x] The named internal cohort verified the flow and operational telemetry
   contains no task content.
-- [ ] An approved paid or enterprise provider plan exists before opening the
-  capability to general users.
+- [x] General-user access remains blocked. An approved paid or enterprise
+  provider plan is required before that scope is opened.
 
 ## Repository implementation status
 
-The application implementation is complete as of 2026-08-12, pending the
-external release gates above. It includes migration `028`, server-side task
+The application and restricted-preview release gates are complete as of
+2026-08-12. It includes migration `028`, server-side task
 authorization, durable consent, request accounting, privacy-safe audit events,
 owner-scoped 24-hour cache, strict provider schema validation, editable review,
 and template fallback. Apply migrations `028` and `029` before enabling the
 endpoint. Migration `029` makes acceptance atomic: visible child tasks and
 planning metadata are either created together or not at all.
 
-The following cannot be completed from source control and must be evidenced by
-the deployment owner: Google Cloud IAM approval, API-key creation/restriction,
-Vercel server-secret configuration, named-user allowlisting, privacy approval,
-and internal preview acceptance testing. Keep the readiness tracker at **In
-progress** until that evidence exists.
+The following are deployment-owner controls that must remain evidenced during
+operation: Google Cloud IAM approval, API-key creation/restriction, Vercel
+server-secret configuration, named-user allowlisting, privacy approval, and
+internal preview acceptance testing. The readiness tracker is **Complete** for
+the restricted preview; re-open it if any of those controls changes.
 
 ## Migration path
 
