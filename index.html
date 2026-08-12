@@ -186,6 +186,9 @@
       background: var(--bg-card); border: 1px solid var(--border);
       font-size: .8rem; font-weight: 600; color: var(--text-muted);
     }
+    .more-details { margin-top: 24px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-card); }
+    .more-details > summary { cursor: pointer; padding: 18px 22px; color: var(--violet-light); font-weight: 700; }
+    .more-details > summary + * { padding: 0 22px 22px; }
 
     /* ── Promise section ── */
     .promise {
@@ -323,7 +326,7 @@
       <!-- Features -->
       <section class="section" aria-labelledby="features-heading">
         <p class="section-eyebrow">What's inside</p>
-        <h2 class="section-title" id="features-heading">Everything a focused team needs</h2>
+        <h2 class="section-title" id="features-heading">The essentials for a focused day</h2>
         <p class="section-sub">
           No bloat, no dark patterns, no misleading save states.
           Every feature earns its place by reducing mental overhead.
@@ -343,36 +346,6 @@
             <div class="feature-icon" aria-hidden="true">🤝</div>
             <h3 class="feature-title">Private collaboration</h3>
             <p class="feature-desc">Share lists and tasks via one-time invitation links. Owner, editor, and viewer roles are enforced at the database level with RLS.</p>
-          </article>
-          <article class="feature-card">
-            <div class="feature-icon" aria-hidden="true">🔔</div>
-            <h3 class="feature-title">Reminders that reach you</h3>
-            <p class="feature-desc">Assignment-aware reminders delivered in-app, by email, or by SMS. Configurable offsets, per-channel opt-in, and delivery receipts.</p>
-          </article>
-          <article class="feature-card">
-            <div class="feature-icon" aria-hidden="true">🔍</div>
-            <h3 class="feature-title">Full-workspace search</h3>
-            <p class="feature-desc">Search across all lists and tasks instantly. Activity history shows every change so nothing is ever silently lost.</p>
-          </article>
-          <article class="feature-card">
-            <div class="feature-icon" aria-hidden="true">🎨</div>
-            <h3 class="feature-title">Accessible themes</h3>
-            <p class="feature-desc">Multiple hand-crafted themes, visible focus states, responsive layouts, and keyboard-friendly navigation.</p>
-          </article>
-          <article class="feature-card">
-            <div class="feature-icon" aria-hidden="true">🔒</div>
-            <h3 class="feature-title">Honest about durability</h3>
-            <p class="feature-desc">Local, saving, synced, and error states are always visible. The app never claims a cloud save succeeded when it did not.</p>
-          </article>
-          <article class="feature-card">
-            <div class="feature-icon" aria-hidden="true">📦</div>
-            <h3 class="feature-title">Workspace export &amp; import</h3>
-            <p class="feature-desc">Export your entire workspace as a versioned JSON file. Import it anywhere. Your data is yours — no lock-in.</p>
-          </article>
-          <article class="feature-card">
-            <div class="feature-icon" aria-hidden="true">⚡</div>
-            <h3 class="feature-title">Works before sign-in</h3>
-            <p class="feature-desc">Explore and create tasks without creating an account. Sign in when you're ready and your drafts travel with you.</p>
           </article>
         </div>
       </section>
@@ -430,6 +403,7 @@
 
     <div class="container">
 
+      <details class="more-details"><summary>Explore implementation and deployment details</summary>
       <!-- Tech stack -->
       <section class="section" aria-labelledby="tech-heading">
         <p class="section-eyebrow">Built on</p>
@@ -471,6 +445,7 @@
           </a>
         </div>
       </section>
+      </details>
 
     </div><!-- /container -->
 
