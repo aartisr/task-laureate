@@ -25,7 +25,7 @@ const webVercel = readJson('apps/web/vercel.json');
 for (const [name, config] of [['vercel.json', rootVercel], ['apps/web/vercel.json', webVercel]]) {
   requireValue(config.framework === 'vite', `${name} must declare the Vite framework.`);
   requireValue(config.outputDirectory === 'dist', `${name} must publish the Vite dist directory.`);
-  requireValue(typeof config.installCommand === 'string' && config.installCommand.includes('npm ci --include=optional'), `${name} must use a reproducible optional-dependency install.`);
+  requireValue(typeof config.installCommand === 'string' && config.installCommand.includes('npm ci --include=dev --include=optional'), `${name} must install reproducible build-time and optional dependencies.`);
   requireValue(typeof config.buildCommand === 'string' && config.buildCommand.includes('verify:production'), `${name} must run the production preflight before building.`);
   requireValue(Array.isArray(config.crons) && config.crons.some((cron) => cron.path === '/api/cron/notifications'), `${name} must retain the notification cron route.`);
   requireValue(Array.isArray(config.rewrites) && config.rewrites.some((rewrite) => rewrite.destination === '/index.html'), `${name} must preserve SPA deep-link routing.`);
