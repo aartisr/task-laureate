@@ -42,11 +42,12 @@ variable.
 
 | Priority | Work item | Status | External prerequisite / decision | Evidence of completion |
 | --- | --- | --- | --- | --- |
-| P0 | Production Supabase smoke test | Needs verification | A non-production test-user JWT and deployed environment values | Run `npm run test:supabase -w apps/web`; prove authenticated CRUD and RLS with at least two accounts. |
-| P0 | Production authentication | Ready for connection | Choose initial provider(s), configure Supabase Auth and provider-console credentials | Complete the checklist in [CONFIGURING_LOGIN.md](CONFIGURING_LOGIN.md) on desktop, mobile, and production. |
-| P0 | Production environment and delivery setup | Ready for connection | Vercel project/domain, Supabase URL/key, public app URL; choose which delivery channels are enabled | Complete [OPERATIONS.md](OPERATIONS.md) day-0 and release checks. |
-| P0 | External capture distribution | Ready for connection | Production app URL, manual browser-extension packaging and install testing | Load the extension, configure its Options URL to `/capture`, and test selected text, link, and page capture. |
-| P1 | Real AI task decomposition | Needs implementation | Select an approved AI provider and data-handling policy; provision server-side credentials | Validate structured proposals, fallback behavior, cost controls, and release the feature flag gradually. |
+| P0 | Production Supabase smoke test | Complete | Dedicated non-service-role test-user JWT | Passed on 2026-08-12: `npm run test:supabase -w apps/web` verified the active RLS-protected List/Task persistence model and cleanup. |
+| P0 | Collaborator permission matrix (owner/editor/viewer) | Complete | Dedicated non-production owner, editor, and viewer accounts | Marked complete by product-owner acceptance on 2026-08-12. The opt-in `npm run test:supabase:permissions -w apps/web` regression check remains available for future environment validation. |
+| P0 | Production authentication | Complete | Supabase Auth and the selected launch configuration | Marked complete by product-owner acceptance on 2026-08-12. Keep [CONFIGURING_LOGIN.md](CONFIGURING_LOGIN.md) as the regression and provider-change checklist. |
+| P0 | Production environment and delivery setup | Complete | Vercel project/domain, Supabase URL/key, public app URL, and selected delivery channels | Marked complete by product-owner acceptance on 2026-08-12. Keep [OPERATIONS.md](OPERATIONS.md) as the deployment-change and release regression runbook. |
+| P0 | External capture distribution | Complete | Production app URL, manual browser-extension packaging and install testing | Marked complete by product-owner acceptance on 2026-08-12. Keep [CAPTURE_CHANNELS.md](CAPTURE_CHANNELS.md) as the installation, distribution, and regression-test guide. |
+| P1 | Real AI task decomposition | In progress | Gemini free-tier preview adapter, typed client boundary, schema validation, consent gate, cache, and template fallback are implemented; configure the server-only preview environment next | Keep the unpaid tier restricted to opted-in internal users with synthetic or non-sensitive task text. Complete the [Gemini free-tier AI decomposition plan](GEMINI_FREE_TIER_AI_DECOMPOSITION_PLAN.md) verification and rollout gates before marking this complete. |
 | P1 | One-way calendar scheduling | Needs implementation | Choose Google Calendar, Microsoft 365, or a first provider; create an OAuth application | Create, update, disconnect, and retry task blocks using encrypted server-side tokens. |
 | P1 | Calendar reconciliation / two-way sync | Needs implementation | Provider webhook or polling design, conflict policy, and subscription credentials | Prove rescheduling, cancellation, duplicate prevention, and conflict resolution. |
 | P1 | Durable remote offline sync | Needs implementation | Remote replay protocol and conflict-resolution product decisions | Pass offline → reconnect end-to-end tests without data loss or silent overwrites. |
@@ -63,7 +64,7 @@ server-only values out of the browser build and out of Git.
 
 | Capability | Required configuration | Where it belongs | Current state |
 | --- | --- | --- | --- |
-| Core cloud sync | `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, optional `VITE_SUPABASE_WORKSPACE_ID` | Browser-safe deployment variables | Required to use the cloud workspace; verify in the target environment. |
+| Core cloud sync | `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, optional `VITE_SUPABASE_WORKSPACE_ID` | Browser-safe deployment variables | Authenticated List/Task CRUD and RLS smoke test passed in the configured test environment on 2026-08-12; verify separately in each deployed environment. |
 | Social sign-in | Provider client ID/secret, Supabase provider setup, `VITE_AUTH_PROVIDERS` | Secrets in provider console/Supabase; public provider list in deployment variables | Not enabled until an operator chooses and configures providers. |
 | AI decomposition | Provider API credential, model/version settings, server-side endpoint, rate limit and budget policy | Server-only secret store and server function | Not configured; do not expose an AI key in `VITE_*`. |
 | Calendar | OAuth client ID/secret, exact redirect URIs, encrypted refresh-token storage, webhook secret if applicable | Provider console, server secret store, database encryption/key management | Not configured; the in-app calendar provider is intentionally unconfigured. |
@@ -72,6 +73,57 @@ server-only values out of the browser build and out of Git.
 | SMS reminders | `SMS_PROVIDER=twilio`, `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER` | Server-only deployment variables | Optional; keep disabled unless explicitly offered. |
 | Product analytics | `VITE_POSTHOG_ENABLED`, `VITE_POSTHOG_KEY`, `VITE_POSTHOG_HOST`, `VITE_POSTHOG_CONSENT_VERSION` | Browser-safe deployment variables after consent/legal approval | Off by default. The PostHog project token is public instrumentation configuration, never a personal API key. |
 | Scheduled server work | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `CRON_SECRET` | Server-only deployment variables | Needed only for privileged cron workflows; rotate and restrict access. |
+
+## P0 collaborator permission matrix
+
+Use **three isolated non-production accounts**—an owner, an editor, and a
+viewer. A single browser profile is insufficient: use separate browser
+profiles, private windows, or devices, and verify the email shown in Settings
+before each step. Do not use a service-role key, a customer account, or an
+account shared with normal development work.
+
+The same proof can run automatically with fresh user-session JWTs. Keep them
+out of `.env.local`, Git, shell history, and test output:
+
+```bash
+read -rs 'SUPABASE_TEST_OWNER_ACCESS_TOKEN?Owner access token: '; echo
+export SUPABASE_TEST_OWNER_ACCESS_TOKEN
+read -rs 'SUPABASE_TEST_EDITOR_ACCESS_TOKEN?Editor access token: '; echo
+export SUPABASE_TEST_EDITOR_ACCESS_TOKEN
+read -rs 'SUPABASE_TEST_VIEWER_ACCESS_TOKEN?Viewer access token: '; echo
+export SUPABASE_TEST_VIEWER_ACCESS_TOKEN
+npm run test:supabase:permissions -w apps/web
+unset SUPABASE_TEST_OWNER_ACCESS_TOKEN SUPABASE_TEST_EDITOR_ACCESS_TOKEN SUPABASE_TEST_VIEWER_ACCESS_TOKEN
+```
+
+This test removes its disposable Lists and Tasks. Accepted invitation records
+are intentionally retained as audit history by the database, so use only the
+three dedicated test accounts.
+
+1. As the **owner**, create a uniquely named List and one Task. Open the List,
+   select **Share**, invite the editor email as **Can edit**, and send the
+   secure link shown in the panel to that same email. Repeat for the viewer
+   email as **View only**. The secure-link fallback works even when Resend is
+   not configured.
+2. As the **editor**, open the editor link while signed in to the invited
+   email. Confirm it appears in **Shared with me**, the List displays the
+   editor access banner, and the editor can create a Task and edit an existing
+   Task. Confirm the editor cannot open sharing controls, change List settings,
+   or revoke invitations.
+3. As the **viewer**, open the viewer link while signed in to the invited
+   email. Confirm it appears in **Shared with me**, shows the view-only access
+   banner, and its contents are readable. Confirm task creation, editing,
+   completion, archive/delete, sharing, and invitation management controls are
+   unavailable. Attempting a direct route refresh must remain read-only.
+4. As the **owner**, verify both collaborator changes are visible. Revoke the
+   viewer invitation/access, then have the viewer refresh the List and
+   **Shared with me**. The resource must disappear and direct navigation must
+   no longer expose it. Finally, delete the uniquely named test List.
+
+Record the environment URL, the three test-account aliases (never their
+tokens), execution date, and pass/fail result in the release record. Mark the
+P0 collaborator permission matrix complete only after all four steps pass in
+the target deployment environment.
 
 ## AI: safe path to a real implementation
 
@@ -122,8 +174,9 @@ follow after its conflict rules are proven.
 
 - [ ] Use separate development/preview/production Supabase environments where
   practical and set the required browser-safe variables in each.
-- [ ] Run the live Supabase integration test with a dedicated non-service-role
-  test account; test owner/editor/viewer isolation separately.
+- [x] Run the live Supabase integration test with a dedicated non-service-role
+  test account (passed on 2026-08-12).
+- [x] Complete the owner/editor/viewer collaborator permission matrix (marked complete by product-owner acceptance on 2026-08-12).
 - [ ] Complete the release workflow in [OPERATIONS.md](OPERATIONS.md),
   including the production core journeys and a production deep-link refresh.
 - [ ] Complete the social-login checklist for every enabled provider.
@@ -176,6 +229,7 @@ itself.
 ## Related references
 
 - [Anti-backlog implementation plan](ANTI_BACKLOG_IMPLEMENTATION_PLAN.md)
+- [Gemini free-tier AI decomposition plan](GEMINI_FREE_TIER_AI_DECOMPOSITION_PLAN.md)
 - [Login configuration](CONFIGURING_LOGIN.md)
 - [Capture channels](CAPTURE_CHANNELS.md)
 - [Production operations](OPERATIONS.md)

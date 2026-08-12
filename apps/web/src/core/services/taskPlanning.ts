@@ -1,7 +1,7 @@
 import type { TodoRepository } from '../contracts/repository';
 import type { TaskPlanningRepository } from '../contracts/antiBacklog';
 import { needsClarity, type TaskPlanningMetadata } from '../domain/antiBacklog';
-import type { DecompositionStep } from '../domain/antiBacklog';
+import type { DecompositionSource, DecompositionStep } from '../domain/antiBacklog';
 
 const storageKey = 'task-laureate.task-planning.v1';
 
@@ -36,8 +36,8 @@ export function createTaskPlanningService(repository: TodoRepository) {
       writeLocal({ ...readLocal(), [taskId]: metadata });
       return metadata;
     },
-    async acceptSteps(taskId: string, steps: DecompositionStep[]) {
-      if (supportsTaskPlanning(repository)) await repository.saveAcceptedSteps(taskId, steps);
+    async acceptSteps(taskId: string, steps: DecompositionStep[], origin: DecompositionSource = 'template') {
+      if (supportsTaskPlanning(repository)) await repository.saveAcceptedSteps(taskId, steps, origin);
       return steps;
     },
   };

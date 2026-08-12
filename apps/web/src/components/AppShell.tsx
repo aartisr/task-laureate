@@ -14,10 +14,18 @@ interface AppShellProps {
   navItems: NavItem[];
 }
 
+const workspaceNavigationPreferenceKey = 'task-laureate.workspace-navigation-expanded';
+
+function readWorkspaceNavigationPreference() {
+  if (typeof window === 'undefined') return false;
+  return window.localStorage.getItem(workspaceNavigationPreferenceKey) === 'true';
+}
+
 export function AppShell({ children, navItems }: AppShellProps) {
   const { currentTheme } = useTheme();
   const isDarkTheme = currentTheme !== 'luxury-minimal';
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isWorkspaceExpanded, setIsWorkspaceExpanded] = useState(readWorkspaceNavigationPreference);
   const currentPath = useRouterState({ select: (state) => state.location.pathname });
   const recoveryAvailable = recoveryNeedsAttention(
     useSyncExternalStore(undoJournal.subscribe, undoJournal.getSnapshot, undoJournal.getSnapshot),
@@ -107,6 +115,17 @@ export function AppShell({ children, navItems }: AppShellProps) {
 
   const shellThemeClass = isDarkTheme ? 'app-shell--dark' : 'app-shell--light';
   const getLinkActiveOptions = (to: string) => (to === '/' ? { exact: true } : undefined);
+  const workspaceNavigationIsActive = desktopNavigation.workspace.some((item) => item.to === '/' ? currentPath === '/' : currentPath === item.to || currentPath.startsWith(`${item.to}/`));
+  useEffect(() => {
+    if (workspaceNavigationIsActive) setIsWorkspaceExpanded(true);
+  }, [workspaceNavigationIsActive]);
+
+  const workspaceNavigationExpanded = isWorkspaceExpanded;
+  const toggleWorkspaceNavigation = () => {
+    const next = !workspaceNavigationExpanded;
+    setIsWorkspaceExpanded(next);
+    window.localStorage.setItem(workspaceNavigationPreferenceKey, String(next));
+  };
 
   return (
     <div className={`app-shell ${shellThemeClass}`}>
@@ -156,10 +175,14 @@ export function AppShell({ children, navItems }: AppShellProps) {
             );
           })}
           <div className="sidebar-nav__extensions">
-            <p className="sidebar-nav__label">Workspace</p>
-            {desktopNavigation.workspace.map((item) => (
-              <Link key={item.to} to={item.to} activeOptions={getLinkActiveOptions(item.to)} activeProps={{ className: 'active' }} className="sidebar-link" aria-label={item.label}>{item.icon} {item.label}</Link>
-            ))}
+            <button type="button" className="sidebar-nav__section-toggle" aria-expanded={workspaceNavigationExpanded} aria-controls="workspace-navigation-items" onClick={toggleWorkspaceNavigation}>
+              <span><span className="sidebar-nav__section-label">Workspace</span><small>{workspaceNavigationExpanded ? 'Hide less-used views' : `${desktopNavigation.workspace.length} views`}</small></span><span className="sidebar-nav__section-chevron" aria-hidden="true">⌄</span>
+            </button>
+            <div id="workspace-navigation-items" className="sidebar-nav__section-items" hidden={!workspaceNavigationExpanded}>
+              {desktopNavigation.workspace.map((item) => (
+                <Link key={item.to} to={item.to} activeOptions={getLinkActiveOptions(item.to)} activeProps={{ className: 'active' }} className="sidebar-link" aria-label={item.label}>{item.icon} {item.label}</Link>
+              ))}
+            </div>
           </div>
           {desktopNavigation.utility.length > 0 && (
             <div className="sidebar-nav__extensions">

@@ -1,5 +1,5 @@
 import type { TodoItem } from './domain';
-import type { DecompositionStep, ParsedCapture, TaskPlanProposal, TaskPlanningMetadata } from '../domain/antiBacklog';
+import type { DecompositionSource, DecompositionStep, ParsedCapture, TaskPlanProposal, TaskPlanningMetadata } from '../domain/antiBacklog';
 
 /** Capability contracts keep product workflows independent of persistence and vendors. */
 export interface CaptureRepository {
@@ -18,7 +18,7 @@ export function supportsCaptureTask(repository: unknown): repository is CaptureT
 export interface TaskPlanningRepository {
   getTaskPlanning(taskId: string): Promise<TaskPlanningMetadata | null>;
   saveTaskPlanning(taskId: string, metadata: TaskPlanningMetadata): Promise<TaskPlanningMetadata>;
-  saveAcceptedSteps(taskId: string, steps: DecompositionStep[]): Promise<void>;
+  saveAcceptedSteps(taskId: string, steps: DecompositionStep[], origin?: DecompositionSource): Promise<void>;
 }
 
 export interface TaskEventRepository {

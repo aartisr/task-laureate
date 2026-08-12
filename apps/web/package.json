@@ -11,6 +11,7 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:supabase": "RUN_SUPABASE_INTEGRATION=true vitest run src/infrastructure/persistence/supabase.integration.test.ts",
+    "test:supabase:permissions": "RUN_SUPABASE_PERMISSION_INTEGRATION=true vitest run src/infrastructure/persistence/supabase.permissions.integration.test.ts",
     "lint": "tsc --noEmit",
     "verify:public-registry": "node ../../scripts/verify-public-registry.mjs",
     "verify:production": "npm run verify:public-registry && node ../../scripts/verify-production-config.mjs"

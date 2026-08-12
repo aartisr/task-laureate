@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { createCaptureOutboxItem, createOutboxStore } from '../infrastructure/antiBacklog/localFirstCapture';
 import { parseCapture } from '../core/domain/antiBacklog';
 import { flushCaptureOutbox } from '../core/services/captureDelivery';
@@ -15,6 +16,7 @@ export function QuickCapture() {
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState('');
   const [notice, setNotice] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -71,16 +73,24 @@ export function QuickCapture() {
   const close = () => setOpen(false);
   const save = async () => {
     if (!parsed.title) { setNotice('Add a task or idea to capture.'); return; }
-    await outbox.enqueue(createCaptureOutboxItem(value, parsed));
-    const result = await flushCaptureOutbox(outbox, appServices.repository);
-    clearPendingCapture();
-    setValue('');
-    if (result.delivered) {
-      await appServices.queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-      await appServices.queryClient.invalidateQueries({ queryKey: ['tasks'] });
-      setNotice('Captured in Inbox. You can return to what you were doing.');
-    } else {
-      setNotice('Captured safely on this device. It will retry when you are online.');
+    if (isSaving) return;
+    try {
+      setIsSaving(true);
+      await outbox.enqueue(createCaptureOutboxItem(value, parsed));
+      const result = await flushCaptureOutbox(outbox, appServices.repository);
+      clearPendingCapture();
+      setValue('');
+      if (result.delivered) {
+        await appServices.queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+        await appServices.queryClient.invalidateQueries({ queryKey: ['tasks'] });
+        setNotice('Saved to Inbox. Return to what you were doing.');
+      } else {
+        setNotice('Saved safely on this device. It will retry automatically when you are online.');
+      }
+    } catch {
+      setNotice('Your capture is still safe on this device. Please try syncing again in a moment.');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -93,17 +103,23 @@ export function QuickCapture() {
     if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
   };
 
-  if (!open) return <button ref={triggerRef} type="button" className="secondary-button" onClick={() => { setNotice(null); setOpen(true); }}>Capture <kbd>⌘⇧K</kbd></button>;
+  if (!open) return <button ref={triggerRef} type="button" className="quick-capture__trigger" onClick={() => { setNotice(null); setOpen(true); }}><span className="quick-capture__trigger-icon" aria-hidden="true">＋</span><span>Quick capture</span><kbd>⌘⇧K</kbd></button>;
 
-  return <div className="quick-capture" role="presentation">
+  const dialog = <div className="quick-capture" role="presentation">
     <button className="quick-capture__backdrop" aria-label="Close quick capture" type="button" onClick={close} />
-    <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="quick-capture-title" className="panel quick-capture__dialog" onKeyDown={trapFocus}>
-      <div className="panel-heading"><div><p className="eyebrow">Quick capture</p><h2 id="quick-capture-title">What needs your attention?</h2></div><button type="button" className="secondary-button" onClick={close}>Close</button></div>
-      <p className="quick-capture__hint">Use natural language: <em>“Send report tomorrow at 2pm #work 15m”</em></p>
-      <textarea ref={inputRef} value={value} onChange={(event) => { setValue(event.target.value); setNotice(null); }} placeholder="Add the thought before it gets away…" rows={4} />
-      {parsed.title ? <div className="quick-capture__chips" aria-label="Capture details"><span>Task: {parsed.title}</span>{parsed.estimateMinutes ? <span>{parsed.estimateMinutes} min</span> : null}{parsed.scheduledStartAt ? <span>Tomorrow</span> : null}{parsed.tags.map((tag) => <span key={tag}>#{tag}</span>)}</div> : null}
+    <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="quick-capture-title" aria-describedby="quick-capture-description" className="panel quick-capture__dialog" onKeyDown={trapFocus}>
+      <header className="quick-capture__header"><div><p className="eyebrow">Capture without context switching</p><h2 id="quick-capture-title">What just came to mind?</h2><p id="quick-capture-description">Save it now. We’ll organize it into your Inbox without interrupting your flow.</p></div><button type="button" className="quick-capture__close" onClick={close} aria-label="Close quick capture">×</button></header>
+      <div className="quick-capture__body">
+        <div className="quick-capture__compose-column"><label className="quick-capture__composer"><span className="sr-only">Task, idea, or reminder</span><textarea ref={inputRef} value={value} onChange={(event) => { setValue(event.target.value); setNotice(null); }} onKeyDown={(event) => { if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') { event.preventDefault(); void save(); } }} placeholder="Write the thought exactly as it arrives…" rows={5} /></label><div className="quick-capture__helper"><span>Try: “Send report tomorrow #work 15m”</span><span><kbd>⌘↵</kbd> to save</span></div></div>
+        <aside className="quick-capture__insight" aria-label="Capture details">{parsed.title ? <section className="quick-capture__preview" aria-label="Capture preview"><div className="quick-capture__preview-heading"><span aria-hidden="true">✦</span><div><strong>Ready to save</strong><p>{parsed.confidence === 'high' ? 'Details recognized automatically.' : 'A clear Inbox item will be created.'}</p></div></div><p className="quick-capture__title">{parsed.title}</p><div className="quick-capture__chips">{parsed.estimateMinutes ? <span>{parsed.estimateMinutes} min</span> : null}{parsed.scheduledStartAt ? <span>Tomorrow</span> : null}{parsed.tags.map((tag) => <span key={tag}>#{tag}</span>)}{!parsed.estimateMinutes && !parsed.scheduledStartAt && !parsed.tags.length ? <span>Inbox</span> : null}</div></section> : <div className="quick-capture__rest-assurance"><span aria-hidden="true">⌁</span><div><strong>Your flow is protected</strong><p>Nothing is lost—captures are saved locally first, then synced when possible.</p></div></div>}</aside>
+      </div>
       {notice ? <p role="status" className="quick-capture__notice">{notice}</p> : null}
-      <div className="button-row"><button type="button" className="primary-button" disabled={!parsed.title} onClick={() => void save()}>Capture to Inbox</button><button type="button" className="secondary-button" onClick={close}>Keep working</button></div>
+      <footer className="quick-capture__actions"><button type="button" className="primary-button" disabled={!parsed.title || isSaving} onClick={() => void save()}>{isSaving ? 'Saving…' : 'Save to Inbox'} <span aria-hidden="true">→</span></button><button type="button" className="quick-capture__dismiss" disabled={isSaving} onClick={close}>Keep working</button></footer>
     </div>
   </div>;
+
+  // The trigger lives in the desktop sidebar, whose backdrop treatment creates
+  // a containing block for fixed descendants. A portal ensures the dialog is
+  // always anchored to the viewport—not squeezed into the sidebar column.
+  return createPortal(dialog, document.body);
 }

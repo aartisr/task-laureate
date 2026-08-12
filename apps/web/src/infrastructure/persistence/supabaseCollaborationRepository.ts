@@ -145,10 +145,10 @@ export function createSupabaseCollaborationTodoRepository(config: SupabasePersis
       }));
       return planningFromRow(row);
     },
-    async saveAcceptedSteps(taskId, steps: DecompositionStep[]) {
+    async saveAcceptedSteps(taskId, steps: DecompositionStep[], origin = 'template') {
       await json<unknown>('/rpc/accept_task_steps', {
         method: 'POST',
-        body: JSON.stringify({ p_task_id: taskId, p_steps: steps, p_origin: 'template', p_idempotency_key: `steps:${taskId}:${crypto.randomUUID()}` }),
+        body: JSON.stringify({ p_task_id: taskId, p_steps: steps, p_origin: origin, p_idempotency_key: `steps:${taskId}:${crypto.randomUUID()}` }),
       });
     },
     async recordTaskEvent(input) {

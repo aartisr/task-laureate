@@ -38,12 +38,24 @@ export interface DecompositionStep {
   energyLevel: EnergyLevel;
 }
 
+export type DecompositionSource = 'template' | 'ai';
+
+export interface ProposalProvenance {
+  provider: string;
+  model: string;
+  promptVersion: string;
+  schemaVersion: number;
+}
+
 export interface TaskPlanProposal {
   taskTitle: string;
   summary: string;
   firstAction: string;
   steps: DecompositionStep[];
-  source: 'template';
+  source: DecompositionSource;
+  assumptions?: string[];
+  warnings?: string[];
+  provenance?: ProposalProvenance;
 }
 
 const TAG_PATTERN = /(?:^|\s)#([\p{L}\p{N}_-]+)/gu;

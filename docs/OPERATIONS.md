@@ -18,11 +18,12 @@ Task-Laureate is a Vite/React SPA backed by Supabase Auth + Postgres RLS.
 
 Apply migrations in order from [supabase/migrations](../supabase/migrations):
 
-- `001` through `025` for a new environment.
+- `001` through `027` for a new environment.
 
 Important:
 
 - `006_switch_to_collaboration_persistence.sql` retires legacy `workspace_snapshots` and is intentionally destructive for that table.
+- The live `test:supabase` check validates the active `collaboration_lists` and `collaboration_tasks` model. A missing `workspace_snapshots` table is expected after migration `006` and must not be recreated.
 - `016` through `023` add private task attachments, the required Storage/RLS lifecycle, and metadata deletion behaviour. Keep the `task-attachments` bucket private.
 - `024` through `025` add the directed acyclic task-dependency graph, database completion gate, and batched list-summary projection.
 - Run `010_reload_postgrest_schema_cache.sql` if PostgREST reports missing RPC/schema drift.
