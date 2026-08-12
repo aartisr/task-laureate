@@ -3913,3 +3913,212 @@ textarea {
   .reminder-delivery, .task-reminder-control { padding: 1rem; }.reminder-delivery__sms > label { align-items: flex-start; flex-direction: column; gap: .2rem; }.reminder-delivery__sms > div { flex-direction: column; }.reminder-delivery__sms > div .secondary-button { inline-size: 100%; }.task-reminder-control__schedule { align-items: stretch; flex-direction: column; }.task-reminder-control__schedule select { inline-size: 100%; }
   .workspace-data-panel__actions > *, .recovery-panel__actions > *, .list-composer__actions > *, .task-composer__actions > * { flex: 1 1 100%; }.task-list__toolbar { align-items: stretch; }.task-list__sort, .task-list__sort select { inline-size: 100%; }.task-list__sort { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; }
 }
+
+/* Responsive layout contract
+   --------------------------------------------------------------------------
+   Every application route is hosted by the same workspace shell.  Keeping the
+   final responsive rules together prevents individual pages from accidentally
+   losing their breathing room as they evolve.  The values include iOS safe
+   areas, retain a deliberate reading measure, and leave enough clearance for
+   the persistent mobile navigation. */
+html,
+body,
+#root {
+  min-block-size: 100%;
+}
+
+@media (max-width: 47.9375rem) {
+  :root {
+    --app-mobile-gutter: clamp(1rem, 4vw, 1.35rem);
+    --app-safe-inline-start: max(var(--app-mobile-gutter), env(safe-area-inset-left));
+    --app-safe-inline-end: max(var(--app-mobile-gutter), env(safe-area-inset-right));
+    --app-mobile-nav-clearance: calc(6rem + env(safe-area-inset-bottom));
+    --app-capture-offset: min(8dvh, 3.5rem);
+  }
+
+  .app-shell {
+    min-block-size: 100vh;
+    min-block-size: 100dvh;
+  }
+
+  /* The shell owns horizontal insets. Page components can therefore be reused
+     in Puck or standalone routes without each needing device-specific padding. */
+  .workspace {
+    padding:
+      clamp(1rem, 3vw, 1.35rem)
+      var(--app-safe-inline-end)
+      var(--app-mobile-nav-clearance)
+      var(--app-safe-inline-start);
+  }
+
+  .workspace > :is(main, section),
+  .workspace > .page-container {
+    inline-size: 100%;
+    max-inline-size: none;
+    margin-inline: 0;
+    min-inline-size: 0;
+  }
+
+  /* Older page roots supplied their own compact padding. The workspace now
+     owns that concern, avoiding the uneven double gutter seen between routes. */
+  .workspace > section {
+    padding: 0 !important;
+  }
+
+  .page-stack,
+  .execution-page,
+  .task-focus-page {
+    inline-size: 100%;
+    margin-inline: 0;
+    padding: 0;
+  }
+
+  .page-stack {
+    gap: clamp(1rem, 4vw, 1.4rem);
+  }
+
+  .page-container {
+    padding: 0;
+  }
+
+  .page-container__header {
+    margin-bottom: clamp(1.25rem, 5vw, 1.75rem);
+  }
+
+  .page-container__content {
+    gap: clamp(1rem, 4vw, 1.35rem);
+  }
+
+  /* The execution page is the primary mobile workflow. Its hero, commitments,
+     and disclosures use the same compact rhythm rather than inheriting desktop
+     panel padding. */
+  .execution-page .page-hero,
+  .execution-page .panel,
+  .execution-page__disclosure,
+  .dashboard-details,
+  .task-execution-controls__details {
+    padding: clamp(1rem, 4vw, 1.35rem);
+  }
+
+  .execution-page .page-hero {
+    border-radius: var(--radius-xl);
+  }
+
+  .execution-page .data-card,
+  .execution-card {
+    padding: clamp(1rem, 4vw, 1.25rem);
+  }
+
+  .execution-page__controls {
+    align-items: stretch;
+  }
+
+  .execution-page__controls > :is(button, .field) {
+    flex: 1 1 calc(50% - .65rem);
+    min-inline-size: 0;
+  }
+
+  .execution-page__controls .field {
+    flex-basis: 100%;
+  }
+
+  .execution-card .button-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--spacing-2);
+  }
+
+  .execution-card .button-row > * {
+    inline-size: 100%;
+    min-inline-size: 0;
+    margin: 0;
+  }
+
+  .dashboard-primary-action {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .dashboard-primary-action > :is(a, button) {
+    inline-size: 100%;
+  }
+
+  /* Modals use the same safe-area contract in portrait and landscape, so
+     capture is never obscured by a notch, browser chrome, or the home bar. */
+  .quick-capture {
+    place-items: start center;
+    padding:
+      max(1rem, env(safe-area-inset-top))
+      var(--app-safe-inline-end)
+      max(1rem, env(safe-area-inset-bottom))
+      var(--app-safe-inline-start);
+  }
+
+  .quick-capture__dialog {
+    inline-size: 100%;
+    max-block-size: calc(100dvh - var(--app-capture-offset) - max(2rem, env(safe-area-inset-top) + env(safe-area-inset-bottom)));
+    margin-top: var(--app-capture-offset);
+    padding: clamp(1rem, 4vw, 1.35rem);
+  }
+
+  .mobile-navigation__panel {
+    padding-inline: var(--app-safe-inline-start) var(--app-safe-inline-end);
+    padding-bottom: max(var(--spacing-4), env(safe-area-inset-bottom));
+  }
+
+  .task-attachments__viewer,
+  .share-resource-panel__content {
+    padding:
+      max(.75rem, env(safe-area-inset-top))
+      var(--app-safe-inline-end)
+      max(.75rem, env(safe-area-inset-bottom))
+      var(--app-safe-inline-start);
+  }
+
+  .share-accept-page,
+  .app-startup-error,
+  .auth-callback-page,
+  .sign-in-page {
+    padding:
+      max(1rem, env(safe-area-inset-top))
+      var(--app-safe-inline-end)
+      max(1rem, env(safe-area-inset-bottom))
+      var(--app-safe-inline-start);
+  }
+}
+
+@media (min-width: 48rem) and (max-width: 63.9375rem) {
+  /* Tablets keep a useful sidebar without making the content column feel
+     cramped. This is intentionally independent of desktop-only page rules. */
+  .app-shell {
+    grid-template-columns: minmax(14rem, 15.5rem) minmax(0, 1fr);
+  }
+
+  .sidebar {
+    padding-inline: var(--spacing-4);
+  }
+
+  .workspace {
+    padding: clamp(1.5rem, 4vw, 2.5rem);
+  }
+
+  .execution-page {
+    padding: 0;
+  }
+
+  .page-container {
+    padding: 0;
+  }
+}
+
+@media (max-width: 22.5rem) {
+  .execution-card .button-row,
+  .execution-page__controls {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .execution-page__controls > :is(button, .field) {
+    flex-basis: 100%;
+  }
+}
