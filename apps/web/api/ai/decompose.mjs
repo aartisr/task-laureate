@@ -10,6 +10,8 @@ const sensitivePatterns = [
   /\b[\w.+-]+@[\w.-]+\.[a-z]{2,}\b/i,
   /\b(?:\+?\d[\d ()-]{7,}\d)\b/,
   /\b\d{3}-\d{2}-\d{4}\b/,
+  /\b(?:medical|health|mental health|therapy|doctor|physician|specialist|clinic|hospital|diagnosis|treatment|prescription|appointment|patient)\b/i,
+  /\b(?:mom|mother|dad|father|parent|spouse|husband|wife|child|daughter|son)\b/i,
 ];
 
 function respond(response, status, payload) {

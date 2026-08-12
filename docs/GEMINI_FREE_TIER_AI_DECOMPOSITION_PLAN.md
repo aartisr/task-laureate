@@ -382,7 +382,9 @@ The application implementation is complete as of 2026-08-12, pending the
 external release gates above. It includes migration `028`, server-side task
 authorization, durable consent, request accounting, privacy-safe audit events,
 owner-scoped 24-hour cache, strict provider schema validation, editable review,
-and template fallback. Apply migration `028` before enabling the endpoint.
+and template fallback. Apply migrations `028` and `029` before enabling the
+endpoint. Migration `029` makes acceptance atomic: visible child tasks and
+planning metadata are either created together or not at all.
 
 The following cannot be completed from source control and must be evidenced by
 the deployment owner: Google Cloud IAM approval, API-key creation/restriction,

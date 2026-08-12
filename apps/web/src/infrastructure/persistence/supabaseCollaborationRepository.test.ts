@@ -33,6 +33,17 @@ describe('normalized collaboration repository', () => {
     expect(JSON.parse(String(requests[0].init?.body))).toMatchObject({ p_list_id: 'list-id', p_title: 'Write brief' });
   });
 
+  it('accepts a plan through one atomic RPC with its provenance', async () => {
+    const requests: Array<{ endpoint: string; init?: RequestInit }> = [];
+    const repository = createSupabaseCollaborationTodoRepository(config, async (url, init) => {
+      requests.push({ endpoint: String(url), init });
+      return new Response(JSON.stringify([]), { status: 200 });
+    });
+    await repository.saveAcceptedSteps('task-id', [{ title: 'Call the clinic', estimateMinutes: 10, energyLevel: 'quick' }], 'ai');
+    expect(requests[0].endpoint).toContain('/rpc/accept_task_plan');
+    expect(JSON.parse(String(requests[0].init?.body))).toMatchObject({ p_task_id: 'task-id', p_origin: 'ai', p_steps: [{ title: 'Call the clinic' }] });
+  });
+
   it('removes attachment variants through the Storage API before deleting metadata', async () => {
     const requests: Array<{ endpoint: string; init?: RequestInit }> = [];
     const repository = createSupabaseCollaborationTodoRepository(config, async (url, init) => {
