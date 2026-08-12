@@ -3961,7 +3961,7 @@ body,
 
   /* Older page roots supplied their own compact padding. The workspace now
      owns that concern, avoiding the uneven double gutter seen between routes. */
-  .workspace > section {
+  .workspace > section:not(.page-container) {
     padding: 0 !important;
   }
 
@@ -3977,9 +3977,7 @@ body,
     gap: clamp(1rem, 4vw, 1.4rem);
   }
 
-  .page-container {
-    padding: 0;
-  }
+  .page-container { padding: 0; }
 
   .page-container__header {
     margin-bottom: clamp(1.25rem, 5vw, 1.75rem);
@@ -4678,6 +4676,133 @@ body,
   .task-section--clarify .secondary-button {
     inline-size: 100%;
     justify-content: center;
+  }
+}
+
+/* Dashboard decision surfaces
+   These are named application primitives—not utility-class compositions—so
+   their spacing and hierarchy remain stable in every theme and viewport. */
+.dashboard-primary-action,
+.dashboard-onboarding {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: clamp(1rem, 3vw, 1.75rem);
+  margin-top: 0;
+  padding: clamp(1.25rem, 3.5vw, 2rem);
+}
+
+.dashboard-primary-action {
+  isolation: isolate;
+  border-color: color-mix(in srgb, var(--color-action-primary) 40%, var(--color-border-default));
+  background:
+    radial-gradient(circle at 94% 8%, color-mix(in srgb, var(--color-action-primary) 14%, transparent), transparent 16rem),
+    linear-gradient(140deg, color-mix(in srgb, var(--color-action-primary) 7%, var(--color-bg-secondary)), var(--color-bg-secondary));
+}
+
+.dashboard-primary-action::before {
+  background: radial-gradient(circle, color-mix(in srgb, var(--color-action-primary) 14%, transparent), transparent 68%);
+  opacity: 1;
+}
+
+.dashboard-primary-action > *,
+.dashboard-onboarding > * {
+  position: relative;
+  z-index: 1;
+}
+
+.dashboard-primary-action__content,
+.dashboard-onboarding__content {
+  min-inline-size: 0;
+}
+
+.dashboard-primary-action h2,
+.dashboard-primary-action p,
+.dashboard-onboarding h2,
+.dashboard-onboarding p {
+  margin: 0;
+}
+
+.dashboard-primary-action h2 {
+  max-inline-size: 22ch;
+  margin-top: var(--spacing-1);
+  color: var(--color-text-primary);
+  font-size: clamp(1.5rem, 4vw, 2.15rem);
+  letter-spacing: -.035em;
+  line-height: 1.08;
+}
+
+.dashboard-primary-action__content > p:not(.eyebrow),
+.dashboard-onboarding__content > p:not(.eyebrow) {
+  max-inline-size: 54ch;
+  margin-top: var(--spacing-2);
+  color: var(--color-text-secondary);
+  line-height: var(--line-height-relaxed);
+}
+
+.dashboard-primary-action .eyebrow,
+.dashboard-onboarding .eyebrow {
+  display: inline-flex;
+  inline-size: fit-content;
+  align-items: center;
+  min-block-size: 1.65rem;
+  margin-bottom: 0;
+  padding: .2rem .55rem;
+  border-radius: var(--radius-full);
+  opacity: 1;
+}
+
+.dashboard-primary-action .eyebrow {
+  background: var(--color-action-primary);
+  color: var(--color-text-on-action);
+}
+
+.dashboard-primary-action__cta,
+.dashboard-onboarding__cta {
+  flex: 0 0 auto;
+  gap: var(--spacing-2);
+  min-block-size: 2.75rem;
+  white-space: nowrap;
+}
+
+.dashboard-onboarding {
+  border-color: color-mix(in srgb, var(--color-status-info) 30%, var(--color-border-default));
+  background:
+    radial-gradient(circle at 96% 10%, color-mix(in srgb, var(--color-status-info) 10%, transparent), transparent 15rem),
+    linear-gradient(145deg, color-mix(in srgb, var(--color-status-info) 4%, var(--color-bg-secondary)), var(--color-bg-secondary));
+}
+
+.dashboard-onboarding .eyebrow {
+  background: var(--color-status-info);
+  color: var(--color-text-on-action);
+}
+
+.dashboard-onboarding h2 {
+  margin-top: var(--spacing-1);
+  color: var(--color-text-primary);
+  font-size: clamp(1.25rem, 3vw, 1.55rem);
+  letter-spacing: -.025em;
+  line-height: 1.15;
+}
+
+.dashboard-primary-action__cta:focus-visible,
+.dashboard-onboarding__cta:focus-visible {
+  outline: 3px solid var(--color-action-primary);
+  outline-offset: 3px;
+}
+
+@media (max-width: 47.9375rem) {
+  .dashboard-primary-action,
+  .dashboard-onboarding {
+    align-items: stretch;
+    flex-direction: column;
+    gap: var(--spacing-4);
+    padding: clamp(1.1rem, 4.5vw, 1.35rem);
+  }
+
+  .dashboard-primary-action__cta,
+  .dashboard-onboarding__cta {
+    inline-size: 100%;
   }
 }
 

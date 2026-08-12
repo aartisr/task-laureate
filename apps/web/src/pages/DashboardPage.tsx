@@ -111,7 +111,7 @@ export function DashboardPage() {
       spacing="spacious"
       footer={footer}
     >
-      <section className="dashboard-primary-action panel" aria-label="Start your work"><div><p className="eyebrow">Start here</p><h2>What deserves your attention now?</h2><p>Choose one feasible next action before looking at the whole workspace.</p></div><Link to="/now" className="primary-button">Open Now →</Link></section>
+      <section className="dashboard-primary-action panel" aria-label="Start your work"><div className="dashboard-primary-action__content"><p className="eyebrow">Start here</p><h2>What deserves your attention now?</h2><p>Choose one feasible next action before looking at the whole workspace.</p></div><Link to="/now" className="primary-button dashboard-primary-action__cta">Open Now <span aria-hidden="true">→</span></Link></section>
 
       <details className="dashboard-details"><summary>Workspace snapshot</summary><Grid columns={4} gap="normal">
         <Card variant="elevated" ariaLabel="Lists summary" onClick={() => navigate({ to: '/lists-overview' })}>
@@ -200,9 +200,9 @@ export function DashboardPage() {
         </Card>
       </Grid></details>
 
-      <section className="panel mt-6 flex flex-wrap items-center justify-between gap-4" aria-label="Try Task-Laureate before signing in">
-        <div><h2 className="mb-1 text-lg">New to Task-Laureate?</h2><p className="mb-0 text-sm text-[var(--color-text-secondary)]">Explore a private, non-persistent sample before you decide whether to sign in and sync.</p></div>
-        <Link to="/sample" className="secondary-button">Try the interactive sample</Link>
+      <section className="panel dashboard-onboarding" aria-label="Try Task-Laureate before signing in">
+        <div className="dashboard-onboarding__content"><p className="eyebrow">Explore safely</p><h2>New to Task-Laureate?</h2><p>Explore a private, non-persistent sample before you decide whether to sign in and sync.</p></div>
+        <Link to="/sample" className="secondary-button dashboard-onboarding__cta">Try the interactive sample <span aria-hidden="true">→</span></Link>
       </section>
 
       {/* Quick Actions */}
