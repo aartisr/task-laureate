@@ -88,7 +88,7 @@ export function TaskExecutionControls({ task }: { task: TodoItem }) {
         {proposalVisible ? 'Hide breakdown' : 'Deconstruct task'}
       </button>
     </div>
-    {aiDecompositionPreviewEnabled() ? <div className="task-execution-controls__ai-preview"><label><input type="checkbox" checked={aiConsent} onChange={(event) => setAiConsent(event.target.checked)} /> <span>I confirm this task has no personal, health, confidential, or identifying information. The free Gemini preview may process this text externally.</span></label><button className="secondary-button" type="button" disabled={isDecomposing || !aiConsent} onClick={() => void tryAiBreakdown()}>{isDecomposing ? 'Creating AI preview…' : 'Try AI breakdown (preview)'}</button></div> : null}
+    {aiDecompositionPreviewEnabled() ? <div className="task-execution-controls__ai-preview"><label><input type="checkbox" checked={aiConsent} onChange={(event) => setAiConsent(event.target.checked)} /> <span>I confirm this task has no credentials, contact details, account numbers, medical-record details, or other sensitive identifiers. The free Gemini preview may process this text externally.</span></label><button className="secondary-button" type="button" disabled={isDecomposing || !aiConsent} onClick={() => void tryAiBreakdown()}>{isDecomposing ? 'Creating AI preview…' : 'Try AI breakdown (preview)'}</button></div> : null}
     <details className="task-execution-controls__details">
       <summary>Planning details</summary>
       <div className="task-execution-controls__planning-form">

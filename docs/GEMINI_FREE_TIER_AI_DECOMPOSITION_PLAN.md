@@ -229,10 +229,12 @@ The endpoint must perform this sequence:
    and a consent confirmation. Reject attachments, URLs, and unexpected keys.
 5. Enforce title and notes size limits before any provider request. A safe
    starting ceiling is 500 characters for the title and 1,500 for notes.
-6. Reject probable sensitive content with a conservative detector (email,
-   phone, credentials, SSN-like patterns, API keys) and explain that the free
-   preview accepts only non-sensitive content. This detector reduces obvious
-   mistakes; it is not a claim of perfect redaction.
+6. Reject clear identifiers and detailed sensitive records (email, phone,
+   credentials, SSN-like patterns, API keys, medical-record or insurance IDs,
+   and explicitly labelled diagnoses, test results, prescriptions, or treatment
+   plans). Generic personal planning, including appointments and family
+   reminders without identifying details, is allowed. This detector reduces
+   obvious mistakes; it is not a claim of perfect redaction.
 7. Apply both per-user and per-workspace limits. Start with three requests per
    user per hour, 20 per workspace per day, and a global daily circuit breaker
    below the provider quota.
