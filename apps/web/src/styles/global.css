@@ -978,7 +978,7 @@ input {
 .panel {
   border: 1px solid var(--color-border-default);
   border-radius: var(--radius-xl);
-  background: linear-gradient(135deg, var(--color-bg-secondary), rgba(45, 45, 45, 0.5));
+  background: linear-gradient(135deg, var(--color-bg-secondary), color-mix(in srgb, var(--color-bg-secondary) 84%, var(--color-bg-primary)));
   backdrop-filter: blur(20px);
   position: relative;
   overflow: hidden;
@@ -1356,7 +1356,7 @@ p {
   padding: var(--spacing-5);
   border: 1px solid var(--color-border-light);
   border-radius: var(--radius-lg);
-  background: linear-gradient(135deg, rgba(45, 45, 45, 0.5), rgba(32, 32, 32, 0.3));
+  background: linear-gradient(135deg, var(--color-bg-secondary), color-mix(in srgb, var(--color-bg-secondary) 82%, var(--color-bg-primary)));
   transition: all var(--transition-slow);
   position: relative;
   overflow: hidden;
@@ -1406,7 +1406,7 @@ p {
 /* Interactive data-card (clickable buttons) */
 button.data-card {
   border: 1px solid var(--color-border-light);
-  background: linear-gradient(135deg, rgba(45, 45, 45, 0.5), rgba(32, 32, 32, 0.3));
+  background: linear-gradient(135deg, var(--color-bg-secondary), color-mix(in srgb, var(--color-bg-secondary) 82%, var(--color-bg-primary)));
   padding: var(--spacing-5);
   text-align: left;
   cursor: pointer;
@@ -1475,7 +1475,7 @@ button.data-card:active {
   padding: var(--spacing-6);
   border: 1px solid var(--color-border-default);
   border-radius: var(--radius-xl);
-  background: linear-gradient(135deg, var(--color-bg-secondary), rgba(45, 45, 45, 0.5));
+  background: linear-gradient(135deg, var(--color-bg-secondary), color-mix(in srgb, var(--color-bg-secondary) 84%, var(--color-bg-primary)));
   backdrop-filter: blur(20px);
   transition: all var(--transition-slow);
 }
@@ -1506,7 +1506,7 @@ button.data-card:active {
   color: var(--color-text-primary);
   border: 1px solid var(--color-border-default);
   border-radius: var(--radius-lg);
-  background: linear-gradient(135deg, var(--color-bg-surface), rgba(20, 20, 20, 0.8));
+  background: var(--color-bg-surface);
   font-size: 0.95rem;
   transition: all var(--transition-base);
   font-weight: var(--font-weight-medium);
@@ -1570,7 +1570,7 @@ button.data-card:active {
   color: var(--color-text-primary);
   border: 1px solid var(--color-border-default);
   border-radius: var(--radius-md);
-  background: linear-gradient(135deg, var(--color-bg-surface), rgba(20, 20, 20, 0.8));
+  background: var(--color-bg-surface);
   font-size: 0.95rem;
   font-weight: var(--font-weight-medium);
   transition: all var(--transition-base);
@@ -2295,7 +2295,7 @@ select:focus {
   padding: var(--spacing-6);
   border: 1px solid var(--color-border-light);
   border-radius: var(--radius-lg);
-  background: linear-gradient(135deg, rgba(45,45,45,0.5), rgba(32,32,32,0.3));
+  background: linear-gradient(135deg, var(--color-bg-secondary), color-mix(in srgb, var(--color-bg-secondary) 82%, var(--color-bg-primary)));
   text-decoration: none;
   color: inherit;
   transition: all var(--transition-slow);
@@ -2683,7 +2683,7 @@ select:focus {
   padding: var(--spacing-6);
   border: 1px solid var(--color-border-light);
   border-radius: var(--radius-lg);
-  background: linear-gradient(135deg, rgba(45,45,45,0.5), rgba(32,32,32,0.3));
+  background: linear-gradient(135deg, var(--color-bg-secondary), color-mix(in srgb, var(--color-bg-secondary) 82%, var(--color-bg-primary)));
 }
 
 .kpi-card--primary { border-color: rgba(139,92,246,0.4); background: rgba(139,92,246,0.06); }
@@ -4722,5 +4722,123 @@ body,
 
   .task-execution-controls__save {
     grid-column: auto;
+  }
+}
+
+/* Adaptive navigation contract
+   Mobile navigation is shared across every route, so it uses only semantic
+   theme tokens. This keeps the dark, light, and warm themes readable without
+   duplicating menu rules per page or relying on a dark-only overlay. */
+@media (max-width: 47.9375rem) {
+  .app-shell {
+    --mobile-nav-text-primary: var(--color-text-primary);
+    --mobile-nav-text-secondary: var(--color-text-secondary);
+    --mobile-nav-border: color-mix(in srgb, var(--color-border-default) 84%, var(--color-action-primary));
+    --mobile-nav-surface: var(--color-bg-tertiary);
+    --mobile-nav-background: var(--color-bg-secondary);
+    --mobile-nav-active-surface: color-mix(in srgb, var(--color-action-primary) 12%, var(--color-bg-secondary));
+  }
+
+  .mobile-topbar,
+  .mobile-bottom-nav,
+  .mobile-navigation__panel {
+    background: var(--mobile-nav-background);
+    color: var(--mobile-nav-text-primary);
+  }
+
+  .mobile-topbar,
+  .mobile-bottom-nav {
+    box-shadow: 0 .45rem 1.25rem color-mix(in srgb, var(--color-bg-primary) 18%, transparent);
+  }
+
+  .mobile-navigation__panel {
+    box-shadow: -1.25rem 0 2.75rem color-mix(in srgb, var(--color-bg-primary) 24%, transparent);
+  }
+
+  .mobile-topbar__action,
+  .mobile-navigation__link,
+  .mobile-navigation__link--secondary,
+  .mobile-navigation__close {
+    border-color: var(--mobile-nav-border);
+    background: var(--mobile-nav-surface);
+    color: var(--mobile-nav-text-primary);
+  }
+
+  .mobile-menu-toggle {
+    border-color: color-mix(in srgb, var(--color-action-primary) 52%, var(--color-border-default));
+    background: var(--mobile-nav-active-surface);
+    color: var(--mobile-nav-text-primary);
+  }
+
+  .mobile-navigation__icon {
+    background: color-mix(in srgb, var(--color-bg-primary) 58%, var(--color-bg-tertiary));
+    color: var(--mobile-nav-text-primary);
+  }
+
+  .mobile-navigation__link,
+  .mobile-bottom-nav__link {
+    color: var(--mobile-nav-text-secondary);
+  }
+
+  .mobile-navigation__link.active,
+  .mobile-bottom-nav__link.active {
+    border-color: var(--color-action-primary);
+    background: var(--mobile-nav-active-surface);
+    color: var(--mobile-nav-text-primary);
+  }
+
+  .mobile-navigation__link.active .mobile-navigation__icon {
+    background: var(--color-action-primary);
+    color: var(--color-text-on-action);
+  }
+
+  .mobile-navigation__eyebrow,
+  .mobile-navigation__header h2,
+  .mobile-navigation__text strong {
+    color: var(--mobile-nav-text-primary);
+  }
+
+  .mobile-navigation__eyebrow {
+    color: var(--color-action-primary);
+  }
+
+  .mobile-navigation__text small,
+  .mobile-navigation__subheading,
+  .mobile-topbar__brand small {
+    color: var(--mobile-nav-text-secondary);
+  }
+
+  .mobile-topbar__action:focus-visible,
+  .mobile-menu-toggle:focus-visible,
+  .mobile-navigation__close:focus-visible,
+  .mobile-navigation__link:focus-visible,
+  .mobile-bottom-nav__link:focus-visible {
+    outline: 3px solid var(--color-action-primary);
+    outline-offset: 3px;
+  }
+
+  /* Keep GPU promotion for the one animated drawer, not every bottom-nav
+     control. This reduces retained compositor layers on lower-power phones. */
+  .mobile-bottom-nav__link {
+    will-change: auto;
+  }
+
+  @supports not (backdrop-filter: blur(1px)) {
+    .mobile-topbar,
+    .mobile-bottom-nav,
+    .mobile-navigation__panel {
+      backdrop-filter: none;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
   }
 }

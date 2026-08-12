@@ -1,11 +1,17 @@
-import { readdirSync, statSync, existsSync } from 'node:fs';
+import { readdirSync, existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { gzipSync } from 'node:zlib';
 
 const BUDGETS = {
-  maxMainJsKB: 380,
-  maxMainCssKB: 180,
-  maxTotalJsKB: 900,
-  maxTotalCssKB: 260,
+  // Delivery budgets use gzip because that is what browsers actually download.
+  // The Puck editor and analytics are intentionally lazy-loaded, so total
+  // shipped artifacts remain bounded without inflating the critical path.
+  maxMainJsGzipKB: 90,
+  maxMainCssGzipKB: 60,
+  maxTotalJsGzipKB: 700,
+  maxTotalCssGzipKB: 80,
+  maxLargestLazyJsGzipKB: 240,
+  maxLargestLazyCssGzipKB: 18,
   maxAssetCount: 140,
 };
 
@@ -31,9 +37,7 @@ if (files.length === 0) {
   fail('No build assets found in dist/assets.');
 }
 
-const sizeOf = (name) => statSync(join(assetsDir, name)).size;
-const totalJs = jsFiles.reduce((sum, file) => sum + sizeOf(file), 0);
-const totalCss = cssFiles.reduce((sum, file) => sum + sizeOf(file), 0);
+const gzipSizeOf = (name) => gzipSync(readFileSync(join(assetsDir, name))).byteLength;
 
 const mainJs = jsFiles.find((name) => name.startsWith('index-'));
 const mainCss = cssFiles.find((name) => name.startsWith('index-'));
@@ -41,35 +45,49 @@ const mainCss = cssFiles.find((name) => name.startsWith('index-'));
 if (!mainJs) fail('Main JS bundle (index-*.js) not found in dist/assets.');
 if (!mainCss) fail('Main CSS bundle (index-*.css) not found in dist/assets.');
 
-const mainJsKB = toKB(sizeOf(mainJs));
-const mainCssKB = toKB(sizeOf(mainCss));
-const totalJsKB = toKB(totalJs);
-const totalCssKB = toKB(totalCss);
+const mainJsGzipKB = toKB(gzipSizeOf(mainJs));
+const mainCssGzipKB = toKB(gzipSizeOf(mainCss));
+const totalJsGzipKB = toKB(jsFiles.reduce((sum, file) => sum + gzipSizeOf(file), 0));
+const totalCssGzipKB = toKB(cssFiles.reduce((sum, file) => sum + gzipSizeOf(file), 0));
+const largestLazyJsGzipKB = toKB(Math.max(...jsFiles.filter((file) => file !== mainJs).map(gzipSizeOf)));
+const largestLazyCssGzipKB = toKB(Math.max(...cssFiles.filter((file) => file !== mainCss).map(gzipSizeOf)));
 
 const checks = [
   {
-    label: 'Main JS bundle',
-    actual: mainJsKB,
-    budget: BUDGETS.maxMainJsKB,
-    unit: 'KB',
+    label: 'Main JS bundle (gzip)',
+    actual: mainJsGzipKB,
+    budget: BUDGETS.maxMainJsGzipKB,
+    unit: 'KB gzip',
   },
   {
-    label: 'Main CSS bundle',
-    actual: mainCssKB,
-    budget: BUDGETS.maxMainCssKB,
-    unit: 'KB',
+    label: 'Main CSS bundle (gzip)',
+    actual: mainCssGzipKB,
+    budget: BUDGETS.maxMainCssGzipKB,
+    unit: 'KB gzip',
   },
   {
-    label: 'Total JS bundles',
-    actual: totalJsKB,
-    budget: BUDGETS.maxTotalJsKB,
-    unit: 'KB',
+    label: 'Total JS bundles (gzip)',
+    actual: totalJsGzipKB,
+    budget: BUDGETS.maxTotalJsGzipKB,
+    unit: 'KB gzip',
   },
   {
-    label: 'Total CSS bundles',
-    actual: totalCssKB,
-    budget: BUDGETS.maxTotalCssKB,
-    unit: 'KB',
+    label: 'Total CSS bundles (gzip)',
+    actual: totalCssGzipKB,
+    budget: BUDGETS.maxTotalCssGzipKB,
+    unit: 'KB gzip',
+  },
+  {
+    label: 'Largest lazy JS bundle (gzip)',
+    actual: largestLazyJsGzipKB,
+    budget: BUDGETS.maxLargestLazyJsGzipKB,
+    unit: 'KB gzip',
+  },
+  {
+    label: 'Largest lazy CSS bundle (gzip)',
+    actual: largestLazyCssGzipKB,
+    budget: BUDGETS.maxLargestLazyCssGzipKB,
+    unit: 'KB gzip',
   },
   {
     label: 'Asset count',

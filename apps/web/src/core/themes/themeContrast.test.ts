@@ -49,4 +49,13 @@ describe('theme color contrast', () => {
       }
     }
   });
+
+  it.each(Object.values(THEMES))('%s keeps mobile navigation readable in every state', (theme) => {
+    const surface = theme.colors.bg.secondary;
+
+    expect(contrast(theme.colors.text.primary, surface), `${theme.label}: mobile navigation primary text`).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(theme.colors.text.secondary, surface), `${theme.label}: mobile navigation secondary text`).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(theme.colors.action.primary, surface), `${theme.label}: mobile navigation section label`).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(theme.colors.text.onAction, theme.colors.action.primary), `${theme.label}: mobile navigation active icon`).toBeGreaterThanOrEqual(4.5);
+  });
 });
