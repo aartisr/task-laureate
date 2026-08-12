@@ -4122,3 +4122,605 @@ body,
     flex-basis: 100%;
   }
 }
+
+/* Task planning keeps the decision hierarchy calm: estimate the work, save a
+   small adjustment, then use the more consequential actions deliberately. */
+.task-execution-controls {
+  display: grid;
+  gap: var(--spacing-5);
+  isolation: isolate;
+  border-color: color-mix(in srgb, var(--color-action-primary) 34%, var(--color-border-default));
+  background:
+    radial-gradient(circle at 95% 7%, color-mix(in srgb, var(--color-action-primary) 9%, transparent), transparent 18rem),
+    linear-gradient(145deg, color-mix(in srgb, var(--color-action-primary) 4%, var(--color-bg-secondary)), var(--color-bg-secondary));
+  color: var(--color-text-primary);
+}
+
+.task-execution-controls::before {
+  background: radial-gradient(circle, color-mix(in srgb, var(--color-action-primary) 12%, transparent), transparent 68%);
+  opacity: 1;
+}
+
+.task-execution-controls > * {
+  position: relative;
+  z-index: 1;
+}
+
+.task-execution-controls__header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: var(--spacing-5);
+}
+
+.task-execution-controls__header > div {
+  min-inline-size: 0;
+}
+
+.task-execution-controls__header h2,
+.task-execution-controls__header p {
+  margin: 0;
+}
+
+.task-execution-controls__header h2 {
+  margin-top: var(--spacing-1);
+  color: var(--color-text-primary);
+}
+
+.task-execution-controls__header > div > p:not(.eyebrow) {
+  max-inline-size: 42rem;
+  margin-top: var(--spacing-2);
+  color: var(--color-text-secondary);
+  font-size: .9rem;
+  line-height: var(--line-height-relaxed);
+}
+
+.task-execution-controls__deconstruct {
+  flex: 0 0 auto;
+  min-block-size: 2.75rem;
+  padding-inline: var(--spacing-4);
+  white-space: nowrap;
+}
+
+.task-execution-controls__details {
+  border-color: color-mix(in srgb, var(--color-action-primary) 25%, var(--color-border-default));
+  background: color-mix(in srgb, var(--color-bg-primary) 62%, var(--color-bg-secondary));
+  color: var(--color-text-primary);
+}
+
+.task-execution-controls__details > summary {
+  color: var(--color-text-primary);
+}
+
+.task-execution-controls__planning-form {
+  display: grid;
+  grid-template-columns: minmax(7rem, .75fr) minmax(10rem, 1fr) auto;
+  align-items: end;
+  gap: var(--spacing-3);
+}
+
+.task-execution-controls__planning-form .field {
+  gap: var(--spacing-2);
+}
+
+.task-execution-controls__planning-form .field > span {
+  color: var(--color-text-secondary);
+  font-size: .8125rem;
+  font-weight: var(--font-weight-semibold);
+}
+
+.task-execution-controls__planning-form :is(input, select) {
+  border-color: var(--color-border-default);
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+}
+
+.task-execution-controls__planning-form :is(input, select):focus {
+  border-color: var(--color-action-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-action-primary) 24%, transparent);
+}
+
+/* This intentionally opt-outs of the generic full-width button row. Saving a
+   plan is an acknowledgement, not the page's dominant call to action. */
+.task-execution-controls__save {
+  inline-size: fit-content;
+  min-block-size: 2.75rem;
+  padding-inline: var(--spacing-4);
+  justify-self: start;
+  white-space: nowrap;
+}
+
+.task-execution-controls__secondary-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-2);
+  padding-top: var(--spacing-3);
+  border-top: 1px solid var(--color-border-default);
+}
+
+.task-execution-controls__secondary-actions .secondary-button {
+  min-block-size: 2.4rem;
+  padding: .45rem .7rem;
+  color: var(--color-text-secondary);
+  font-size: .8125rem;
+}
+
+.task-execution-controls__proposal {
+  display: grid;
+  gap: var(--spacing-4);
+  padding: clamp(1rem, 3vw, 1.35rem);
+  border: 1px solid color-mix(in srgb, var(--color-action-primary) 30%, var(--color-border-default));
+  border-radius: var(--radius-xl);
+  background: color-mix(in srgb, var(--color-bg-primary) 55%, var(--color-bg-secondary));
+  color: var(--color-text-primary);
+}
+
+.task-execution-controls__proposal-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: var(--spacing-3);
+  padding-bottom: var(--spacing-3);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border-default) 72%, var(--color-action-primary));
+}
+
+.task-execution-controls__proposal-heading h3,
+.task-execution-controls__proposal-heading p {
+  margin: 0;
+}
+
+.task-execution-controls__proposal-heading h3 {
+  margin-top: var(--spacing-1);
+  color: var(--color-text-primary);
+  font-size: clamp(1.05rem, 2vw, 1.2rem);
+}
+
+.task-execution-controls__proposal-heading > div > p:not(.eyebrow) {
+  max-inline-size: 48ch;
+  margin-top: var(--spacing-1);
+  color: var(--color-text-secondary);
+  font-size: .875rem;
+  line-height: var(--line-height-relaxed);
+}
+
+.task-execution-controls__proposal-heading .eyebrow {
+  color: var(--color-action-primary);
+  opacity: 1;
+}
+
+.task-execution-controls__proposal-heading > span {
+  flex: 0 0 auto;
+  padding: .3rem .6rem;
+  border: 1px solid color-mix(in srgb, var(--color-action-primary) 34%, var(--color-border-default));
+  border-radius: var(--radius-full);
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  font-size: .75rem;
+  font-weight: var(--font-weight-bold);
+  white-space: nowrap;
+}
+
+.task-execution-controls__proposal-list {
+  gap: var(--spacing-2);
+}
+
+.task-execution-controls__proposal-card {
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: var(--spacing-3);
+  min-block-size: 0;
+  padding: var(--spacing-4);
+  border-color: color-mix(in srgb, var(--color-border-default) 74%, var(--color-action-primary));
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  box-shadow: none;
+  cursor: pointer;
+}
+
+.task-execution-controls__proposal-card:hover {
+  border-color: var(--color-action-primary);
+  background: color-mix(in srgb, var(--color-action-primary) 6%, var(--color-bg-primary));
+  box-shadow: 0 .55rem 1.3rem color-mix(in srgb, var(--color-action-primary) 10%, transparent);
+}
+
+.task-execution-controls__proposal-card:has(input:checked) {
+  border-color: var(--color-action-primary);
+  background: color-mix(in srgb, var(--color-action-primary) 10%, var(--color-bg-primary));
+  box-shadow: inset .2rem 0 0 var(--color-action-primary);
+}
+
+.task-execution-controls__proposal-card input {
+  inline-size: 1.15rem;
+  block-size: 1.15rem;
+  margin-top: .15rem;
+  accent-color: var(--color-action-primary);
+}
+
+.task-execution-controls__proposal-card .data-card__content {
+  gap: var(--spacing-1);
+}
+
+.task-execution-controls__proposal-card .data-card__content strong {
+  color: var(--color-text-primary);
+}
+
+.task-execution-controls__proposal-card .data-card__content p {
+  color: var(--color-text-secondary);
+}
+
+.task-execution-controls__proposal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-2);
+  padding-top: var(--spacing-3);
+  border-top: 1px solid color-mix(in srgb, var(--color-border-default) 72%, var(--color-action-primary));
+}
+
+.task-execution-controls__save:focus-visible,
+.task-execution-controls__deconstruct:focus-visible,
+.task-execution-controls__secondary-actions .secondary-button:focus-visible {
+  outline: 3px solid var(--color-action-primary);
+  outline-offset: 2px;
+}
+
+.task-execution-controls__notice {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: .875rem;
+  line-height: var(--line-height-normal);
+}
+
+.task-execution-controls__notice[data-tone='success'] {
+  color: var(--color-status-success);
+}
+
+.task-execution-controls__notice[data-tone='error'] {
+  color: var(--color-status-error);
+}
+
+/* The Now recommendation is the product's highest-value decision. It gets a
+   distinct but quiet focal surface: text remains on semantic tokens while the
+   accent only adds hierarchy, never becomes the reading background. */
+.execution-page__now {
+  isolation: isolate;
+  border-color: color-mix(in srgb, var(--color-action-primary) 38%, var(--color-border-default));
+  background:
+    radial-gradient(circle at 94% 4%, color-mix(in srgb, var(--color-action-primary) 13%, transparent), transparent 17rem),
+    linear-gradient(135deg, color-mix(in srgb, var(--color-action-primary) 8%, var(--color-bg-secondary)), var(--color-bg-secondary));
+  box-shadow: 0 1rem 2.75rem color-mix(in srgb, var(--color-action-primary) 11%, transparent);
+}
+
+.execution-page__now::before {
+  background: radial-gradient(circle, color-mix(in srgb, var(--color-action-primary) 16%, transparent), transparent 68%);
+  opacity: 1;
+}
+
+.execution-page__now > * {
+  position: relative;
+  z-index: 1;
+}
+
+.execution-page__now .panel-heading {
+  gap: var(--spacing-3);
+  margin-bottom: var(--spacing-5);
+  padding-bottom: var(--spacing-5);
+  border-bottom-color: color-mix(in srgb, var(--color-border-default) 72%, var(--color-action-primary));
+}
+
+.execution-page__now .eyebrow {
+  display: inline-flex;
+  inline-size: fit-content;
+  align-items: center;
+  min-block-size: 1.65rem;
+  padding: .2rem .55rem;
+  border-radius: var(--radius-full);
+  background: var(--color-action-primary);
+  color: var(--color-text-on-action);
+  opacity: 1;
+}
+
+.execution-page__now h2 {
+  max-inline-size: 22ch;
+  margin-bottom: var(--spacing-2);
+  color: var(--color-text-primary);
+  font-size: clamp(1.5rem, 4vw, 2.15rem);
+  letter-spacing: -.035em;
+  line-height: 1.08;
+}
+
+.execution-page__now .panel-heading p:not(.eyebrow) {
+  max-inline-size: 58ch;
+  margin-bottom: 0;
+  color: var(--color-text-secondary);
+  line-height: var(--line-height-relaxed);
+}
+
+.execution-page__now .execution-card {
+  border-color: color-mix(in srgb, var(--color-action-primary) 34%, var(--color-border-default));
+  background: color-mix(in srgb, var(--color-bg-primary) 74%, var(--color-bg-secondary));
+  box-shadow: 0 .8rem 2rem color-mix(in srgb, var(--color-bg-primary) 30%, transparent);
+}
+
+.execution-page__now .execution-card:hover {
+  border-color: var(--color-action-primary);
+  box-shadow: 0 1.1rem 2.4rem color-mix(in srgb, var(--color-action-primary) 16%, transparent);
+}
+
+@media (max-width: 39.9375rem) {
+  .execution-page__now .panel-heading {
+    margin-bottom: var(--spacing-4);
+    padding-bottom: var(--spacing-4);
+  }
+
+  .execution-page__now h2 {
+    font-size: clamp(1.45rem, 7vw, 1.85rem);
+  }
+}
+
+/* Commitments are a bounded agreement with the day, not a secondary backlog.
+   The surface carries its own subtle identity and makes its three-task limit
+   visible before the user has to interpret the cards. */
+.execution-page__commitments {
+  border-color: color-mix(in srgb, var(--color-status-success) 30%, var(--color-border-default));
+  background:
+    radial-gradient(circle at 96% 8%, color-mix(in srgb, var(--color-status-success) 10%, transparent), transparent 17rem),
+    linear-gradient(145deg, color-mix(in srgb, var(--color-status-success) 5%, var(--color-bg-secondary)), var(--color-bg-secondary));
+}
+
+.execution-page__commitments::before {
+  background: radial-gradient(circle, color-mix(in srgb, var(--color-status-success) 13%, transparent), transparent 68%);
+  opacity: 1;
+}
+
+.execution-page__commitments > * {
+  position: relative;
+  z-index: 1;
+}
+
+.execution-page__commitments .panel-heading {
+  align-items: end;
+  gap: var(--spacing-4);
+  margin-bottom: var(--spacing-5);
+  padding-bottom: var(--spacing-5);
+  border-bottom-color: color-mix(in srgb, var(--color-border-default) 72%, var(--color-status-success));
+}
+
+.execution-page__commitments .eyebrow {
+  display: inline-flex;
+  inline-size: fit-content;
+  align-items: center;
+  min-block-size: 1.65rem;
+  padding: .2rem .55rem;
+  border-radius: var(--radius-full);
+  background: var(--color-status-success);
+  color: var(--color-text-on-action);
+  opacity: 1;
+}
+
+.execution-page__commitments h2 {
+  max-inline-size: 22ch;
+  margin-bottom: var(--spacing-2);
+  color: var(--color-text-primary);
+  font-size: clamp(1.4rem, 3vw, 1.85rem);
+  letter-spacing: -.03em;
+  line-height: 1.12;
+}
+
+.execution-page__commitments .panel-heading p:not(.eyebrow) {
+  max-inline-size: 58ch;
+  margin-bottom: 0;
+  color: var(--color-text-secondary);
+  line-height: var(--line-height-relaxed);
+}
+
+.execution-page__commitment-count {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  min-block-size: 2.1rem;
+  padding: .35rem .7rem;
+  border: 1px solid color-mix(in srgb, var(--color-status-success) 42%, var(--color-border-default));
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--color-bg-primary) 76%, transparent);
+  color: var(--color-text-primary);
+  font-size: .8125rem;
+  font-weight: var(--font-weight-bold);
+  white-space: nowrap;
+}
+
+.execution-page__commitment-list {
+  gap: var(--spacing-3);
+}
+
+.execution-page__commitments .execution-card {
+  border-color: color-mix(in srgb, var(--color-status-success) 30%, var(--color-border-default));
+  background: color-mix(in srgb, var(--color-bg-primary) 76%, var(--color-bg-secondary));
+}
+
+.execution-page__commitments .execution-card:hover {
+  border-color: var(--color-status-success);
+  box-shadow: 0 .9rem 2.2rem color-mix(in srgb, var(--color-status-success) 14%, transparent);
+}
+
+.execution-page__commitments-empty {
+  margin: 0;
+  padding: clamp(1rem, 3vw, 1.35rem);
+  border: 1px dashed color-mix(in srgb, var(--color-status-success) 38%, var(--color-border-default));
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--color-bg-primary) 58%, transparent);
+  color: var(--color-text-secondary);
+  line-height: var(--line-height-relaxed);
+}
+
+@media (max-width: 39.9375rem) {
+  .execution-page__commitments .panel-heading {
+    align-items: flex-start;
+    margin-bottom: var(--spacing-4);
+    padding-bottom: var(--spacing-4);
+  }
+
+  .execution-page__commitment-count {
+    min-block-size: 2rem;
+  }
+}
+
+/* Clarification is a readiness checkpoint, never an invitation to force an
+   ambiguous task into today. The muted amber surface signals “shape this next”
+   while preserving the same calm, high-contrast reading hierarchy. */
+.task-section--clarify {
+  border-color: color-mix(in srgb, var(--color-status-warning) 34%, var(--color-border-default));
+  background:
+    radial-gradient(circle at 95% 8%, color-mix(in srgb, var(--color-status-warning) 9%, transparent), transparent 17rem),
+    linear-gradient(145deg, color-mix(in srgb, var(--color-status-warning) 5%, var(--color-bg-secondary)), var(--color-bg-secondary));
+}
+
+.task-section--clarify::before {
+  background: radial-gradient(circle, color-mix(in srgb, var(--color-status-warning) 12%, transparent), transparent 68%);
+  opacity: 1;
+}
+
+.task-section--clarify > * {
+  position: relative;
+  z-index: 1;
+}
+
+.task-section--clarify .panel-heading {
+  align-items: end;
+  gap: var(--spacing-4);
+  margin-bottom: var(--spacing-5);
+  padding-bottom: var(--spacing-5);
+  border-bottom-color: color-mix(in srgb, var(--color-border-default) 72%, var(--color-status-warning));
+}
+
+.task-section--clarify .eyebrow {
+  display: inline-flex;
+  inline-size: fit-content;
+  align-items: center;
+  min-block-size: 1.65rem;
+  padding: .2rem .55rem;
+  border-radius: var(--radius-full);
+  background: var(--color-status-warning);
+  color: var(--color-text-on-action);
+  opacity: 1;
+}
+
+.task-section--clarify h2 {
+  max-inline-size: 24ch;
+  margin-bottom: var(--spacing-2);
+  color: var(--color-text-primary);
+  font-size: clamp(1.4rem, 3vw, 1.85rem);
+  letter-spacing: -.03em;
+  line-height: 1.12;
+}
+
+.task-section--clarify .panel-heading p:not(.eyebrow) {
+  max-inline-size: 58ch;
+  margin-bottom: 0;
+  color: var(--color-text-secondary);
+  line-height: var(--line-height-relaxed);
+}
+
+.task-section__count,
+.task-section__readiness {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 2.1rem;
+  padding: .35rem .7rem;
+  border: 1px solid color-mix(in srgb, var(--color-status-warning) 44%, var(--color-border-default));
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--color-bg-primary) 76%, transparent);
+  color: var(--color-text-primary);
+  font-size: .8125rem;
+  font-weight: var(--font-weight-bold);
+  white-space: nowrap;
+}
+
+.task-section--clarify .data-card {
+  border-color: color-mix(in srgb, var(--color-status-warning) 30%, var(--color-border-default));
+  background: color-mix(in srgb, var(--color-bg-primary) 76%, var(--color-bg-secondary));
+}
+
+.task-section--clarify .data-card:hover {
+  border-color: var(--color-status-warning);
+  box-shadow: 0 .9rem 2.2rem color-mix(in srgb, var(--color-status-warning) 14%, transparent);
+}
+
+.task-section--clarify .button-row {
+  align-items: center;
+}
+
+.task-section--clarify .secondary-button {
+  min-block-size: 2.5rem;
+}
+
+.task-section__empty {
+  margin: 0;
+  padding: clamp(1rem, 3vw, 1.35rem);
+  border: 1px dashed color-mix(in srgb, var(--color-status-warning) 38%, var(--color-border-default));
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--color-bg-primary) 58%, transparent);
+  color: var(--color-text-secondary);
+  line-height: var(--line-height-relaxed);
+}
+
+@media (max-width: 39.9375rem) {
+  .task-section--clarify .panel-heading {
+    align-items: flex-start;
+    margin-bottom: var(--spacing-4);
+    padding-bottom: var(--spacing-4);
+  }
+
+  .task-section--clarify .button-row {
+    align-items: stretch;
+  }
+
+  .task-section--clarify .task-section__readiness,
+  .task-section--clarify .secondary-button {
+    inline-size: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 39.9375rem) {
+  .task-execution-controls__header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .task-execution-controls__deconstruct {
+    align-self: start;
+  }
+
+  .task-execution-controls__planning-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .task-execution-controls__save {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+
+  .task-execution-controls__proposal-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .task-execution-controls__proposal-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .task-execution-controls__proposal-actions > * {
+    inline-size: 100%;
+  }
+}
+
+@media (max-width: 22.5rem) {
+  .task-execution-controls__planning-form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .task-execution-controls__save {
+    grid-column: auto;
+  }
+}
