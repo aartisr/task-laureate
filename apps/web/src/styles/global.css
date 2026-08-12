@@ -4478,13 +4478,13 @@ body,
   box-shadow: 0 .55rem 1.3rem color-mix(in srgb, var(--color-action-primary) 10%, transparent);
 }
 
-.task-execution-controls__proposal-card:has(input:checked) {
+.task-execution-controls__proposal-card:has(input[type='checkbox']:checked) {
   border-color: var(--color-action-primary);
   background: color-mix(in srgb, var(--color-action-primary) 10%, var(--color-bg-primary));
   box-shadow: inset .2rem 0 0 var(--color-action-primary);
 }
 
-.task-execution-controls__proposal-card input {
+.task-execution-controls__proposal-card input[type='checkbox'] {
   inline-size: 1.15rem;
   block-size: 1.15rem;
   margin-top: .15rem;
@@ -4500,18 +4500,23 @@ body,
 }
 
 .task-execution-controls__step-title {
+  display: block;
   inline-size: 100%;
-  padding: .15rem .35rem;
-  border: 1px solid transparent;
+  min-inline-size: 0;
+  min-block-size: 3.4rem;
+  padding: .45rem .55rem;
+  border: 1px solid var(--color-border-default);
   border-radius: var(--radius-sm);
-  background: transparent;
+  background: color-mix(in srgb, var(--color-bg-primary) 86%, transparent);
   color: var(--color-text-primary);
   font: inherit;
   font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-normal);
+  resize: vertical;
 }
 
 .task-execution-controls__step-title:hover {
-  border-color: var(--color-border-default);
+  border-color: color-mix(in srgb, var(--color-action-primary) 50%, var(--color-border-default));
 }
 
 .task-execution-controls__step-title:focus-visible {
