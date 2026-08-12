@@ -111,8 +111,9 @@ export function DashboardPage() {
       spacing="spacious"
       footer={footer}
     >
-      {/* Summary Stats */}
-      <Grid columns={4} gap="normal">
+      <section className="dashboard-primary-action panel" aria-label="Start your work"><div><p className="eyebrow">Start here</p><h2>What deserves your attention now?</h2><p>Choose one feasible next action before looking at the whole workspace.</p></div><Link to="/now" className="primary-button">Open Now →</Link></section>
+
+      <details className="dashboard-details"><summary>Workspace snapshot</summary><Grid columns={4} gap="normal">
         <Card variant="elevated" ariaLabel="Lists summary" onClick={() => navigate({ to: '/lists-overview' })}>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-medium text-[var(--color-text-secondary)] uppercase tracking-wider">
@@ -197,7 +198,7 @@ export function DashboardPage() {
           </div>
           <p className="text-xs text-[var(--color-text-tertiary)] mt-2">View insights →</p>
         </Card>
-      </Grid>
+      </Grid></details>
 
       <section className="panel mt-6 flex flex-wrap items-center justify-between gap-4" aria-label="Try Task-Laureate before signing in">
         <div><h2 className="mb-1 text-lg">New to Task-Laureate?</h2><p className="mb-0 text-sm text-[var(--color-text-secondary)]">Explore a private, non-persistent sample before you decide whether to sign in and sync.</p></div>
@@ -206,7 +207,7 @@ export function DashboardPage() {
 
       {/* Quick Actions */}
       {(isCreatingList || pendingList) ? <ListComposer titleInputRef={listTitleInputRef} initialInput={pendingList?.input} restoredDraft={Boolean(pendingList)} onCreate={handleCreateList} onCancel={() => { clearPendingSaveIntent(); setIsCreatingList(false); }} /> : null}
-      <div className="quick-actions-wrapper">
+      <details className="dashboard-details quick-actions-wrapper"><summary>Workspace tools</summary>
         <Grid columns={2} gap="normal">
           <Card onClick={() => { clearPendingSaveIntent(); setIsCreatingList(true); }} ariaLabel="Create a new list">
             <div className="text-4xl mb-4" aria-hidden="true">
@@ -226,14 +227,14 @@ export function DashboardPage() {
             <p className="text-xs text-[var(--color-text-tertiary)] mt-4">Or press Cmd+F</p>
           </Card>
         </Grid>
-        </div>
+      </details>
 
       {/* Recent Lists Section */}
       {dashboard.lists.length > 0 ? (
         <div className="recent-lists-section">
           <Section title="Recent Lists" description="Your most recent projects">
             <Grid columns={3} gap="normal">
-            {dashboard.lists.slice(0, 6).map((list) => {
+            {dashboard.lists.slice(0, 3).map((list) => {
               const listCompletion =
                 list.taskCount > 0 ? Math.round((list.completedTaskCount / list.taskCount) * 100) : 0;
               return (

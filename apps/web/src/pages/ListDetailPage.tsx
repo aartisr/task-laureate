@@ -281,8 +281,8 @@ export function ListDetailPage({ listId }: ListDetailPageProps) {
               >
                 <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M19 8v6M22 11h-6" /></svg><span>Share</span>
               </button>
-              <div className="list-detail-actions__utility" aria-label="More List actions">
-              <button
+              <details className="list-detail-actions__utility" aria-label="More List actions">
+              <summary>More actions</summary><button
                 type="button"
                 onClick={() => navigate({ to: '/activity' })}
                 title="View activity"
@@ -328,7 +328,7 @@ export function ListDetailPage({ listId }: ListDetailPageProps) {
                   🗑️
                 </button>
               )}
-              </div>
+              </details>
             </div>}
           </div>
 

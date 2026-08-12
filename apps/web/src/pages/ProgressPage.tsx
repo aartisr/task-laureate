@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQueries, useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import { appServices } from '../app/runtime/appServices';
 import { dashboardQueryOptions, listTasksQueryOptions } from '../core/contracts/queryKeys';
@@ -51,10 +51,12 @@ function useAllTasks() {
   const listIds = (dashboard?.lists ?? []).map((l) => l.id);
   const listMap = Object.fromEntries((dashboard?.lists ?? []).map((l) => [l.id, l]));
 
-  const listTaskQueries = listIds.map((id) =>
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    useQuery({ ...listTasksQueryOptions(appServices.repository, id), enabled: !!id })
-  );
+  // `useQueries` is one stable hook call even while the dashboard response
+  // changes the number of lists. Calling `useQuery` inside a dynamic map would
+  // violate the Rules of Hooks after the first data load.
+  const listTaskQueries = useQueries({
+    queries: listIds.map((id) => ({ ...listTasksQueryOptions(appServices.repository, id), enabled: Boolean(id) })),
+  });
 
   const allTasks: Array<TodoItem & { listTitle: string }> = listIds.flatMap((id, i) =>
     (listTaskQueries[i].data ?? [])
@@ -170,6 +172,7 @@ export function ProgressPage() {
         </div>
       </div>
 
+      <details className="progress-details"><summary>See detailed analysis</summary><p>Use the breakdown only when it helps you decide what to adjust next.</p>
       {/* Status distribution */}
       <div className="panel">
         <div className="panel-heading">
@@ -259,6 +262,8 @@ export function ProgressPage() {
           })}
         </div>
       </div>
+
+      </details>
 
       {/* Overdue detail */}
       {overdue.length > 0 && (
