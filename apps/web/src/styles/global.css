@@ -4460,7 +4460,8 @@ body,
 }
 
 .task-execution-controls__proposal-card {
-  grid-template-columns: auto minmax(0, 1fr);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: start;
   gap: var(--spacing-3);
   min-block-size: 0;
@@ -4469,7 +4470,7 @@ body,
   background: var(--color-bg-primary);
   color: var(--color-text-primary);
   box-shadow: none;
-  cursor: pointer;
+  cursor: default;
 }
 
 .task-execution-controls__proposal-card:hover {
@@ -4484,10 +4485,38 @@ body,
   box-shadow: inset .2rem 0 0 var(--color-action-primary);
 }
 
-.task-execution-controls__proposal-card input[type='checkbox'] {
+.task-execution-controls__proposal-select {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  min-block-size: 2rem;
+  padding: .35rem .55rem;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--color-bg-secondary) 76%, transparent);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  font-size: .75rem;
+  font-weight: var(--font-weight-semibold);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.task-execution-controls__proposal-select:hover {
+  border-color: color-mix(in srgb, var(--color-action-primary) 55%, var(--color-border-default));
+  color: var(--color-text-primary);
+}
+
+.task-execution-controls__proposal-select:has(input:checked) {
+  border-color: var(--color-action-primary);
+  background: color-mix(in srgb, var(--color-action-primary) 15%, var(--color-bg-primary));
+  color: var(--color-text-primary);
+}
+
+.task-execution-controls__proposal-select input[type='checkbox'] {
   inline-size: 1.15rem;
   block-size: 1.15rem;
-  margin-top: .15rem;
+  margin: 0;
   accent-color: var(--color-action-primary);
 }
 
