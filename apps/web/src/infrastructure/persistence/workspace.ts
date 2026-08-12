@@ -195,3 +195,72 @@ export function createLocalStorageAdapter(key = LEGACY_BROWSER_WORKSPACE_KEY): W
     },
   };
 }
+
+const INDEXED_DB_NAME = 'task-laureate-workspace';
+const INDEXED_DB_STORE = 'workspace_exports';
+
+function indexedRequest<T>(request: IDBRequest<T>): Promise<T> {
+  return new Promise((resolve, reject) => {
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error ?? new Error('IndexedDB request failed.'));
+  });
+}
+
+function indexedTransaction(transaction: IDBTransaction): Promise<void> {
+  return new Promise((resolve, reject) => {
+    transaction.oncomplete = () => resolve();
+    transaction.onerror = () => reject(transaction.error ?? new Error('IndexedDB transaction failed.'));
+    transaction.onabort = () => reject(transaction.error ?? new Error('IndexedDB transaction aborted.'));
+  });
+}
+
+/**
+ * Local-first workspace read model. IndexedDB removes localStorage's practical
+ * size ceiling; the fallback preserves the documented local-mode behaviour in
+ * restricted browsers and test environments.
+ */
+export function createIndexedDbWorkspaceAdapter(key = LEGACY_BROWSER_WORKSPACE_KEY): WorkspacePersistenceAdapter {
+  const fallback = createLocalStorageAdapter(key);
+  if (typeof indexedDB === 'undefined') return fallback;
+  const database = new Promise<IDBDatabase>((resolve, reject) => {
+    const open = indexedDB.open(INDEXED_DB_NAME, 1);
+    open.onupgradeneeded = () => {
+      if (!open.result.objectStoreNames.contains(INDEXED_DB_STORE)) open.result.createObjectStore(INDEXED_DB_STORE);
+    };
+    open.onsuccess = () => resolve(open.result);
+    open.onerror = () => reject(open.error ?? new Error('Unable to open workspace database.'));
+  });
+  return {
+    async load() {
+      try {
+        const db = await database;
+        const transaction = db.transaction(INDEXED_DB_STORE, 'readonly');
+        const stored = await indexedRequest(transaction.objectStore(INDEXED_DB_STORE).get(key));
+        await indexedTransaction(transaction);
+        return stored ? parseWorkspaceExport(stored) : null;
+      } catch {
+        return fallback.load();
+      }
+    },
+    async save(workspace) {
+      try {
+        const db = await database;
+        const transaction = db.transaction(INDEXED_DB_STORE, 'readwrite');
+        transaction.objectStore(INDEXED_DB_STORE).put(workspace, key);
+        await indexedTransaction(transaction);
+      } catch {
+        await fallback.save(workspace);
+      }
+    },
+    async clear() {
+      try {
+        const db = await database;
+        const transaction = db.transaction(INDEXED_DB_STORE, 'readwrite');
+        transaction.objectStore(INDEXED_DB_STORE).delete(key);
+        await indexedTransaction(transaction);
+      } finally {
+        await fallback.clear?.();
+      }
+    },
+  };
+}

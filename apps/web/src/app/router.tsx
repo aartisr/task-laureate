@@ -15,6 +15,9 @@ import { trackGrowthEvent } from '../infrastructure/analytics/growthTelemetry';
 
 const page = <T extends Record<string, ComponentType<any>>>(load: () => Promise<T>, name: keyof T) => lazy(async () => ({ default: (await load())[name] }));
 const ActivityPage = page(() => import('../pages/ActivityPage'), 'ActivityPage'); const DashboardPage = page(() => import('../pages/DashboardPage'), 'DashboardPage'); const ListDetailPage = page(() => import('../pages/ListDetailPage'), 'ListDetailPage'); const ListsPage = page(() => import('../pages/ListsPage'), 'ListsPage'); const TasksPage = page(() => import('../pages/TasksPage'), 'TasksPage'); const CompletedPage = page(() => import('../pages/CompletedPage'), 'CompletedPage'); const ProgressPage = page(() => import('../pages/ProgressPage'), 'ProgressPage'); const SearchPage = page(() => import('../pages/SearchPage'), 'SearchPage'); const SettingsPage = page(() => import('../pages/SettingsPage'), 'SettingsPage'); const SupportPage = page(() => import('../pages/SupportPage'), 'SupportPage'); const AuthCallbackPage = page(() => import('../pages/AuthCallbackPage'), 'AuthCallbackPage'); const SignInPage = page(() => import('../pages/SignInPage'), 'SignInPage'); const TaskFocusPage = page(() => import('../pages/TaskFocusPage'), 'TaskFocusPage'); const SharedWithMePage = page(() => import('../pages/SharedWithMePage'), 'SharedWithMePage'); const AcceptSharePage = page(() => import('../pages/AcceptSharePage'), 'AcceptSharePage'); const SampleWorkspacePage = page(() => import('../pages/SampleWorkspacePage'), 'SampleWorkspacePage');
+const PuckEditorPage = page(() => import('../pages/PuckEditorPage'), 'PuckEditorPage');
+const ExecutionPage = page(() => import('../pages/ExecutionPage'), 'ExecutionPage');
+const CapturePage = page(() => import('../pages/CapturePage'), 'CapturePage');
 const Lazy = ({ children }: { children: ReactNode }) => <Suspense fallback={<main className="page-surface" aria-busy="true">Loading…</main>}>{children}</Suspense>;
 
 const rootRoute = createRootRouteWithContext<{
@@ -149,6 +152,9 @@ const signInRoute = createRoute({
   path: 'sign-in',
   component: () => <Lazy><SignInPage /></Lazy>,
 });
+const puckEditorRoute = createRoute({ getParentRoute: () => rootRoute, path: 'puck/$pageId', component: PuckEditorRoute });
+const executionRoute = createRoute({ getParentRoute: () => rootRoute, path: 'now', component: () => <Lazy><ExecutionPage /></Lazy> });
+const captureRoute = createRoute({ getParentRoute: () => rootRoute, path: 'capture', component: () => <Lazy><CapturePage /></Lazy> });
 const sampleWorkspaceRoute = createRoute({ getParentRoute: () => rootRoute, path: 'sample', component: () => <Lazy><SampleWorkspacePage /></Lazy> });
 
 const sharedWithMeRoute = createRoute({ getParentRoute: () => rootRoute, path: 'shared-with-me', component: () => <Lazy><SharedWithMePage /></Lazy> });
@@ -168,6 +174,9 @@ const routeTree = rootRoute.addChildren([
   supportRoute,
   authCallbackRoute,
   signInRoute,
+  puckEditorRoute,
+  executionRoute,
+  captureRoute,
   sampleWorkspaceRoute,
   sharedWithMeRoute,
   acceptShareRoute,
@@ -206,4 +215,9 @@ function ActivityRoute() {
 
 function SettingsRoute() {
   return <Lazy><SettingsPage /></Lazy>;
+}
+
+function PuckEditorRoute() {
+  const params = useParams({ strict: false }) as { pageId?: string };
+  return <Lazy><PuckEditorPage pageId={params.pageId ?? 'dashboard'} /></Lazy>;
 }

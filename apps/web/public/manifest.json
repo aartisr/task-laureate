@@ -2,7 +2,7 @@
   "name": "Task-Laureate",
   "short_name": "Task-Laureate",
   "description": "Premium task orchestration for high-performance teams. Calm, fast, beautiful.",
-  "start_url": "/",
+  "start_url": "/now",
   "display": "standalone",
   "background_color": "#0f172a",
   "theme_color": "#8b5cf6",
@@ -21,6 +21,13 @@
     }
   ],
   "shortcuts": [
+    {
+      "name": "Capture",
+      "short_name": "Capture",
+      "description": "Capture a thought without leaving your flow",
+      "url": "/capture",
+      "icons": [{ "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }]
+    },
     {
       "name": "All Tasks",
       "short_name": "Tasks",
@@ -43,6 +50,16 @@
       "icons": [{ "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }]
     }
   ],
+  "share_target": {
+    "action": "/capture",
+    "method": "GET",
+    "enctype": "application/x-www-form-urlencoded",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  },
   "related_applications": [],
   "prefer_related_applications": false
 }

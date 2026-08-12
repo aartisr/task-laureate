@@ -33,6 +33,10 @@ export default defineConfig({
       output: {
         manualChunks: {
           supabase: ['@supabase/supabase-js'],
+          // The visual editor is intentionally isolated from everyday task
+          // flows. Splitting its vendor code keeps the Puck route cacheable
+          // without making capture, planning, or execution pay for it.
+          puck: ['@puckeditor/core'],
           // posthog-js gets its own cacheable chunk when installed
           ...(posthogResolved === 'posthog-js' ? { posthog: ['posthog-js'] } : {}),
         },

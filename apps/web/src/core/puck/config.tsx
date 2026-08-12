@@ -5,7 +5,7 @@
  * These components can be dragged, dropped, and configured in the Puck UI
  */
 
-import type { PageContent } from './types';
+import type { ContentBlock, PageContent } from './types';
 
 /**
  * Editable Hero Section Component
@@ -247,15 +247,26 @@ export const PageLayout = {
  */
 export const puckConfig = {
   components: {
-    HeroSection,
+    Hero: HeroSection,
     StatCard,
     StatGrid,
     Panel,
-    TextBlock,
-    CTAButton,
-    FeatureCard,
+    Text: TextBlock,
+    Cta: CTAButton,
+    Feature: FeatureCard,
   },
   root: PageLayout,
+};
+
+/** Maps the stable, application-owned block names to Puck component names. */
+export const puckComponentNames: Record<ContentBlock['type'], string> = {
+  hero: 'Hero',
+  stats: 'StatGrid',
+  panel: 'Panel',
+  search: 'Text',
+  text: 'Text',
+  feature: 'Feature',
+  cta: 'Cta',
 };
 
 /**
@@ -357,3 +368,33 @@ export const defaultPageContents: Record<string, PageContent> = {
     ],
   },
 };
+
+/**
+ * Defines every routed surface that can have Puck-managed editorial content.
+ * Pages not requiring custom seed blocks still receive an editable page frame.
+ */
+const pageCatalog: Array<Pick<PageContent, 'id' | 'name' | 'path'>> = [
+  { id: 'lists', name: 'Lists', path: '/lists-overview' },
+  { id: 'tasks', name: 'Tasks', path: '/tasks' },
+  { id: 'completed', name: 'Completed', path: '/completed' },
+  { id: 'progress', name: 'Progress', path: '/progress' },
+  { id: 'support', name: 'Support', path: '/support' },
+  { id: 'list-detail', name: 'List details', path: '/lists/$listId' },
+  { id: 'task-focus', name: 'Task focus', path: '/lists/$listId/tasks/$taskId' },
+  { id: 'shared-with-me', name: 'Shared with me', path: '/shared-with-me' },
+  { id: 'accept-share', name: 'Accept share', path: '/share/accept' },
+  { id: 'sign-in', name: 'Sign in', path: '/sign-in' },
+  { id: 'auth-callback', name: 'Authentication callback', path: '/auth/callback' },
+  { id: 'sample-workspace', name: 'Sample workspace', path: '/sample' },
+];
+
+for (const page of pageCatalog) {
+  defaultPageContents[page.id] = {
+    ...page,
+    blocks: [{
+      id: 'intro',
+      type: 'hero',
+      props: { eyebrow: page.name, heading: page.name, subheading: '' },
+    }],
+  };
+}

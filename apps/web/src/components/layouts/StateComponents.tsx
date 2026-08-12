@@ -29,17 +29,17 @@ export function LoadingState({
 }: LoadingStateProps) {
   return (
     <section
-      className="py-12 text-center"
+      className="ui-state ui-state--loading"
       role="status"
       aria-live={ariaLive ? 'polite' : undefined}
       aria-busy="true"
     >
       {showSpinner && (
-        <div className="inline-block mb-4" aria-hidden="true">
-          <div className="w-8 h-8 border-4 border-[var(--color-border-default)] border-t-[var(--color-action-primary)] rounded-full animate-spin" />
+        <div className="ui-state__spinner" aria-hidden="true">
+          <div />
         </div>
       )}
-      <p className="text-[var(--color-text-secondary)]">{message}</p>
+      <p>{message}</p>
     </section>
   );
 }
@@ -89,25 +89,24 @@ export function EmptyState({
   children,
 }: EmptyStateProps) {
   return (
-    <article className="bg-[var(--color-bg-secondary)] rounded-lg p-12 text-center border border-[var(--color-border-default)]">
+    <article className="ui-state ui-state--empty">
       {icon && (
-        <div className="text-6xl mb-4" aria-hidden="true">
+        <div className="ui-state__icon" aria-hidden="true">
           {icon}
         </div>
       )}
-      <h2 className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">
+      <h2>
         {title}
       </h2>
       {description && (
-        <p className="text-[var(--color-text-secondary)] mb-8">
+        <p>
           {description}
         </p>
       )}
       {action && (
         <button
           onClick={action.onClick}
-          className="px-6 py-3 bg-[var(--color-action-primary)] text-[var(--color-text-inverse)] rounded-lg font-medium hover:bg-[var(--color-action-hover)] transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--color-action-primary)] focus:ring-offset-2"
-          style={{ '--tw-ring-offset-color': 'var(--color-bg-primary)' } as React.CSSProperties}
+          className="primary-button"
         >
           {action.label}
         </button>
@@ -147,24 +146,24 @@ export interface ErrorStateProps {
 export function ErrorState({ message, details, action }: ErrorStateProps) {
   return (
     <article
-      className="bg-red-50 border border-red-200 rounded-lg p-8 text-center"
+      className="ui-state ui-state--error"
       role="alert"
     >
-      <div className="text-4xl mb-4" aria-hidden="true">
+      <div className="ui-state__icon" aria-hidden="true">
         ⚠️
       </div>
-      <h2 className="text-xl font-bold text-red-900 mb-2">
+      <h2>
         {message}
       </h2>
       {details && (
-        <p className="text-sm text-red-700 mb-6 font-mono whitespace-pre-wrap">
+        <p className="ui-state__details">
           {details}
         </p>
       )}
       {action && (
         <button
           onClick={action.onClick}
-          className="px-4 py-2 bg-red-600 text-white rounded font-medium hover:bg-red-700 transition-colors focus:outline-none focus:ring-2 focus:ring-red-600 focus:ring-offset-2"
+          className="secondary-button"
         >
           {action.label}
         </button>

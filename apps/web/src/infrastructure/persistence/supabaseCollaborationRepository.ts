@@ -2,6 +2,8 @@ import type { ActivityEvent, DashboardSummary, ListTemplate, SearchResult, TodoI
 import type { AttachmentRepository, CollaborationRepository, CursorPage, CursorPageInput, DependencyRepository, ListPageInput, ScalableTaskFeedRepository, TaskFeedInput, TaskFeedPage, TodoListInput, TodoListUpdateInput, TodoRepository, TodoTaskInput, TodoTaskUpdateInput } from '../../core/contracts/repository';
 import { classifyAttachment, type TaskAttachment } from '../../core/domain/attachments';
 import type { DependencyTaskRef, TaskDependency, TaskDependencySummary } from '../../core/domain/dependencies';
+import type { CaptureRepository, CaptureTaskRepository, TaskEventRepository, TaskPlanningRepository } from '../../core/contracts/antiBacklog';
+import type { DecompositionStep, TaskPlanningMetadata } from '../../core/domain/antiBacklog';
 import { createSupabaseCollaborationGateway } from './collaborationGateway';
 import type { SupabasePersistenceConfig } from './config';
 import { collaborationError } from './collaborationErrors';
@@ -17,6 +19,7 @@ type AttachmentRow = { id: string; task_id: string; original_name: string; conte
 type DependencyTaskRow = { id: string; title: string; status: TodoItem['status']; due_date: string | null };
 type DependencyRow = { id: string; prerequisite_task_id: string; dependent_task_id: string; dependency_type: TaskDependency['type']; is_required: boolean; created_at: string; prerequisite: DependencyTaskRow; dependent: DependencyTaskRow };
 type DependencySummaryRow = { task_id: string; unresolved_prerequisite_count: number; dependent_count: number };
+type PlanningRow = { task_id: string; estimate_minutes: number | null; energy_level: TaskPlanningMetadata['energyLevel']; scheduled_start_at: string | null; parent_task_id: string | null; needs_clarity: boolean };
 const REQUEST_TIMEOUT_MS = 15_000;
 
 function listFromRow(row: ListRow, tasks: TaskRow[]): TodoList {
@@ -40,7 +43,7 @@ function rpcRecord<T>(value: T | T[]): T { return Array.isArray(value) ? first(v
  * Postgres; this adapter only maps the public domain contract to Data API calls.
  * It is composed with the collaboration gateway rather than duplicating invite code.
  */
-export function createSupabaseCollaborationTodoRepository(config: SupabasePersistenceConfig, request: FetchLike = fetch): TodoRepository & CollaborationRepository & ScalableTaskFeedRepository & AttachmentRepository & DependencyRepository {
+export function createSupabaseCollaborationTodoRepository(config: SupabasePersistenceConfig, request: FetchLike = fetch): TodoRepository & CollaborationRepository & ScalableTaskFeedRepository & AttachmentRepository & DependencyRepository & TaskPlanningRepository & TaskEventRepository & CaptureRepository & CaptureTaskRepository {
   if (!config.url || !config.publishableKey) throw new Error('Collaboration persistence requires configured Supabase credentials.');
   const rest = `${config.url.replace(/\/$/, '')}/rest/v1`;
   const storage = `${config.url.replace(/\/$/, '')}/storage/v1`;
@@ -99,6 +102,7 @@ export function createSupabaseCollaborationTodoRepository(config: SupabasePersis
     return [...incoming, ...outgoing.filter((row) => !incoming.some((existing) => existing.id === row.id))].map(dependencyFromRow);
   };
   const collaboration = createSupabaseCollaborationGateway(config, request);
+  const planningFromRow = (row: PlanningRow): TaskPlanningMetadata => ({ estimateMinutes: row.estimate_minutes, energyLevel: row.energy_level, scheduledStartAt: row.scheduled_start_at, parentTaskId: row.parent_task_id, needsClarity: row.needs_clarity });
 
   return {
     ...collaboration,
@@ -130,6 +134,40 @@ export function createSupabaseCollaborationTodoRepository(config: SupabasePersis
       return { items: rows.map((row) => ({ ...taskFromRow(row), listTitle: row.list_title })), nextCursor };
     },
     async getTask(id) { const rows = await json<TaskRow[]>(`/collaboration_tasks?id=eq.${encodeURIComponent(id)}&select=id,list_id,title,note_document,status,priority,due_date,tags,order_key,created_at,updated_at,completed_at,deleted_at`); return rows[0] ? taskFromRow(rows[0]) : null; },
+    async getTaskPlanning(taskId) {
+      const rows = await json<PlanningRow[]>(`/task_planning_metadata?task_id=eq.${encodeURIComponent(taskId)}&select=task_id,estimate_minutes,energy_level,scheduled_start_at,parent_task_id,needs_clarity`);
+      return rows[0] ? planningFromRow(rows[0]) : null;
+    },
+    async saveTaskPlanning(taskId, metadata) {
+      const row = rpcRecord(await json<PlanningRow | PlanningRow[]>('/rpc/set_task_planning_metadata', {
+        method: 'POST',
+        body: JSON.stringify({ p_task_id: taskId, p_estimate_minutes: metadata.estimateMinutes, p_energy_level: metadata.energyLevel, p_scheduled_start_at: metadata.scheduledStartAt, p_parent_task_id: metadata.parentTaskId }),
+      }));
+      return planningFromRow(row);
+    },
+    async saveAcceptedSteps(taskId, steps: DecompositionStep[]) {
+      await json<unknown>('/rpc/accept_task_steps', {
+        method: 'POST',
+        body: JSON.stringify({ p_task_id: taskId, p_steps: steps, p_origin: 'template', p_idempotency_key: `steps:${taskId}:${crypto.randomUUID()}` }),
+      });
+    },
+    async recordTaskEvent(input) {
+      await call('/rpc/record_task_event', { method: 'POST', body: JSON.stringify({ p_task_id: input.taskId, p_event_type: input.type, p_idempotency_key: input.idempotencyKey, p_payload: input.payload ?? {} }) });
+    },
+    async saveCaptureIntent(input) {
+      const idempotencyKey = `capture:${crypto.randomUUID()}`;
+      const saved = rpcRecord(await json<{ id: string } | Array<{ id: string }>>('/rpc/record_task_capture_intent', {
+        method: 'POST', body: JSON.stringify({ p_idempotency_key: idempotencyKey, p_raw_input: input.rawInput, p_parsed: input.parsed, p_parser_version: 'deterministic-v1' }),
+      }));
+      return { id: saved.id };
+    },
+    async captureTask(input) {
+      const row = rpcRecord(await json<TaskRow | TaskRow[]>('/rpc/capture_task', {
+        method: 'POST',
+        body: JSON.stringify({ p_idempotency_key: input.idempotencyKey, p_raw_input: input.rawInput, p_parsed: input.parsed, p_list_id: input.listId ?? null }),
+      }));
+      return taskFromRow(row);
+    },
     async listDependencies(taskId) { return dependenciesForTask(taskId); },
     async getDependencySummary(taskId): Promise<TaskDependencySummary> {
       const dependencies = await dependenciesForTask(taskId);

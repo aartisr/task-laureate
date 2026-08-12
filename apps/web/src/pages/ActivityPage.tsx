@@ -20,16 +20,10 @@ export function ActivityPage() {
       backButton={{ label: 'Back', to: '/' }}
       ariaLabel="Activity log"
       spacing="normal"
-      footer={
-        <div className="text-center text-sm text-[var(--color-text-secondary)]">
-          <p>
-            💡 Tip: Press <kbd className="bg-[var(--color-bg-secondary)] px-2 py-1 rounded">Esc</kbd> to return to dashboard
-          </p>
-        </div>
-      }
+      footer={<p className="activity-page__tip">Press <kbd>Esc</kbd> to return to your dashboard.</p>}
     >
       {/* Activity Timeline */}
-      <div className="bg-[var(--color-bg-secondary)] rounded-lg shadow-md p-8">
+      <div className="activity-page__surface">
         <ActivityTimeline repository={repository} maxItems={100} />
       </div>
     </PageContainer>

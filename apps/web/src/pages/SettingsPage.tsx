@@ -10,6 +10,7 @@ import { authProvider } from '../config/persistence.config';
 import { NotificationInbox } from '../components/NotificationInbox';
 import { ReminderDeliveryPreferences } from '../components/ReminderDeliveryPreferences';
 import { AnalyticsConsentControl } from '../components/AnalyticsConsentControl';
+import { AntiBacklogPrivacyControls } from '../components/AntiBacklogPrivacyControls';
 
 /** Keeps everyday preferences visible and infrequent administration available on demand. */
 export function SettingsPage() {
@@ -52,7 +53,7 @@ export function SettingsPage() {
 
         <details className="settings-disclosure">
           <summary><span>Privacy &amp; analytics</span><small>Control usage insights</small></summary>
-          <div className="settings-disclosure__body"><AnalyticsConsentControl /></div>
+          <div className="settings-disclosure__body"><AnalyticsConsentControl /><AntiBacklogPrivacyControls /></div>
         </details>
 
         <details className="settings-disclosure">

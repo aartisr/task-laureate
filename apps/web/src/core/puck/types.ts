@@ -67,6 +67,18 @@ export interface PageContent {
   };
 }
 
+/**
+ * The canonical set of editable application surfaces. Keeping this list here
+ * makes adding a page an intentional editorial decision as well as a route.
+ */
+export const puckPageIds = [
+  'dashboard', 'lists', 'tasks', 'completed', 'progress', 'search', 'activity',
+  'settings', 'support', 'list-detail', 'task-focus', 'shared-with-me',
+  'accept-share', 'sign-in', 'auth-callback', 'sample-workspace',
+] as const;
+
+export type PuckPageId = (typeof puckPageIds)[number];
+
 export interface DashboardContent extends PageContent {
   blocks: Array<ContentBlock & { type: 'hero' | 'stats' | 'panel' }>;
 }

@@ -18,6 +18,8 @@ import { listTasksQueryOptions } from '../contracts/queryKeys';
 import { queryKeys } from '../contracts/queryKeys';
 import { undoJournal } from './undoJournal';
 import { MAX_NOTE_LENGTH } from '../domain/richNote';
+import { mutationOutbox } from '../../infrastructure/antiBacklog/mutationOutbox';
+import { supportsTaskEvents } from '../contracts/antiBacklog';
 
 interface TaskMutationContext {
   repository: TodoRepository;
@@ -153,7 +155,11 @@ export function useTaskMutations(context: TaskMutationContext) {
 
       const result = await orchestrator.executeMutation(operation, input);
       if (!result.success) {
-        throw new Error(result.error?.message || 'Failed to update task');
+        const message = result.error?.message || 'Failed to update task';
+        if (/conflict|version|409/i.test(message)) {
+          await mutationOutbox.enqueue({ id: crypto.randomUUID(), type: 'task.update', payload: { taskId, input }, idempotencyKey: `task.update:${taskId}:${crypto.randomUUID()}`, createdAt: new Date().toISOString(), state: 'pending' });
+        }
+        throw new Error(message);
       }
       if (currentTask) {
         const before: TodoTaskUpdateInput = {
@@ -202,9 +208,12 @@ export function useTaskMutations(context: TaskMutationContext) {
 
       const result = await orchestrator.executeMutation(operation, isComplete);
       if (!result.success) {
-        throw new Error(result.error?.message || 'Failed to complete task');
+        const message = result.error?.message || 'Failed to complete task';
+        if (/conflict|version|409/i.test(message)) await mutationOutbox.enqueue({ id: crypto.randomUUID(), type: 'task.complete', payload: { taskId, isComplete }, idempotencyKey: `task.complete:${taskId}:${crypto.randomUUID()}`, createdAt: new Date().toISOString(), state: 'pending' });
+        throw new Error(message);
       }
       if (currentTask) {
+        if (supportsTaskEvents(repository)) await repository.recordTaskEvent({ taskId, type: isComplete ? 'completed' : 'reopened', occurredAt: new Date().toISOString(), idempotencyKey: `task.${isComplete ? 'complete' : 'reopen'}:${taskId}:${result.data!.updatedAt}` });
         const priorComplete = currentTask.status === 'done';
         undoJournal.record({
           label: isComplete ? `Completed “${currentTask.title}”` : `Reopened “${currentTask.title}”`,
@@ -251,7 +260,9 @@ export function useTaskMutations(context: TaskMutationContext) {
 
       const result = await orchestrator.executeMutation(operation, taskId);
       if (!result.success) {
-        throw new Error(result.error?.message || 'Failed to delete task');
+        const message = result.error?.message || 'Failed to delete task';
+        if (/conflict|version|409/i.test(message)) await mutationOutbox.enqueue({ id: crypto.randomUUID(), type: 'task.delete', payload: { taskId }, idempotencyKey: `task.delete:${taskId}:${crypto.randomUUID()}`, createdAt: new Date().toISOString(), state: 'pending' });
+        throw new Error(message);
       }
       undoJournal.record({
         label: `Deleted “${result.data!.title}”`,

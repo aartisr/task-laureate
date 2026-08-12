@@ -49,7 +49,6 @@ function renderBlock(block: any, dynamicData?: Record<string, any>, children?: R
   const props = {
     ...block.props,
     ...(dynamicData && dynamicData[block.id]),
-    children,
   };
 
   return (
@@ -74,7 +73,7 @@ export function PuckPageRenderer({
   return (
     <section className="page-stack" data-page-id={content.id}>
       {content.blocks.map((block) => {
-        return renderBlock(block, dynamicData, children);
+        return renderBlock(block, dynamicData);
       })}
       {children}
     </section>

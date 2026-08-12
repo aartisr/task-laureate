@@ -1,0 +1,10 @@
+{
+  "manifest_version": 3,
+  "name": "Task-Laureate Capture",
+  "version": "0.1.0",
+  "description": "Send the current page or selected text to Task-Laureate.",
+  "permissions": ["contextMenus", "tabs"],
+  "background": { "service_worker": "capture-extension.js" },
+  "options_ui": { "page": "capture-extension-options.html", "open_in_tab": true },
+  "action": { "default_title": "Capture in Task-Laureate" }
+}

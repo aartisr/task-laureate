@@ -6,6 +6,7 @@ import { useTaskMutations } from '../core/mutations/useTaskMutations';
 import { TaskDetailLens } from '../components/TaskDetailLens';
 import { usePageSEO, PAGE_SEO } from '../hooks/usePageSEO';
 import { supportsCollaboration } from '../core/contracts/repository';
+import { TaskExecutionControls } from '../components/TaskExecutionControls';
 
 export function TaskFocusPage({ listId, taskId }: { listId: string; taskId: string }) {
   const navigate = useNavigate();
@@ -25,7 +26,7 @@ export function TaskFocusPage({ listId, taskId }: { listId: string; taskId: stri
   if (!task || !listQuery.data) return <main className="task-focus-page"><h1>Task not found</h1><button className="secondary-button" onClick={() => navigate({ to: '/lists/$listId', params: { listId } })}>Back to list</button></main>;
   const canEdit = !supportsCollaboration(appServices.repository) || (accessQuery.data === 'owner' || accessQuery.data === 'editor');
 
-  return <main className="task-focus-page">
+  return <main className="page-stack task-focus-page">
     <button className="task-focus-page__back" onClick={() => navigate({ to: '/lists/$listId', params: { listId } })}>← Back to {listQuery.data.title}</button>
     <TaskDetailLens
       task={task}
@@ -35,5 +36,6 @@ export function TaskFocusPage({ listId, taskId }: { listId: string; taskId: stri
       onUpdate={async (input) => { await mutations.updateTask.mutateAsync({ taskId, input }); }}
       onComplete={async () => { if (task.status === 'done') await mutations.updateTask.mutateAsync({ taskId, input: { status: 'todo' } }); else await mutations.completeTask.mutateAsync({ taskId, isComplete: true }); }}
     />
+    {canEdit ? <TaskExecutionControls task={task} /> : null}
   </main>;
 }

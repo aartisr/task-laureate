@@ -6,7 +6,11 @@
  */
 
 import type { PageContent } from '../core/puck/types';
-import { defaultPageContents } from '../core/puck/config';
+import { defaultPageContents, puckComponentNames } from '../core/puck/config';
+
+const storageKey = 'task-laureate.puck-content.v1';
+type ContentListener = () => void;
+const listeners = new Set<ContentListener>();
 
 // In-memory cache for page contents (production: use database)
 const pageContentCache = new Map<string, PageContent>();
@@ -15,6 +19,33 @@ const pageContentCache = new Map<string, PageContent>();
 Object.entries(defaultPageContents).forEach(([key, content]) => {
   pageContentCache.set(key, content);
 });
+
+function clone<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value)) as T;
+}
+
+function loadPersistedContent() {
+  if (typeof window === 'undefined') return;
+  try {
+    const persisted = JSON.parse(window.localStorage.getItem(storageKey) ?? '{}') as Record<string, PageContent>;
+    Object.entries(persisted).forEach(([id, content]) => {
+      if (defaultPageContents[id] && content?.id === id && Array.isArray(content.blocks)) {
+        pageContentCache.set(id, content);
+      }
+    });
+  } catch {
+    // A corrupt editorial draft must never prevent the application from loading.
+  }
+}
+
+function persistAndNotify() {
+  if (typeof window !== 'undefined') {
+    window.localStorage.setItem(storageKey, JSON.stringify(getAllPageContents()));
+  }
+  listeners.forEach((listener) => listener());
+}
+
+loadPersistedContent();
 
 /**
  * Get page content for editing in Puck
@@ -27,12 +58,12 @@ export function getPageContent(pageId: string): PageContent | null {
  * Save page content from Puck editor
  */
 export function savePageContent(pageId: string, content: PageContent): void {
-  pageContentCache.set(pageId, {
+  if (!defaultPageContents[pageId]) throw new Error(`Unknown Puck page: ${pageId}`);
+  pageContentCache.set(pageId, clone({
     ...content,
     id: pageId,
-  });
-  // TODO: Persist to database
-  console.log(`✅ Page "${pageId}" saved`, content);
+  }));
+  persistAndNotify();
 }
 
 /**
@@ -52,7 +83,8 @@ export function getAllPageContents(): Record<string, PageContent> {
 export function resetPageContent(pageId: string): void {
   const defaults = defaultPageContents[pageId];
   if (defaults) {
-    pageContentCache.set(pageId, JSON.parse(JSON.stringify(defaults)));
+    pageContentCache.set(pageId, clone(defaults));
+    persistAndNotify();
   }
 }
 
@@ -81,13 +113,10 @@ export function importPageContent(pageId: string, jsonContent: string): void {
  */
 export function contentToPuckData(content: PageContent): any {
   return {
-    root: {
-      type: 'PageLayout',
-      props: {},
-    },
-    content: content.blocks.map((block: { type: string; props: Record<string, unknown> }) => ({
-      type: block.type.charAt(0).toUpperCase() + block.type.slice(1),
-      props: block.props,
+    root: { props: {} },
+    content: content.blocks.map((block: { id: string; type: string; props: Record<string, unknown> }) => ({
+      type: puckComponentNames[block.type as keyof typeof puckComponentNames],
+      props: { ...block.props, id: block.id },
     })),
   };
 }
@@ -101,9 +130,14 @@ export function puckDataToContent(pageId: string, puckData: any): PageContent {
   return {
     ...content!,
     blocks: (puckData.content || []).map((item: any, idx: number) => ({
-      id: `block-${idx}`,
-      type: item.type.toLowerCase(),
+      id: item.props?.id || `block-${idx}`,
+      type: Object.entries(puckComponentNames).find(([, name]) => name === item.type)?.[0] || 'text',
       props: item.props,
     })),
   };
+}
+
+export function subscribeToPuckContent(listener: ContentListener) {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
 }

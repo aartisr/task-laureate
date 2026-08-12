@@ -1,4 +1,5 @@
-import { ReactNode } from 'react';
+import { type ReactNode } from 'react';
+import { Link } from '@tanstack/react-router';
 
 export interface PageContainerProps {
   title: string;
@@ -11,118 +12,16 @@ export interface PageContainerProps {
   ariaLabel?: string;
 }
 
-export function PageContainer({
-  title,
-  subtitle,
-  backButton,
-  children,
-  footer,
-  maxWidth = 'lg',
-  spacing = 'normal',
-  ariaLabel,
-}: PageContainerProps) {
-  const maxWidthMap = {
-    sm: '640px',
-    md: '768px',
-    lg: '1200px',
-    xl: '1400px',
-    full: '100%',
-  };
-
-  const spacingMap = {
-    compact: 'var(--spacing-4)',
-    normal: 'var(--spacing-8)',
-    spacious: 'var(--spacing-12)',
-  };
-
-  return (
-    <section
-      aria-label={ariaLabel || title}
-      style={{
-        minHeight: '100vh',
-        backgroundColor: 'var(--color-bg-primary)',
-        padding: 'var(--spacing-6)',
-      }}
-    >
-      <div
-        style={{
-          maxWidth: maxWidthMap[maxWidth],
-          marginLeft: 'auto',
-          marginRight: 'auto',
-        }}
-      >
-        <header
-          style={{
-            display: 'grid',
-            gap: spacingMap[spacing],
-            marginBottom: spacingMap[spacing],
-          }}
-        >
-          {backButton && (
-            <nav style={{ marginBottom: 'var(--spacing-4)' }}>
-              <a
-                href={backButton.to}
-                style={{
-                  color: 'var(--color-action-primary)',
-                  fontWeight: '500',
-                  fontSize: '0.875rem',
-                  transition: 'color var(--transition-base)',
-                  textDecoration: 'none',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.color = 'var(--color-action-hover)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.color = 'var(--color-action-primary)';
-                }}
-                aria-label={`Back to ${backButton.label || 'previous page'}`}
-              >
-                ← {backButton.label || 'Back'}
-              </a>
-            </nav>
-          )}
-          <div>
-            <h1
-              style={{
-                fontSize: 'clamp(2rem, 6vw, 3.5rem)',
-                fontWeight: 'var(--font-weight-extrabold)',
-                color: 'var(--color-text-primary)',
-                marginBottom: 'var(--spacing-2)',
-                marginTop: 0,
-                lineHeight: 'var(--line-height-tight)',
-              }}
-            >
-              {title}
-            </h1>
-            {subtitle && (
-              <p
-                style={{
-                  fontSize: 'clamp(0.95rem, 2vw, 1.1rem)',
-                  color: 'var(--color-text-secondary)',
-                  marginBottom: 0,
-                  marginTop: 0,
-                }}
-              >
-                {subtitle}
-              </p>
-            )}
-          </div>
-        </header>
-
-        <div>{children}</div>
-
-        {footer && (
-          <footer
-            style={{
-              marginTop: 'var(--spacing-12)',
-              paddingTop: 'var(--spacing-8)',
-              borderTop: '1px solid var(--color-border-default)',
-            }}
-          >
-            {footer}
-          </footer>
-        )}
-      </div>
-    </section>
-  );
+/** Shared page frame: every utility page receives the same calm hierarchy. */
+export function PageContainer({ title, subtitle, backButton, children, footer, maxWidth = 'lg', spacing = 'normal', ariaLabel }: PageContainerProps) {
+  return <section aria-label={ariaLabel || title} className={`page-container page-container--${maxWidth} page-container--${spacing}`}>
+    <div className="page-container__inner">
+      <header className="page-container__header">
+        {backButton ? <nav className="page-container__back"><Link to={backButton.to as never} aria-label={`Back to ${backButton.label || 'previous page'}`}>← {backButton.label || 'Back'}</Link></nav> : null}
+        <div><p className="page-container__eyebrow">Task Laureate</p><h1>{title}</h1>{subtitle ? <p className="page-container__subtitle">{subtitle}</p> : null}</div>
+      </header>
+      <div className="page-container__content">{children}</div>
+      {footer ? <footer className="page-container__footer">{footer}</footer> : null}
+    </div>
+  </section>;
 }

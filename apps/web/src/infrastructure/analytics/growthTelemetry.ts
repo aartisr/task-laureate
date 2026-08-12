@@ -18,7 +18,8 @@ export type GrowthEventName =
   | 'landing_viewed' | 'demo_started' | 'signup_started' | 'signup_completed'
   | 'first_list_created' | 'first_task_created' | 'first_due_date_set'
   | 'first_task_completed' | 'first_list_shared' | 'invite_accepted'
-  | 'reminder_enabled' | 'sync_failed';
+  | 'reminder_enabled' | 'sync_failed' | 'quick_capture_saved'
+  | 'daily_commitment_added' | 'decomposition_accepted' | 'mutation_conflict_detected';
 
 type SafeProperty = string | number | boolean | null;
 type GrowthEvent = { name: GrowthEventName; properties?: Record<string, SafeProperty>; occurredAt: string };

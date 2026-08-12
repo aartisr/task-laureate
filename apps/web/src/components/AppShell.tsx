@@ -7,6 +7,7 @@ import { AccountStatus } from './AccountStatus';
 import { NotificationCenter } from './NotificationCenter';
 import { authProvider } from '../config/persistence.config';
 import { recoveryNeedsAttention, undoJournal } from '../core/mutations/undoJournal';
+import { QuickCapture } from './QuickCapture';
 
 interface AppShellProps {
   children?: ReactNode;
@@ -22,27 +23,28 @@ export function AppShell({ children, navItems }: AppShellProps) {
     useSyncExternalStore(undoJournal.subscribe, undoJournal.getSnapshot, undoJournal.getSnapshot),
   );
 
-  const mobileNavItems = useMemo(
-    () =>
-      [
-        { label: 'Dashboard', to: '/', icon: '📊', description: 'Overview' },
-        ...navItems,
-        { label: 'Help & Support', to: '/support', icon: '💡', description: 'Help center' },
-      ].filter((item, index, items) => items.findIndex((candidate) => candidate.to === item.to) === index),
-    [navItems],
-  );
+  const mobileNavItems = useMemo(() => [
+    { label: 'Now', to: '/now', icon: '⚡', description: 'Choose one feasible action' },
+    { label: 'Tasks', to: '/tasks', icon: '✓', description: 'All active work' },
+    { label: 'Search', to: '/search', icon: '⌕', description: 'Find anything' },
+    { label: 'Progress', to: '/progress', icon: '◔', description: 'Reflect on momentum' },
+    { label: 'Dashboard', to: '/', icon: '⌂', description: 'Workspace overview' },
+    { label: 'Lists', to: '/lists-overview', icon: '☷', description: 'Projects and lists' },
+    ...navItems,
+    { label: 'Help & Support', to: '/support', icon: '?', description: 'Help center' },
+  ].filter((item, index, items) => items.findIndex((candidate) => candidate.to === item.to) === index), [navItems]);
 
   const desktopNavigation = useMemo(() => {
-    const dashboard = { label: 'Dashboard', to: '/', icon: '📊', description: 'Your overview' };
-    const essentialPaths = new Set(['/', '/shared-with-me', '/search', '/activity', '/settings']);
-    const essentials = [dashboard, ...['/shared-with-me', '/search', '/activity', '/settings']
-      .map((path) => navItems.find((item) => item.to === path))
-      .filter((item): item is NavItem => Boolean(item))];
-
-    return {
-      essentials,
-      extensions: navItems.filter((item) => !essentialPaths.has(item.to)),
-    };
+    const find = (to: string, fallback: NavItem) => navItems.find((item) => item.to === to) ?? fallback;
+    const primary = [
+      find('/now', { label: 'Now', to: '/now', icon: '⚡', description: 'Choose one feasible action' }),
+      { label: 'Tasks', to: '/tasks', icon: '✓', description: 'All active work' },
+      find('/search', { label: 'Search', to: '/search', icon: '⌕', description: 'Find anything' }),
+      { label: 'Progress', to: '/progress', icon: '◔', description: 'Reflect on momentum' },
+    ];
+    const workspace = [{ label: 'Dashboard', to: '/', icon: '⌂', description: 'Workspace overview' }, { label: 'Lists', to: '/lists-overview', icon: '☷', description: 'Projects and lists' }, find('/shared-with-me', { label: 'Shared with me', to: '/shared-with-me', icon: '↗', description: 'Work shared with you' }), find('/activity', { label: 'Activity', to: '/activity', icon: '◌', description: 'Recent changes' })];
+    const utility = [find('/settings', { label: 'Settings', to: '/settings', icon: '⚙', description: 'Preferences and privacy' })];
+    return { primary, workspace, utility };
   }, [navItems]);
 
   const currentSection = useMemo(
@@ -57,10 +59,9 @@ export function AppShell({ children, navItems }: AppShellProps) {
 
   const mobileTabConfig = useMemo(
     () => [
-      { to: '/', fallbackLabel: 'Home', displayLabel: 'Home', icon: '🏠' },
+      { to: '/now', fallbackLabel: 'Now', displayLabel: 'Now', icon: '⚡' },
       { to: '/tasks', fallbackLabel: 'Tasks', displayLabel: 'Tasks', icon: '✓' },
       { to: '/search', fallbackLabel: 'Search', displayLabel: 'Search', icon: '🔍' },
-      { to: '/settings', fallbackLabel: 'Settings', displayLabel: 'Settings', icon: '⚙️' },
     ],
     [],
   );
@@ -137,8 +138,8 @@ export function AppShell({ children, navItems }: AppShellProps) {
           <span>Task Laureate</span>
         </div>
         <nav className="sidebar-nav" aria-label="Primary Navigation">
-          <p className="sidebar-nav__label">Workspace</p>
-          {desktopNavigation.essentials.map((item) => {
+          <p className="sidebar-nav__label">Focus</p>
+          {desktopNavigation.primary.map((item) => {
             const hasRecovery = item.to === '/settings' && recoveryAvailable;
             return (
               <Link
@@ -154,10 +155,16 @@ export function AppShell({ children, navItems }: AppShellProps) {
               </Link>
             );
           })}
-          {desktopNavigation.extensions.length > 0 && (
+          <div className="sidebar-nav__extensions">
+            <p className="sidebar-nav__label">Workspace</p>
+            {desktopNavigation.workspace.map((item) => (
+              <Link key={item.to} to={item.to} activeOptions={getLinkActiveOptions(item.to)} activeProps={{ className: 'active' }} className="sidebar-link" aria-label={item.label}>{item.icon} {item.label}</Link>
+            ))}
+          </div>
+          {desktopNavigation.utility.length > 0 && (
             <div className="sidebar-nav__extensions">
-              <p className="sidebar-nav__label">More</p>
-              {desktopNavigation.extensions.map((item) => (
+              <p className="sidebar-nav__label">Manage</p>
+              {desktopNavigation.utility.map((item) => (
                 <Link
                   key={item.to}
                   to={item.to}
@@ -177,9 +184,10 @@ export function AppShell({ children, navItems }: AppShellProps) {
         {/* ===== UTILITY SECTION ===== */}
         <div className="sidebar-footer">
 
-          {/* Divider with label */}
+          <QuickCapture />
+
           <div className="sidebar-footer__divider">
-            <span>Workspace</span>
+            <span>Support</span>
           </div>
 
           {/* Support — highlighted, stands out */}
@@ -190,7 +198,7 @@ export function AppShell({ children, navItems }: AppShellProps) {
             className="sidebar-link sidebar-link--support"
             aria-label="Help & Support"
           >
-            <span className="sidebar-link__icon">💡</span>
+            <span className="sidebar-link__icon">?</span>
             <span className="sidebar-link__label">Help & Support</span>
             <span className="sidebar-link__badge">FAQs</span>
           </Link>

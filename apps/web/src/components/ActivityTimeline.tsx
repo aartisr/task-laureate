@@ -65,51 +65,42 @@ export function ActivityTimeline({ repository, maxItems = DEFAULT_PAGE_SIZE }: A
   }, [displayedActivity]);
 
   if (isLoading) {
-    return (
-      <div className="p-8 text-center">
-        <p className="text-gray-500">Loading activity...</p>
-      </div>
-    );
+    return <div className="activity-timeline__state" role="status">Loading activity…</div>;
   }
 
   if (displayedActivity.length === 0) {
-    return (
-      <div className="p-8 text-center">
-        <p className="text-4xl mb-2">📭</p>
-        <p className="text-gray-500">No activity yet</p>
-      </div>
-    );
+    return <div className="activity-timeline__state"><span aria-hidden="true">◌</span><p>No activity yet. Your meaningful changes will appear here.</p></div>;
   }
 
   return (
-    <div className="space-y-8">
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-sm text-gray-600">{page?.total ?? 0} events · newest first</p>
+    <div className="activity-timeline">
+      <div className="activity-timeline__toolbar">
+        <p>{page?.total ?? 0} events · newest first</p>
         {confirmClear ? (
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-red-700">Clear all activity?</span>
-            <button type="button" className="rounded bg-red-600 px-3 py-1 text-xs font-medium text-white" onClick={async () => {
+          <div className="activity-timeline__confirm">
+            <span>Clear all activity?</span>
+            <button type="button" className="activity-timeline__danger" onClick={async () => {
               await repository.clearActivity();
               setConfirmClear(false);
               setCursor(null);
               setCursorHistory([]);
               await queryClient.invalidateQueries({ queryKey: queryKeys.activity });
             }}>Clear history</button>
-            <button type="button" className="rounded bg-gray-200 px-3 py-1 text-xs" onClick={() => setConfirmClear(false)}>Cancel</button>
+            <button type="button" className="secondary-button" onClick={() => setConfirmClear(false)}>Cancel</button>
           </div>
         ) : (
-          <button type="button" className="text-sm text-red-700 underline" onClick={() => setConfirmClear(true)}>Clear history</button>
+          <button type="button" className="activity-timeline__clear" onClick={() => setConfirmClear(true)}>Clear history</button>
         )}
       </div>
       {Object.entries(groupedByDate).map(([dateKey, events]) => (
         <div key={dateKey}>
           {/* Date Header */}
-          <h3 className="text-sm font-semibold text-gray-900 mb-4">{dateKey}</h3>
+          <h3 className="activity-timeline__date">{dateKey}</h3>
 
           {/* Timeline Events */}
-          <div className="space-y-4 relative">
+          <div className="activity-timeline__events">
             {/* Vertical Line */}
-            <div className="absolute left-2 top-0 bottom-0 w-0.5 bg-gradient-to-b from-blue-200 to-transparent" />
+            <div className="activity-timeline__line" />
 
             {/* Events */}
             {events.map((event, index) => {
@@ -121,33 +112,33 @@ export function ActivityTimeline({ repository, maxItems = DEFAULT_PAGE_SIZE }: A
               });
 
               return (
-                <div key={`${event.id}-${index}`} className="flex gap-3 pl-8 relative">
+                <div key={`${event.id}-${index}`} className="activity-timeline__event">
                   {/* Timeline Dot */}
-                  <div className="absolute left-0 top-1 w-5 h-5 bg-white border-2 border-blue-500 rounded-full flex items-center justify-center text-xs">
-                    <span className="text-blue-500">{icon}</span>
+                  <div className="activity-timeline__dot">
+                    <span>{icon}</span>
                   </div>
 
                   {/* Event Card */}
-                  <div className="flex-1 bg-white rounded-lg p-4 border border-gray-200 hover:shadow-md transition-shadow">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-sm font-semibold text-gray-900">{label}</span>
-                          <span className="text-xs text-gray-500">{time}</span>
+                  <div className="activity-timeline__card">
+                    <div className="activity-timeline__card-row">
+                      <div>
+                        <div className="activity-timeline__event-meta">
+                          <span>{label}</span>
+                          <span>{time}</span>
                         </div>
 
                         {/* Event Description */}
-                        <p className="text-sm text-gray-700">
+                        <p>
                           {event.entityType === 'list' ? '📋' : '✓'} {event.action} {event.entityType}
                         </p>
 
                         {/* Event Metadata */}
                         {event.metadata && (
-                          <div className="mt-2 text-xs text-gray-600">
+                          <div className="activity-timeline__changes">
                             {event.metadata.previousValue && (
                               <p>
                                 Changed from:{' '}
-                                <span className="font-mono bg-gray-100 px-1 rounded">
+                                <span>
                                   {typeof event.metadata.previousValue === 'string'
                                     ? event.metadata.previousValue
                                     : JSON.stringify(event.metadata.previousValue).slice(0, 50)}
@@ -157,7 +148,7 @@ export function ActivityTimeline({ repository, maxItems = DEFAULT_PAGE_SIZE }: A
                             {event.metadata.newValue && (
                               <p>
                                 Changed to:{' '}
-                                <span className="font-mono bg-gray-100 px-1 rounded">
+                                <span>
                                   {typeof event.metadata.newValue === 'string'
                                     ? event.metadata.newValue
                                     : JSON.stringify(event.metadata.newValue).slice(0, 50)}
@@ -169,7 +160,7 @@ export function ActivityTimeline({ repository, maxItems = DEFAULT_PAGE_SIZE }: A
                       </div>
 
                       {/* Entity Type Badge */}
-                      <span className="text-xs font-medium px-2 py-1 bg-gray-100 text-gray-700 rounded whitespace-nowrap">
+                      <span className="activity-timeline__type">
                         {event.entityType === 'list' ? 'List' : 'Task'}
                       </span>
                     </div>
@@ -181,14 +172,14 @@ export function ActivityTimeline({ repository, maxItems = DEFAULT_PAGE_SIZE }: A
         </div>
       ))}
 
-      <nav className="flex items-center justify-between border-t border-gray-200 pt-4" aria-label="Activity pages">
-        <button type="button" className="rounded border px-3 py-2 text-sm disabled:opacity-50" disabled={cursorHistory.length === 0 || isFetching} onClick={() => {
+      <nav className="activity-timeline__pagination" aria-label="Activity pages">
+        <button type="button" className="secondary-button" disabled={cursorHistory.length === 0 || isFetching} onClick={() => {
           const previous = cursorHistory.at(-1) ?? null;
           setCursorHistory((history) => history.slice(0, -1));
           setCursor(previous);
         }}>Previous</button>
-        <span className="text-sm text-gray-600">Showing {displayedActivity.length} of {page?.total ?? 0}</span>
-        <button type="button" className="rounded border px-3 py-2 text-sm disabled:opacity-50" disabled={!page?.nextCursor || isFetching} onClick={() => {
+        <span>Showing {displayedActivity.length} of {page?.total ?? 0}</span>
+        <button type="button" className="secondary-button" disabled={!page?.nextCursor || isFetching} onClick={() => {
           setCursorHistory((history) => [...history, cursor]);
           setCursor(page!.nextCursor);
         }}>Next</button>

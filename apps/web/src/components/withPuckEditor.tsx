@@ -4,9 +4,9 @@
  * Higher-order components and hooks for pages that integrate with Puck
  */
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useSyncExternalStore } from 'react';
 import type { PageContent } from '../core/puck/types';
-import { getPageContent } from '../infrastructure/puckContent';
+import { getPageContent, subscribeToPuckContent } from '../infrastructure/puckContent';
 import { PuckPageRenderer } from './PuckPageRenderer';
 
 interface WithPuckEditorProps {
@@ -29,7 +29,7 @@ export function withPuckEditor<P extends object>(
     dataMapper,
     ...props
   }: WithPuckEditorProps & P) {
-    const puckContent = useMemo(() => getPageContent(pageId), [pageId]);
+    const puckContent = usePuckContent(pageId);
     const dynamicData = useMemo(
       () => (data && dataMapper ? dataMapper(data) : undefined),
       [data, dataMapper]
@@ -53,7 +53,11 @@ export function withPuckEditor<P extends object>(
  * Hook to get page content
  */
 export function usePuckContent(pageId: string) {
-  return useMemo(() => getPageContent(pageId), [pageId]);
+  return useSyncExternalStore(
+    subscribeToPuckContent,
+    () => getPageContent(pageId),
+    () => getPageContent(pageId),
+  );
 }
 
 /**

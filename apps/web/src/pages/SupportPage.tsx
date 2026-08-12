@@ -1,232 +1,53 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link } from '@tanstack/react-router';
 import { COMMUNITY_LINKS } from '../config/communityLinks';
 import { usePageSEO, PAGE_SEO } from '../hooks/usePageSEO';
 
+const SUPPORT_TOPICS = [
+  { icon: '⚡', title: 'Start with Now', description: 'Choose a feasible next action using your available time and energy.', to: '/now', action: 'Open Now' },
+  { icon: '✦', title: 'Capture a thought', description: 'Use Capture or Cmd/Ctrl + Shift + K to save it safely to Inbox.', to: '/now', action: 'Go to Now' },
+  { icon: '▦', title: 'Organize work', description: 'Create lists for projects, then turn the next action into a task.', to: '/lists-overview', action: 'View lists' },
+  { icon: '⌕', title: 'Find anything', description: 'Search tasks, lists, and notes without having to remember where they live.', to: '/search', action: 'Search workspace' },
+];
+
 const SHORTCUTS = [
-  { keys: ['⌘', 'N'], label: 'New list', category: 'Create' },
-  { keys: ['⌘', 'F'], label: 'Focus search', category: 'Navigate' },
-  { keys: ['⌘', 'K'], label: 'Command palette', category: 'Navigate' },
-  { keys: ['Enter'], label: 'Confirm / submit', category: 'Actions' },
-  { keys: ['Esc'], label: 'Cancel / close', category: 'Actions' },
-  { keys: ['Tab'], label: 'Next field', category: 'Forms' },
+  { keys: ['⌘/Ctrl', '⇧', 'K'], label: 'Quick Capture', category: 'Capture' },
+  { keys: ['⌘/Ctrl', 'N'], label: 'Create a list', category: 'Create' },
+  { keys: ['⌘/Ctrl', 'F'], label: 'Open search', category: 'Navigate' },
+  { keys: ['Esc'], label: 'Close a dialog or cancel', category: 'Navigate' },
 ];
 
 const FAQS = [
-  {
-    q: 'How do I create my first task list?',
-    a: 'From the Dashboard, scroll down to the "Current work" panel. Enter a list title (e.g. "Launch planning") and an optional description, then click Create list. Your new list appears instantly.',
-  },
-  {
-    q: 'How do I set task priorities?',
-    a: 'When creating or editing a task, use the Priority dropdown: Urgent (🔴), High (🟠), Medium (🟡), or Low (🟢). Tasks are automatically sorted with urgent items first in the Tasks view.',
-  },
-  {
-    q: 'How do I mark a task as complete?',
-    a: 'Click the circular checkbox on the left of any task row. It turns green with a checkmark, the task strikes through, and your completion stats update in real time.',
-  },
-  {
-    q: 'What do the stat cards on the dashboard link to?',
-    a: 'Each stat card is clickable: Lists → full lists overview with progress rings; Tasks → all tasks across lists with grouping and filters; Completed → your wins timeline; Progress → analytics, leaderboard, and overdue tracking.',
-  },
-  {
-    q: 'Can I search across all my lists and tasks at once?',
-    a: 'Yes. Click Search in the sidebar or press ⌘F. The search is instant and covers titles, descriptions, tags, and notes across every list and task.',
-  },
-  {
-    q: 'How do I change the app theme?',
-    a: 'Go to Settings (⚙️ in the sidebar) and choose from Dark Pro, Luxury Minimal, or Warm & Community. The theme applies immediately.',
-  },
-  {
-    q: 'Is my data saved if I refresh the page?',
-    a: 'The default in-memory storage clears on refresh by design (great for demos). For persistence, connect a Postgres database via the DATABASE_URL environment variable and the data will survive refreshes.',
-  },
-  {
-    q: 'Is Task-Laureate free and open source?',
-    a: 'Completely. MIT licensed. No ads, no tracking, no paywalls — ever. Fork it, modify it, deploy it yourself. The code is yours.',
-  },
-  {
-    q: 'How do I deploy my own instance?',
-    a: "Fork the GitHub repo (github.com/aartisr/task-laureate), connect it to Vercel, and click Deploy. Zero configuration required. For Postgres, add a DATABASE_URL variable in Vercel's environment settings.",
-  },
-  {
-    q: 'Who built this?',
-    a: 'Task-Laureate was designed and built by Aarti S Ravikumar, a high school student at Pioneer Charter School of Science II (PCSSII). It was born from the real frustration of managing research, competitions, and schoolwork across too many disconnected tools.',
-  },
+  { q: 'Where should I start when my list feels overwhelming?', a: 'Open Now. Choose your current energy and available time, then add no more than three realistic commitments. If a task is vague, open it and use Plan and deconstruct before committing it.' },
+  { q: 'How do I capture something without losing my place?', a: 'Use the Capture button in the sidebar or Cmd/Ctrl + Shift + K. The capture stays safe on your device if you are offline and is delivered to Inbox when a connection is available.' },
+  { q: 'How do I make a broad task easier to start?', a: 'Open the task and select Deconstruct task. You can accept only the suggested steps that fit your situation, then edit them as normal tasks.' },
+  { q: 'How do I defer something without creating guilt?', a: 'From Now, select Tomorrow to defer a committed task, or Release to remove it from today while keeping it safely in its list. Nothing is deleted by either choice.' },
+  { q: 'Where can I review my progress?', a: 'Progress shows completion, status, overdue work, and a weekly reflection. It is designed to help you decide what to change next—not to judge a number.' },
+  { q: 'Can I customize pages in Puck?', a: 'Yes. Open the Puck route for the page you want to edit. The editor guide explains available page blocks and how content is saved locally.', to: '/puck/dashboard', label: 'Open Puck editor' },
+  { q: 'Is my data private?', a: 'You control syncing in Settings. Capture and daily planning state are stored locally first; privacy controls let you review and remove anti-backlog data. Cloud capabilities require your configured account and storage.' },
 ];
 
-function AccordionItem({ q, a, isOpen, onToggle }: { q: string; a: string; isOpen: boolean; onToggle: () => void }) {
-  return (
-    <div className={`faq-item ${isOpen ? 'faq-item--open' : ''}`}>
-      <button className="faq-question" onClick={onToggle} aria-expanded={isOpen}>
-        <span>{q}</span>
-        <span className="faq-chevron" aria-hidden="true">{isOpen ? '−' : '+'}</span>
-      </button>
-      {isOpen && (
-        <div className="faq-answer" role="region">
-          <p>{a}</p>
-        </div>
-      )}
-    </div>
-  );
+function AccordionItem({ item, isOpen, onToggle }: { item: typeof FAQS[number]; isOpen: boolean; onToggle: () => void }) {
+  return <article className={`support-faq ${isOpen ? 'is-open' : ''}`}><button type="button" onClick={onToggle} aria-expanded={isOpen} aria-controls={`support-faq-${item.q}`}><span>{item.q}</span><i aria-hidden="true">{isOpen ? '−' : '+'}</i></button>{isOpen ? <div id={`support-faq-${item.q}`} role="region"><p>{item.a}</p>{item.to && item.label ? <Link className="support-faq__link" to={item.to}>{item.label} →</Link> : null}</div> : null}</article>;
 }
-
-const QUICK_LINKS = [
-  { icon: '📋', title: 'All Lists', desc: 'Browse every list with progress rings and filters', to: '/lists-overview' },
-  { icon: '✓', title: 'All Tasks', desc: 'Every task across all lists, grouped and sortable', to: '/tasks' },
-  { icon: '🎉', title: 'Completed', desc: 'Celebrate your wins with a timeline of done tasks', to: '/completed' },
-  { icon: '📈', title: 'Progress', desc: 'Analytics, leaderboard, overdue tracking, and more', to: '/progress' },
-  { icon: '🔍', title: 'Search', desc: 'Instantly find any list or task', to: '/search' },
-  { icon: '⚡', title: 'Activity', desc: 'Complete audit trail of every action', to: '/activity' },
-];
 
 export function SupportPage() {
   usePageSEO(PAGE_SEO.support);
+  const [query, setQuery] = useState('');
   const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const visibleFaqs = useMemo(() => {
+    const normalized = query.trim().toLocaleLowerCase();
+    return FAQS.map((item, index) => ({ item, index })).filter(({ item }) => !normalized || `${item.q} ${item.a}`.toLocaleLowerCase().includes(normalized));
+  }, [query]);
 
-  const toggle = (i: number) => setOpenFaq(openFaq === i ? null : i);
+  return <main className="support-page" aria-label="Help and support">
+    <header className="support-hub-hero"><div><p className="eyebrow">Help & support</p><h1>Get back to clear, quickly.</h1><p>Practical guidance for capturing work, choosing what matters now, and keeping your system calm.</p><label className="support-hub-search"><span className="sr-only">Search support</span><span aria-hidden="true">⌕</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search help topics…" /><button type="button" onClick={() => setQuery('')} aria-label="Clear help search" hidden={!query}>×</button></label></div><aside className="support-hub-hero__card"><span aria-hidden="true">✦</span><strong>Start here</strong><p>Capture the thought. Choose a small commitment. Let the rest wait.</p><Link className="primary-button" to="/now">Open Now</Link></aside></header>
 
-  return (
-    <div className="support-page">
+    <section className="support-hub-section" aria-labelledby="support-start"><div className="support-hub-section__heading"><p className="eyebrow">Common paths</p><h2 id="support-start">What would you like to do?</h2><p>Start with the outcome you need, not a manual.</p></div><div className="support-topic-grid">{SUPPORT_TOPICS.map((topic) => <Link key={topic.title} to={topic.to} className="support-topic"><span aria-hidden="true">{topic.icon}</span><div><strong>{topic.title}</strong><p>{topic.description}</p><small>{topic.action} →</small></div></Link>)}</div></section>
 
-      {/* ===== HERO ===== */}
-      <div className="support-hero">
-        <div className="support-hero__glow" aria-hidden="true" />
-        <div className="support-hero__content">
-          <p className="eyebrow">Help Center</p>
-          <h1 className="support-hero__title">
-            We're here for you.<br />
-            <span className="support-hero__accent">Every step of the way.</span>
-          </h1>
-          <p className="support-hero__subtitle">
-            Find answers instantly, learn keyboard shortcuts, explore features, and connect with the community.
-            Task-Laureate is built with love — and so is this support center.
-          </p>
-          <div className="support-hero__badges">
-            <span className="support-badge">⚡ Instant answers</span>
-            <span className="support-badge">🔓 Open source</span>
-            <span className="support-badge">🌍 Community-powered</span>
-            <span className="support-badge">♿ Accessible</span>
-          </div>
-        </div>
-        <div className="support-hero__visual" aria-hidden="true">
-          <div className="support-orb support-orb--1" />
-          <div className="support-orb support-orb--2" />
-          <div className="support-orb support-orb--3" />
-          <div className="support-hero__icon">🏆</div>
-        </div>
-      </div>
+    <div className="support-hub-split"><section className="support-hub-section" aria-labelledby="support-faq"><div className="support-hub-section__heading"><p className="eyebrow">Answers</p><h2 id="support-faq">Frequently asked questions</h2><p>{query ? `${visibleFaqs.length} matching answer${visibleFaqs.length === 1 ? '' : 's'}.` : 'The answers people need most often.'}</p></div><div className="support-faq-list">{visibleFaqs.length ? visibleFaqs.map(({ item, index }) => <AccordionItem key={item.q} item={item} isOpen={openFaq === index} onToggle={() => setOpenFaq((current) => current === index ? null : index)} />) : <div className="support-empty">No support topic matches “{query}”. Try a shorter phrase.</div>}</div></section>
+      <aside className="support-hub-aside"><section><p className="eyebrow">Keyboard</p><h2>Move without breaking focus</h2><div className="support-shortcuts">{SHORTCUTS.map((shortcut) => <div key={shortcut.label}><span>{shortcut.keys.map((key) => <kbd key={key}>{key}</kbd>)}</span><strong>{shortcut.label}</strong><small>{shortcut.category}</small></div>)}</div></section><section><p className="eyebrow">Your workspace</p><h2>Useful places</h2><nav className="support-utility-links"><Link to="/tasks">All tasks <span>→</span></Link><Link to="/progress">Progress & reflection <span>→</span></Link><Link to="/settings">Settings & privacy <span>→</span></Link></nav></section></aside></div>
 
-      {/* ===== QUICK NAVIGATION ===== */}
-      <section className="support-section" aria-labelledby="quick-nav-heading">
-        <div className="support-section__header">
-          <p className="eyebrow">Navigate</p>
-          <h2 id="quick-nav-heading">Jump to what you need</h2>
-          <p className="support-section__desc">Every view in Task-Laureate is one click away.</p>
-        </div>
-        <div className="quick-links-grid">
-          {QUICK_LINKS.map((link) => (
-            <Link key={link.to} to={link.to} className="quick-link-card">
-              <span className="quick-link-card__icon">{link.icon}</span>
-              <div>
-                <strong>{link.title}</strong>
-                <p>{link.desc}</p>
-              </div>
-              <span className="quick-link-card__arrow">→</span>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      {/* ===== KEYBOARD SHORTCUTS ===== */}
-      <section className="support-section support-section--alt" aria-labelledby="shortcuts-heading">
-        <div className="support-section__header">
-          <p className="eyebrow">Power User</p>
-          <h2 id="shortcuts-heading">Keyboard shortcuts</h2>
-          <p className="support-section__desc">Move at the speed of thought — no mouse required.</p>
-        </div>
-        <div className="shortcuts-grid">
-          {SHORTCUTS.map((s, i) => (
-            <div key={i} className="shortcut-row">
-              <div className="shortcut-keys">
-                {s.keys.map((k, j) => (
-                  <span key={j} className="kbd">{k}</span>
-                ))}
-              </div>
-              <span className="shortcut-label">{s.label}</span>
-              <span className="shortcut-category">{s.category}</span>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ===== FAQS ===== */}
-      <section className="support-section" aria-labelledby="faq-heading">
-        <div className="support-section__header">
-          <p className="eyebrow">FAQs</p>
-          <h2 id="faq-heading">Frequently asked questions</h2>
-          <p className="support-section__desc">Answers to the questions we hear most often.</p>
-        </div>
-        <div className="faq-list" role="list">
-          {FAQS.map((item, i) => (
-            <AccordionItem
-              key={i}
-              q={item.q}
-              a={item.a}
-              isOpen={openFaq === i}
-              onToggle={() => toggle(i)}
-            />
-          ))}
-        </div>
-      </section>
-
-      {/* ===== COMMUNITY & CONTACT ===== */}
-      <section className="support-section support-section--alt" aria-labelledby="community-heading">
-        <div className="support-section__header">
-          <p className="eyebrow">Community</p>
-          <h2 id="community-heading">Connect & contribute</h2>
-          <p className="support-section__desc">Task-Laureate is open source and community-powered. Join us.</p>
-        </div>
-        <div className="community-grid">
-          {COMMUNITY_LINKS.map((link) => (
-            <a
-              key={link.id}
-              href={link.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={`community-card ${link.className}`}
-              aria-label={`${link.title} — opens GitHub in a new tab`}
-            >
-              <div className="community-card__icon" aria-hidden="true">{link.icon}</div>
-              <div>
-                <strong>{link.title}</strong>
-                <p>{link.description}</p>
-              </div>
-              <span className="community-card__arrow" aria-hidden="true">↗</span>
-              <span className="sr-only"> Opens GitHub in a new tab.</span>
-            </a>
-          ))}
-        </div>
-      </section>
-
-      {/* ===== FOOTER CTA ===== */}
-      <div className="support-footer-cta">
-        <h2>Ready to take back your clarity?</h2>
-        <p>Everything you need is already here. Start with a list. Add a task. Check it off.</p>
-        <div className="support-footer-cta__actions">
-          <Link to="/" className="primary-button">Go to Dashboard →</Link>
-          <Link to="/tasks" className="secondary-button">View all tasks</Link>
-        </div>
-        <p className="support-footer-cta__credit">
-          About Task-Laureate · created by{' '}
-          <a href="https://ai-aarti.com" target="_blank" rel="noopener noreferrer"><img src="/.well-known/logo-small.svg" alt="" aria-hidden="true" />Aarti S Ravikumar</a>
-          {' '}·{' '}
-          <a href="https://saugus.pioneercss.org" target="_blank" rel="noopener noreferrer">PCSSII</a>
-          {' '}·{' '}
-          <a href="https://github.com/aartisr/task-laureate" target="_blank" rel="noopener noreferrer">Open Source on GitHub</a>
-        </p>
-      </div>
-
-    </div>
-  );
+    <section className="support-community" aria-labelledby="support-community"><div><p className="eyebrow">Community</p><h2 id="support-community">Need a human or want to contribute?</h2><p>Task-Laureate is open source. Share an idea, report a problem, or help shape what comes next.</p><p className="support-community__credit">Built with care by <a href="https://ai-aarti.com" target="_blank" rel="noopener noreferrer">Aarti S Ravikumar<span className="sr-only"> — opens in a new tab</span></a>.</p></div><div className="support-community__links">{COMMUNITY_LINKS.map((link) => <a key={link.id} href={link.href} target="_blank" rel="noopener noreferrer" className={`community-card ${link.className}`} aria-label={`${link.title} — opens GitHub in a new tab`}><span aria-hidden="true">{link.icon}</span><span><strong>{link.title}</strong><small>{link.description}</small></span><i aria-hidden="true">↗</i><span className="sr-only"> Opens GitHub in a new tab.</span></a>)}</div></section>
+  </main>;
 }

@@ -5,6 +5,7 @@ import { dashboardQueryOptions, listTasksQueryOptions } from '../core/contracts/
 import type { TodoItem, Priority } from '../core/contracts/domain';
 import { formatDateOnly, isDueDateBeforeToday, isDueDateToday } from '../core/domain/dateOnly';
 import { usePageSEO, PAGE_SEO } from '../hooks/usePageSEO';
+import { buildWeeklyReflection } from '../core/domain/reflection';
 
 const PRIORITY_ORDER: Priority[] = ['urgent', 'high', 'medium', 'low'];
 const PRIORITY_META: Record<Priority, { label: string; icon: string; color: string }> = {
@@ -77,6 +78,7 @@ export function ProgressPage() {
   const blocked = allTasks.filter((t) => t.status === 'blocked').length;
   const todo = allTasks.filter((t) => t.status === 'todo').length;
   const overallPct = total > 0 ? Math.round((done / total) * 100) : 0;
+  const reflection = buildWeeklyReflection(allTasks.filter((task) => task.status === 'done' && task.completedAt).map((task) => ({ occurredAt: task.completedAt!, energyLevel: null, estimateMinutes: null })));
 
   // Priority breakdown
   const byPriority = PRIORITY_ORDER.map((p) => {
@@ -156,6 +158,15 @@ export function ProgressPage() {
             <strong>Active now</strong>
             <p>Tasks currently in progress</p>
           </div>
+        </div>
+      </div>
+
+      <div className="panel">
+        <div className="panel-heading"><div><p className="eyebrow">Weekly reflection</p><h2>Momentum, without guilt</h2><p>Use what happened to plan the next week—not to judge the last one.</p></div></div>
+        <div className="insight-chips">
+          <div className="insight-chip insight-chip--success">✓ Completed <strong>{reflection.completedCount}</strong> tasks in the last seven days.</div>
+          <div className="insight-chip">⏱ Estimated focused time: <strong>{reflection.estimatedMinutesCompleted} minutes</strong>.</div>
+          {reflection.mostProductiveWeekday ? <div className="insight-chip">📈 Most active completion day: <strong>{reflection.mostProductiveWeekday}</strong>.</div> : null}
         </div>
       </div>
 

@@ -8,7 +8,8 @@ import { searchFeature } from '../../features/search/feature';
 import { settingsFeature } from '../../features/settings/feature';
 import { taskFeature } from '../../features/tasks/feature';
 import { collaborationFeature } from '../../features/collaboration/feature';
-import { clearBrowserWorkspace, createEmptyWorkspace, type WorkspaceData } from '../../infrastructure/persistence/workspace';
+import { executionFeature } from '../../features/execution/feature';
+import { clearBrowserWorkspace, createBufferedPersistence, createEmptyWorkspace, createIndexedDbWorkspaceAdapter, hydrateWorkspace, type WorkspaceData } from '../../infrastructure/persistence/workspace';
 import { createSupabaseCollaborationTodoRepository } from '../../infrastructure/persistence/supabaseCollaborationRepository';
 import { authProvider, persistenceConfig } from '../../config/persistence.config';
 import { setPersistenceStatus } from '../../infrastructure/persistence/status';
@@ -35,14 +36,18 @@ export const appServices = {
     activityFeature,
     settingsFeature,
     collaborationFeature,
+    executionFeature,
   ]),
 };
 
 let initialization: Promise<void> | null = null;
 let activeUserId: string | null = null;
 let workspaceGeneration = 0;
+let localWorkspaceBuffer: ReturnType<typeof createBufferedPersistence> | null = null;
 
 function replaceRepository(repository: TodoRepository) {
+  localWorkspaceBuffer?.dispose();
+  localWorkspaceBuffer = null;
   appServices.queryClient.clear();
   appServices.repository = repository;
 }
@@ -78,6 +83,15 @@ export function initializePersistence(options: { force?: boolean } = {}): Promis
     const generation = workspaceGeneration;
     const isCurrentGeneration = () => generation === workspaceGeneration;
     if (persistenceConfig.driver !== 'supabase') {
+      const adapter = createIndexedDbWorkspaceAdapter(persistenceConfig.local.storageKey);
+      const workspace = await hydrateWorkspace(adapter, createEmptyWorkspace());
+      if (!isCurrentGeneration()) return;
+      const buffer = createBufferedPersistence(adapter, {
+        onSaveError: () => setPersistenceStatus('error', 'Local changes are waiting to be saved in this browser.'),
+        onSaveSuccess: () => setPersistenceStatus('local', 'Saving to this browser only.'),
+      });
+      replaceRepository(createMemoryTodoRepository(workspace, { onChange: (next) => buffer.schedule(next) }));
+      localWorkspaceBuffer = buffer;
       setPersistenceStatus('local', 'Saving to this browser only.');
       return;
     }
