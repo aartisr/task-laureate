@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { AppProviders } from './app/providers/AppProviders';
+import { installModuleVersionRecovery } from './app/runtime/moduleRecovery';
 import './core/themes/themes.css';
 import './styles/global.css';
 
@@ -9,6 +10,8 @@ const rootElement = document.getElementById('root');
 if (!rootElement) {
   throw new Error('Root element #root was not found.');
 }
+
+installModuleVersionRecovery();
 
 ReactDOM.createRoot(rootElement).render(
   <React.StrictMode>
