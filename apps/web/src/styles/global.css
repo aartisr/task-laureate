@@ -111,6 +111,7 @@ html[data-theme='warm-community'] .background-watermark { opacity: .09; }
 .calendar-schedule-control .field span { color: var(--color-text-secondary); font-size: .78rem; font-weight: var(--font-weight-semibold); }
 .calendar-schedule-control .field small { color: var(--color-text-tertiary); font-size: .72rem; line-height: 1.35; }
 .calendar-schedule-control :is(input, select) { min-inline-size: 0; min-block-size: 2.7rem; padding: .4rem .55rem; border: 1px solid var(--color-border-default); border-radius: var(--radius-sm); background: var(--color-bg-primary); color: var(--color-text-primary); font: inherit; }
+.calendar-schedule-control__selected-calendar { display: flex; align-items: center; min-block-size: 2.7rem; padding: .4rem .55rem; border: 1px solid var(--color-border-default); border-radius: var(--radius-sm); background: color-mix(in srgb, var(--color-bg-secondary) 72%, var(--color-bg-primary)); color: var(--color-text-primary); }
 .calendar-schedule-control :is(input, select):focus-visible { border-color: var(--color-status-info); outline: 3px solid color-mix(in srgb, var(--color-status-info) 26%, transparent); outline-offset: 1px; }
 .calendar-schedule-control__actions { display: flex; flex-wrap: wrap; gap: var(--spacing-2); }
 .calendar-schedule-control__actions .secondary-button { display: inline-flex; align-items: center; text-decoration: none; }

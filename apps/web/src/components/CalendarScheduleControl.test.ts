@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { calendarBlockPresentation, calendarSyncLabel } from './CalendarScheduleControl';
+import { calendarBlockPresentation, calendarSyncLabel, canScheduleCalendarBlock } from './CalendarScheduleControl';
 
 describe('calendar sync checkpoint labels', () => {
   it('makes an unverified block explicit instead of implying it is synchronized', () => {
@@ -25,5 +25,10 @@ describe('calendar sync checkpoint labels', () => {
       startLabel: 'New start',
       scheduleLabel: 'Add a new calendar block',
     });
+  });
+
+  it('allows a missing block to be restored using its saved Google calendar even when the calendar list is empty', () => {
+    expect(canScheduleCalendarBlock({ startsAt: '2026-08-13T11:15', existingBlock: { calendar_id: 'primary' } })).toBe(true);
+    expect(canScheduleCalendarBlock({ startsAt: '2026-08-13T11:15' })).toBe(false);
   });
 });
