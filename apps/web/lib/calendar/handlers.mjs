@@ -116,11 +116,13 @@ export async function schedule(request, response) {
 export async function sync(request, response) {
   if (only(request, response, 'POST') !== true) return; const value = config(); if (!fullyConfigured(value)) return respond(response, 503, { code: 'disabled' });
   const identity = await userFromRequest(request, value); if (!identity) return respond(response, 401, { code: 'not_signed_in' });
-  const { connectionId, calendarId } = request.body ?? {};
-  if (typeof connectionId !== 'string' || typeof calendarId !== 'string' || !calendarId.trim()) return respond(response, 400, { code: 'invalid_request' });
+  const { taskId, connectionId, calendarId } = request.body ?? {};
+  if (typeof taskId !== 'string' || !/^[0-9a-f-]{36}$/i.test(taskId) || typeof connectionId !== 'string' || typeof calendarId !== 'string' || !calendarId.trim()) return respond(response, 400, { code: 'invalid_request' });
+  const task = await userRpc(value, identity.authorization, 'get_calendar_schedule_task', { p_task_id: taskId });
+  if (!task.ok) return respond(response, 403, { code: 'task_unavailable' });
   const row = await connectionFor(value, identity.user.id, connectionId, 'id,encrypted_refresh_token');
   if (!row) return respond(response, 403, { code: 'connection_unavailable' });
-  try { await ensureGoogleWatch(value, row, calendarId.trim()).catch(() => undefined); await syncGoogleCalendar(value, row, calendarId.trim()); return respond(response, 200, { reconciled: true }); }
+  try { await ensureGoogleWatch(value, row, calendarId.trim()).catch(() => undefined); await syncGoogleCalendar(value, row, calendarId.trim()); const block = await service(value, `calendar_task_blocks?task_id=eq.${encodeURIComponent(taskId)}&connection_id=eq.${encodeURIComponent(connectionId)}&select=calendar_id,starts_at,duration_minutes,external_event_url,sync_state,last_reconciled_at&limit=1`); return respond(response, 200, { reconciled: true, block: block.ok && Array.isArray(block.payload) ? block.payload[0] ?? null : null }); }
   catch (error) { const code = error instanceof Error && error.message === 'reauthorization_required' ? 'reauthorization_required' : 'provider_unavailable'; return respond(response, code === 'reauthorization_required' ? 401 : 503, { code }); }
 }
 

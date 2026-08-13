@@ -58,7 +58,9 @@ export async function scheduleCalendarBlock(input: { taskId: string; connectionI
   return authenticatedRequest('/api/calendar/schedule', { method: 'POST', body: JSON.stringify(input) }) as Promise<{ block: CalendarBlock; eventUrl?: string | null }>;
 }
 export async function removeCalendarBlock(taskId: string, connectionId: string) { await authenticatedRequest('/api/calendar/remove', { method: 'POST', body: JSON.stringify({ taskId, connectionId }) }); }
-export async function reconcileCalendar(connectionId: string, calendarId: string) { await authenticatedRequest('/api/calendar/sync', { method: 'POST', body: JSON.stringify({ connectionId, calendarId }) }); }
+export async function reconcileCalendar(taskId: string, connectionId: string, calendarId: string) {
+  return authenticatedRequest('/api/calendar/sync', { method: 'POST', body: JSON.stringify({ taskId, connectionId, calendarId }) }) as Promise<{ reconciled: true; block: CalendarBlock | null }>;
+}
 export async function disconnectGoogleCalendar() { await authenticatedRequest('/api/calendar/disconnect', { method: 'POST' }); }
 export async function getCalendarTaskBlock(taskId: string) {
   const payload = await authenticatedRequest(`/api/calendar/task-block?taskId=${encodeURIComponent(taskId)}`) as { block?: CalendarBlock | null } | null;
