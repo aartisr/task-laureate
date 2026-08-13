@@ -39,10 +39,16 @@ export function canScheduleCalendarBlock(input: { startsAt: string; connected?: 
   return Boolean(input.startsAt && input.connected);
 }
 
+export function displayedCalendarDuration(estimateMinutes: number | null | undefined, block: { duration_minutes: number; sync_state?: string } | null | undefined) {
+  const blockDuration = block?.duration_minutes;
+  if (block?.sync_state !== 'removed_external' && typeof blockDuration === 'number' && Number.isInteger(blockDuration) && blockDuration >= 5) return blockDuration;
+  return estimateMinutes && estimateMinutes >= 5 ? estimateMinutes : 30;
+}
+
 export function CalendarScheduleControl({ task, scheduledStartAt, estimateMinutes, existingBlock, onScheduled }: { task: TodoItem; scheduledStartAt?: string | null; estimateMinutes?: number | null; existingBlock?: { calendar_id: string; starts_at: string; duration_minutes: number; external_event_url?: string | null; sync_state?: string; last_reconciled_at?: string | null } | null; onScheduled?: () => void | Promise<void> }) {
   const [status, setStatus] = useState<CalendarStatus | null>(null);
   const [startsAt, setStartsAt] = useState(() => localDateTime(scheduledStartAt));
-  const [duration, setDuration] = useState(estimateMinutes && estimateMinutes >= 5 ? estimateMinutes : 30);
+  const [duration, setDuration] = useState(() => displayedCalendarDuration(estimateMinutes, existingBlock));
   const [calendarId, setCalendarId] = useState('primary'); const [busy, setBusy] = useState(false); const [notice, setNotice] = useState('');
   const [checkedAt, setCheckedAt] = useState<string | null>(null);
   const selectedCalendar = useMemo(() => status?.calendars?.find((calendar) => calendar.id === calendarId), [calendarId, status]);
@@ -58,6 +64,7 @@ export function CalendarScheduleControl({ task, scheduledStartAt, estimateMinute
       setCheckedAt(null);
     } else if (scheduledStartAt) setStartsAt(localDateTime(scheduledStartAt));
   }, [scheduledStartAt, existingBlock?.sync_state]);
+  useEffect(() => { setDuration(displayedCalendarDuration(estimateMinutes, existingBlock)); }, [estimateMinutes, existingBlock?.duration_minutes, existingBlock?.sync_state]);
   const connect = async () => { setBusy(true); setNotice(''); try { await beginGoogleCalendarConnection(); } catch (error) { setNotice(messageFor(error)); setBusy(false); } };
   const schedule = async () => { if (!status?.connectionId) return; setBusy(true); setNotice(''); try { const result = await scheduleCalendarBlock({ taskId: task.id, connectionId: status.connectionId, calendarId: targetCalendarId, startsAt: new Date(startsAt).toISOString(), durationMinutes: duration }); await onScheduled?.(); setNotice(result.eventUrl ? 'Calendar block confirmed. You can open it in Google Calendar.' : 'Calendar block confirmed.'); } catch (error) { setNotice(messageFor(error)); } finally { setBusy(false); } };
   const remove = async () => { if (!status?.connectionId) return; setBusy(true); setNotice(''); try { await removeCalendarBlock(task.id, status.connectionId); await onScheduled?.(); setNotice('Calendar block removed. Your task remains in Task-Laureate.'); } catch (error) { setNotice(messageFor(error)); } finally { setBusy(false); } };

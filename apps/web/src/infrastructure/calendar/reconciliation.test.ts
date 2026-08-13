@@ -43,6 +43,18 @@ describe('provider-neutral calendar reconciliation', () => {
     });
   });
 
+  it('accepts an owned resize and carries the exact new duration to the database boundary', () => {
+    const resized = ownedEventChange(event({ end: { dateTime: '2026-08-14T15:00:00.000Z' } }), block, connectionId);
+    expect(resized).toMatchObject({ deleted: false, startsAt: '2026-08-14T14:00:00.000Z', durationMinutes: 60 });
+    expect(shouldApply(resized, block)).toBe(true);
+  });
+
+  it('never applies an external resize whose revision or modification time is stale', () => {
+    const resized = ownedEventChange(event({ end: { dateTime: '2026-08-14T15:00:00.000Z' } }), block, connectionId)!;
+    expect(shouldApply({ ...resized, revision: block.provider_revision }, block)).toBe(false);
+    expect(shouldApply({ ...resized, updatedAt: '2026-08-13T09:00:00.000Z' }, block)).toBe(false);
+  });
+
   it.each([
     ['unknown event id', event({ id: 'ordinary-event' })],
     ['missing task ownership marker', event({ extendedProperties: { private: { taskLaureateConnectionId: connectionId } } })],
