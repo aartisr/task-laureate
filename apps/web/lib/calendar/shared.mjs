@@ -6,7 +6,12 @@ const stateMaxAgeMs = 10 * 60 * 1000;
 export function respond(response, status, payload) { for (const [name, value] of Object.entries(jsonHeaders)) response.setHeader(name, value); return response.status(status).json(payload); }
 export function config() { const supabaseUrl = (process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL ?? '').replace(/\/$/, ''); return { enabled: process.env.CALENDAR_SCHEDULING_ENABLED === 'true', appUrl: (process.env.PUBLIC_APP_URL ?? '').replace(/\/$/, ''), googleClientId: process.env.GOOGLE_CALENDAR_CLIENT_ID, googleClientSecret: process.env.GOOGLE_CALENDAR_CLIENT_SECRET, stateSecret: process.env.CALENDAR_OAUTH_STATE_SECRET, tokenKey: process.env.CALENDAR_TOKEN_ENCRYPTION_KEY, supabaseUrl, publishableKey: process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY, serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY }; }
 export function configured(value) { return typeof value === 'string' && value.trim().length > 0; }
-export function fullyConfigured(value) { return value.enabled && [value.appUrl, value.googleClientId, value.googleClientSecret, value.stateSecret, value.tokenKey, value.supabaseUrl, value.publishableKey, value.serviceRoleKey].every(configured); }
+export function calendarConfigurationIssue(value) {
+  if (!value.enabled) return 'disabled';
+  if (![value.appUrl, value.googleClientId, value.googleClientSecret, value.stateSecret, value.tokenKey, value.supabaseUrl, value.publishableKey, value.serviceRoleKey].every(configured)) return 'missing_configuration';
+  try { key(value.tokenKey); return null; } catch { return 'invalid_token_encryption_key'; }
+}
+export function fullyConfigured(value) { return calendarConfigurationIssue(value) === null; }
 export function callbackUrl(value) { return `${value.appUrl}/api/calendar/google/callback`; }
 export async function userFromRequest(request, value) { const authorization = request.headers.authorization; if (!authorization?.startsWith('Bearer ') || !configured(value.supabaseUrl) || !configured(value.publishableKey)) return null; const response = await fetch(`${value.supabaseUrl}/auth/v1/user`, { headers: { apikey: value.publishableKey, Authorization: authorization } }); if (!response.ok) return null; const user = await response.json().catch(() => null); return typeof user?.id === 'string' ? { user, authorization } : null; }
 export async function userRpc(value, authorization, name, body) { const response = await fetch(`${value.supabaseUrl}/rest/v1/rpc/${name}`, { method: 'POST', headers: { ...jsonHeaders, apikey: value.publishableKey, Authorization: authorization }, body: JSON.stringify(body) }); return { ok: response.ok, status: response.status, payload: await response.json().catch(() => null) }; }

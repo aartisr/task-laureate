@@ -18,6 +18,13 @@ function RedirectUri({ value }: { value?: string | null }) {
   return <p className="calendar-connection-panel__redirect"><span>Google redirect URI</span><code>{value}</code></p>;
 }
 
+function configurationMessage(issue?: CalendarStatus['configurationIssue']) {
+  if (issue === 'invalid_token_encryption_key') return 'The server encryption key is invalid. Set CALENDAR_TOKEN_ENCRYPTION_KEY to a base64-encoded 32-byte value, then redeploy.';
+  if (issue === 'missing_configuration') return 'A required calendar server setting is missing. Complete the Google, Supabase, and encryption settings, then redeploy.';
+  if (issue === 'disabled') return 'Calendar scheduling is disabled for this environment.';
+  return 'Google Calendar may not be enabled for this workspace, or the connection check could not finish.';
+}
+
 /**
  * A provider-neutral account-level entry point. Task pages own scheduling;
  * Settings owns connection lifecycle, keeping the two decisions separate.
@@ -77,7 +84,7 @@ export function CalendarConnectionPanel({ enabled }: { enabled: boolean }) {
       <div>
         <p className="calendar-connection-panel__eyebrow">Calendar scheduling</p>
         <h3>Calendar scheduling is unavailable right now</h3>
-        <p>Google Calendar may not be enabled for this workspace, or the connection check could not finish. Your tasks are safe and unchanged.</p>
+        <p>{configurationMessage(status.configurationIssue)} Your tasks are safe and unchanged.</p>
         <RedirectUri value={status.redirectUri} />
       </div>
       {enabled ? <button className="secondary-button" type="button" onClick={() => { setStatus(null); setCheckVersion((version) => version + 1); }}>Retry connection check</button> : null}

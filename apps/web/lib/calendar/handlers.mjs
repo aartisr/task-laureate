@@ -1,4 +1,4 @@
-import { callbackUrl, config, createState, decrypt, encrypt, fullyConfigured, google, googleAuthorizationUrl, readState, refreshGoogleAccessToken, respond, service, userFromRequest, userRpc } from './shared.mjs';
+import { callbackUrl, calendarConfigurationIssue, config, createState, decrypt, encrypt, fullyConfigured, google, googleAuthorizationUrl, readState, refreshGoogleAccessToken, respond, service, userFromRequest, userRpc } from './shared.mjs';
 
 const only = (request, response, method) => request.method === method || (response.setHeader('Allow', method), respond(response, 405, { code: 'method_not_allowed' }));
 const redirect = (response, location) => { response.setHeader('Cache-Control', 'no-store'); response.writeHead(302, { Location: location }); response.end(); };
@@ -12,17 +12,23 @@ export async function connect(request, response) {
 }
 
 export async function callback(request, response) {
-  const value = config(); if (!fullyConfigured(value)) return redirect(response, `${value.appUrl || ''}/settings?calendar=unavailable`);
-  const url = new URL(request.url, value.appUrl); const state = readState(value, url.searchParams.get('state')); const code = url.searchParams.get('code');
-  if (!state || !code || url.searchParams.get('error')) return redirect(response, `${value.appUrl}/settings?calendar=cancelled`);
-  const tokenResponse = await fetch('https://oauth2.googleapis.com/token', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ code, client_id: value.googleClientId, client_secret: value.googleClientSecret, redirect_uri: callbackUrl(value), grant_type: 'authorization_code' }) });
-  const tokens = await tokenResponse.json().catch(() => null); if (!tokenResponse.ok || typeof tokens?.refresh_token !== 'string') return redirect(response, `${value.appUrl}/settings?calendar=failed`);
-  const stored = await service(value, 'calendar_provider_connections?on_conflict=owner_id,provider', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify([{ owner_id: state.userId, provider: 'google_calendar', encrypted_refresh_token: encrypt(value, tokens.refresh_token), scopes: typeof tokens.scope === 'string' ? tokens.scope.split(' ') : [], default_calendar_id: 'primary', status: 'active', connected_at: new Date().toISOString(), updated_at: new Date().toISOString() }]) });
-  return redirect(response, `${value.appUrl}/settings?calendar=${stored.ok ? 'connected' : 'failed'}`);
+  const value = config();
+  if (!fullyConfigured(value)) return redirect(response, `${value.appUrl || ''}/settings?calendar=unavailable`);
+  try {
+    const url = new URL(request.url, value.appUrl); const state = readState(value, url.searchParams.get('state')); const code = url.searchParams.get('code');
+    if (!state || !code || url.searchParams.get('error')) return redirect(response, `${value.appUrl}/settings?calendar=cancelled`);
+    const tokenResponse = await fetch('https://oauth2.googleapis.com/token', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ code, client_id: value.googleClientId, client_secret: value.googleClientSecret, redirect_uri: callbackUrl(value), grant_type: 'authorization_code' }) });
+    const tokens = await tokenResponse.json().catch(() => null); if (!tokenResponse.ok || typeof tokens?.refresh_token !== 'string') return redirect(response, `${value.appUrl}/settings?calendar=failed`);
+    const stored = await service(value, 'calendar_provider_connections?on_conflict=owner_id,provider', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify([{ owner_id: state.userId, provider: 'google_calendar', encrypted_refresh_token: encrypt(value, tokens.refresh_token), scopes: typeof tokens.scope === 'string' ? tokens.scope.split(' ') : [], default_calendar_id: 'primary', status: 'active', connected_at: new Date().toISOString(), updated_at: new Date().toISOString() }]) });
+    return redirect(response, `${value.appUrl}/settings?calendar=${stored.ok ? 'connected' : 'failed'}`);
+  } catch (error) {
+    console.error('[calendar] OAuth callback failed', { reason: error instanceof Error ? error.message : 'unknown_error' });
+    return redirect(response, `${value.appUrl}/settings?calendar=failed`);
+  }
 }
 
 export async function status(request, response) {
-  if (only(request, response, 'GET') !== true) return; const value = config(); const redirectUri = value.appUrl ? callbackUrl(value) : null; if (!fullyConfigured(value)) return respond(response, 200, { status: 'unavailable', redirectUri });
+  if (only(request, response, 'GET') !== true) return; const value = config(); const redirectUri = value.appUrl ? callbackUrl(value) : null; const configurationIssue = calendarConfigurationIssue(value); if (!fullyConfigured(value)) return respond(response, 200, { status: 'unavailable', redirectUri, configurationIssue });
   const identity = await userFromRequest(request, value); if (!identity) return respond(response, 401, { code: 'not_signed_in' });
   const connection = await service(value, `calendar_provider_connections?owner_id=eq.${encodeURIComponent(identity.user.id)}&provider=eq.google_calendar&select=id,default_calendar_id,status,encrypted_refresh_token&limit=1`); const row = connection.ok && Array.isArray(connection.payload) ? connection.payload[0] : null;
   if (!row || row.status !== 'active') return respond(response, 200, { status: row?.status ?? 'disconnected', redirectUri });
