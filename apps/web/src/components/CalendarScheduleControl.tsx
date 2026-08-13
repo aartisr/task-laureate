@@ -23,7 +23,7 @@ export function CalendarScheduleControl({ task, scheduledStartAt, estimateMinute
   const [duration, setDuration] = useState(estimateMinutes && estimateMinutes >= 5 ? estimateMinutes : 30);
   const [calendarId, setCalendarId] = useState('primary'); const [busy, setBusy] = useState(false); const [notice, setNotice] = useState('');
   const selectedCalendar = useMemo(() => status?.calendars?.find((calendar) => calendar.id === calendarId), [calendarId, status]);
-  const load = () => void getCalendarStatus().then((next) => { setStatus(next); setCalendarId((current) => next.calendars?.some((calendar) => calendar.id === current) ? current : next.defaultCalendarId ?? next.calendars?.find((calendar) => calendar.primary)?.id ?? 'primary'); }).catch(() => setStatus({ status: 'unavailable' }));
+  const load = () => void getCalendarStatus().then((next) => { const calendars = next.calendars ?? []; setStatus(next); setCalendarId((current) => calendars.some((calendar) => calendar.id === current) ? current : next.defaultCalendarId ?? calendars.find((calendar) => calendar.primary)?.id ?? 'primary'); }).catch(() => setStatus({ status: 'unavailable' }));
   useEffect(load, []);
   useEffect(() => { if (scheduledStartAt) setStartsAt(localDateTime(scheduledStartAt)); }, [scheduledStartAt]);
   const connect = async () => { setBusy(true); setNotice(''); try { await beginGoogleCalendarConnection(); } catch (error) { setNotice(messageFor(error)); setBusy(false); } };

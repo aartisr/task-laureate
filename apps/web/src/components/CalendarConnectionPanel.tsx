@@ -21,6 +21,7 @@ export function CalendarConnectionPanel({ enabled }: { enabled: boolean }) {
   const [status, setStatus] = useState<CalendarStatus | null>(enabled ? null : { status: 'unavailable' });
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState('');
+  const [checkVersion, setCheckVersion] = useState(0);
 
   useEffect(() => {
     if (!enabled) {
@@ -29,11 +30,15 @@ export function CalendarConnectionPanel({ enabled }: { enabled: boolean }) {
     }
 
     let active = true;
+    const fallbackId = window.setTimeout(() => {
+      if (active) setStatus({ status: 'unavailable' });
+    }, 8_500);
     void getCalendarStatus()
       .then((next) => { if (active) setStatus(next); })
-      .catch(() => { if (active) setStatus({ status: 'unavailable' }); });
-    return () => { active = false; };
-  }, [enabled]);
+      .catch(() => { if (active) setStatus({ status: 'unavailable' }); })
+      .finally(() => window.clearTimeout(fallbackId));
+    return () => { active = false; window.clearTimeout(fallbackId); };
+  }, [enabled, checkVersion]);
 
   const connect = async () => {
     setBusy(true);
@@ -66,9 +71,10 @@ export function CalendarConnectionPanel({ enabled }: { enabled: boolean }) {
     return <section className="calendar-connection-panel calendar-connection-panel--unavailable">
       <div>
         <p className="calendar-connection-panel__eyebrow">Calendar scheduling</p>
-        <h3>Protect time for your important work</h3>
-        <p>This workspace has not enabled Google Calendar scheduling yet. When it is available, you will connect once here and choose a time from each task.</p>
+        <h3>Calendar scheduling is unavailable right now</h3>
+        <p>Google Calendar may not be enabled for this workspace, or the connection check could not finish. Your tasks are safe and unchanged.</p>
       </div>
+      {enabled ? <button className="secondary-button" type="button" onClick={() => { setStatus(null); setCheckVersion((version) => version + 1); }}>Retry connection check</button> : null}
     </section>;
   }
 
