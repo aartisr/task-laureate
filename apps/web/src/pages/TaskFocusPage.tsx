@@ -45,6 +45,6 @@ export function TaskFocusPage({ listId, taskId }: { listId: string; taskId: stri
       onComplete={async () => { if (task.status === 'done') await mutations.updateTask.mutateAsync({ taskId, input: { status: 'todo' } }); else await mutations.completeTask.mutateAsync({ taskId, isComplete: true }); }}
     />
     {canEdit ? <TaskExecutionControls task={task} /> : null}
-    {canEdit && calendarEnabled ? <CalendarScheduleControl task={task} scheduledStartAt={planningQuery.data?.scheduledStartAt} estimateMinutes={planningQuery.data?.estimateMinutes} existingBlock={calendarBlockQuery.data} onScheduled={() => { void calendarBlockQuery.refetch(); void planningQuery.refetch(); }} /> : null}
+    {canEdit && calendarEnabled ? <CalendarScheduleControl task={task} scheduledStartAt={planningQuery.data?.scheduledStartAt} estimateMinutes={planningQuery.data?.estimateMinutes} existingBlock={calendarBlockQuery.data} onScheduled={async () => { await Promise.all([calendarBlockQuery.refetch(), planningQuery.refetch()]); }} /> : null}
   </main>;
 }
