@@ -12,6 +12,7 @@ describe('calendar scheduling response boundary', () => {
     expect(normalizeCalendarStatus({
       status: 'connected',
       connectionId: 'connection-1',
+      redirectUri: 'https://tasks.example.com/api/calendar/google/callback',
       calendars: [
         { id: 'primary', summary: 'Primary', primary: true },
         { id: 12, summary: 'Invalid', primary: false },
@@ -19,6 +20,7 @@ describe('calendar scheduling response boundary', () => {
     })).toEqual({
       status: 'connected',
       connectionId: 'connection-1',
+      redirectUri: 'https://tasks.example.com/api/calendar/google/callback',
       calendars: [{ id: 'primary', summary: 'Primary', primary: true }],
     });
   });

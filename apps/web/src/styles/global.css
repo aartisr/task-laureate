@@ -135,6 +135,9 @@ html[data-theme='warm-community'] .background-watermark { opacity: .09; }
 .calendar-connection-panel__eyebrow { color: var(--color-status-info); font-size: .72rem; font-weight: var(--font-weight-bold); letter-spacing: .1em; text-transform: uppercase; }
 .calendar-connection-panel > :is(.primary-button, .secondary-button) { justify-self: start; }
 .calendar-connection-panel__notice { padding: .65rem .75rem; border-radius: var(--radius-sm); background: color-mix(in srgb, var(--color-status-info) 10%, var(--color-bg-primary)); color: var(--color-text-primary); font-size: .875rem; }
+.calendar-connection-panel__redirect { display: grid; gap: .35rem; margin-top: var(--spacing-3) !important; color: var(--color-text-secondary); font-size: .8rem; }
+.calendar-connection-panel__redirect span { font-weight: var(--font-weight-semibold); }
+.calendar-connection-panel__redirect code { overflow-wrap: anywhere; padding: .5rem .6rem; border: 1px solid var(--color-border-default); border-radius: var(--radius-sm); background: var(--color-bg-primary); color: var(--color-text-primary); font-family: var(--font-family-mono, ui-monospace, SFMono-Regular, Menlo, monospace); font-size: .78rem; }
 
 @media (max-width: 47.9375rem) {
   .calendar-schedule-control__form { grid-template-columns: minmax(0, 1fr); }

@@ -2,7 +2,7 @@ import { authProvider } from '../../config/persistence.config';
 
 export type CalendarConnectionStatus = 'unavailable' | 'disconnected' | 'connected' | 'reauthorization_required';
 export type CalendarOption = { id: string; summary: string; primary: boolean };
-export type CalendarStatus = { status: CalendarConnectionStatus; connectionId?: string; defaultCalendarId?: string; calendars?: CalendarOption[] };
+export type CalendarStatus = { status: CalendarConnectionStatus; redirectUri?: string | null; connectionId?: string; defaultCalendarId?: string; calendars?: CalendarOption[] };
 export type CalendarBlock = { id: string; calendar_id: string; starts_at: string; duration_minutes: number; external_event_url?: string | null };
 const sessionTimeoutMs = 5_000;
 const requestTimeoutMs = 8_000;
@@ -18,6 +18,7 @@ export function normalizeCalendarStatus(value: unknown): CalendarStatus {
     : undefined;
   return {
     status: payload.status as CalendarConnectionStatus,
+    ...(typeof payload.redirectUri === 'string' || payload.redirectUri === null ? { redirectUri: payload.redirectUri } : {}),
     ...(typeof payload.connectionId === 'string' ? { connectionId: payload.connectionId } : {}),
     ...(typeof payload.defaultCalendarId === 'string' ? { defaultCalendarId: payload.defaultCalendarId } : {}),
     ...(calendars ? { calendars } : {}),
