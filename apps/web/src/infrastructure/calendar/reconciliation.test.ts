@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { durationMinutes, googleTaskEventPayload, isFreshNotification, ownedEventChange, shouldApply, validInstant } from '../../../lib/calendar/reconciliation.mjs';
+import { durationMinutes, googleTaskEventPayload, isFreshNotification, isMissingGoogleEventStatus, ownedEventChange, shouldApply, validInstant } from '../../../lib/calendar/reconciliation.mjs';
 
 const connectionId = '55555555-5555-4555-8555-555555555555';
 const block = {
@@ -26,6 +26,13 @@ describe('provider-neutral calendar reconciliation', () => {
       id: 'event-1', status: 'confirmed', summary: 'Finish report',
       start: { dateTime: '2026-08-14T14:00:00.000Z' }, end: { dateTime: '2026-08-14T14:30:00.000Z' },
     });
+  });
+
+  it('treats an already-deleted Google event as a successful local removal', () => {
+    expect(isMissingGoogleEventStatus(404)).toBe(true);
+    expect(isMissingGoogleEventStatus(410)).toBe(true);
+    expect(isMissingGoogleEventStatus(403)).toBe(false);
+    expect(isMissingGoogleEventStatus(500)).toBe(false);
   });
 
   it('accepts a valid owned time move and normalizes its values', () => {

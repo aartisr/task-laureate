@@ -22,6 +22,11 @@ export function googleTaskEventPayload({ eventId, taskId, connectionId, title, l
   };
 }
 
+/** Google uses 404 and 410 for an event that is already unavailable to us. */
+export function isMissingGoogleEventStatus(status) {
+  return status === 404 || status === 410;
+}
+
 export function ownedEventChange(event, block, connectionId) {
   if (!event || !block || event.id !== block.external_event_id) return null;
   const properties = event.extendedProperties?.private;

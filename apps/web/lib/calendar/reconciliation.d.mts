@@ -14,6 +14,7 @@ export type ReconciliationChange = {
 };
 export function durationMinutes(start: string, end: string): number | null;
 export function googleTaskEventPayload(input: { eventId: string; taskId: string; connectionId: string; title: string; listTitle?: string | null; startsAt: string; durationMinutes: number }): { id: string; status: 'confirmed'; summary: string; description: string; start: { dateTime: string }; end: { dateTime: string }; extendedProperties: { private: { taskLaureateTaskId: string; taskLaureateConnectionId: string; schedulingMode: 'two-way' } } };
+export function isMissingGoogleEventStatus(status: unknown): boolean;
 export function validInstant(value: unknown): string | null;
 export function ownedEventChange(event: unknown, block: ReconciliationBlock | undefined, connectionId: string): ReconciliationChange | null;
 export function shouldApply(change: ReconciliationChange | null, block: ReconciliationBlock | undefined): boolean;
