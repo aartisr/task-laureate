@@ -1,5 +1,5 @@
 import type { ActivityEvent, DashboardSummary, ListTemplate, SearchResult, TodoItem, TodoList } from '../../core/contracts/domain';
-import type { AttachmentRepository, CollaborationRepository, CursorPage, CursorPageInput, DependencyRepository, ListPageInput, ScalableTaskFeedRepository, TaskFeedInput, TaskFeedPage, TodoListInput, TodoListUpdateInput, TodoRepository, TodoTaskInput, TodoTaskUpdateInput } from '../../core/contracts/repository';
+import type { AttachmentRepository, CollaborationRepository, CursorPage, CursorPageInput, DependencyRepository, IdempotentCreationRepository, ListPageInput, ScalableTaskFeedRepository, TaskFeedInput, TaskFeedPage, TodoListInput, TodoListUpdateInput, TodoRepository, TodoTaskInput, TodoTaskUpdateInput } from '../../core/contracts/repository';
 import { classifyAttachment, type TaskAttachment } from '../../core/domain/attachments';
 import type { DependencyTaskRef, TaskDependency, TaskDependencySummary } from '../../core/domain/dependencies';
 import type { CaptureRepository, CaptureTaskRepository, TaskEventRepository, TaskPlanningRepository } from '../../core/contracts/antiBacklog';
@@ -43,7 +43,7 @@ function rpcRecord<T>(value: T | T[]): T { return Array.isArray(value) ? first(v
  * Postgres; this adapter only maps the public domain contract to Data API calls.
  * It is composed with the collaboration gateway rather than duplicating invite code.
  */
-export function createSupabaseCollaborationTodoRepository(config: SupabasePersistenceConfig, request: FetchLike = fetch): TodoRepository & CollaborationRepository & ScalableTaskFeedRepository & AttachmentRepository & DependencyRepository & TaskPlanningRepository & TaskEventRepository & CaptureRepository & CaptureTaskRepository {
+export function createSupabaseCollaborationTodoRepository(config: SupabasePersistenceConfig, request: FetchLike = fetch): TodoRepository & CollaborationRepository & ScalableTaskFeedRepository & AttachmentRepository & DependencyRepository & TaskPlanningRepository & TaskEventRepository & CaptureRepository & CaptureTaskRepository & IdempotentCreationRepository {
   if (!config.url || !config.publishableKey) throw new Error('Collaboration persistence requires configured Supabase credentials.');
   const rest = `${config.url.replace(/\/$/, '')}/rest/v1`;
   const storage = `${config.url.replace(/\/$/, '')}/storage/v1`;
@@ -122,6 +122,7 @@ export function createSupabaseCollaborationTodoRepository(config: SupabasePersis
       return row ? listFromRow(row, await json<TaskRow[]>(`/collaboration_tasks?list_id=eq.${encodeURIComponent(id)}&status=neq.deleted&select=id,list_id,title,note_document,status,priority,due_date,tags,order_key,created_at,updated_at,completed_at,deleted_at&order=order_key.asc`)) : null;
     },
     async createList(input: TodoListInput) { const row = rpcRecord(await json<ListRow | ListRow[]>('/rpc/create_collaboration_list', { method: 'POST', body: JSON.stringify({ p_title: input.title, p_description: input.description ?? '' }) })); return listFromRow(row, []); },
+    async createListIdempotent(input, idempotencyKey) { const row = rpcRecord(await json<ListRow | ListRow[]>('/rpc/create_collaboration_list', { method: 'POST', body: JSON.stringify({ p_title: input.title, p_description: input.description ?? '', p_idempotency_key: idempotencyKey }) })); return listFromRow(row, []); },
     async updateList(id, input: TodoListUpdateInput) { return updateList(id, { ...input }); },
     async archiveList(id) { return updateList(id, { status: 'archived' }); },
     async restoreList(id) { return updateList(id, { status: 'active' }); },
@@ -222,6 +223,7 @@ export function createSupabaseCollaborationTodoRepository(config: SupabasePersis
       await call(`/task_attachments?id=eq.${encodeURIComponent(attachment.id)}`, { method: 'DELETE' });
     },
     async createTask(input: TodoTaskInput) { const row = rpcRecord(await json<TaskRow | TaskRow[]>('/rpc/create_collaboration_task', { method: 'POST', body: JSON.stringify({ p_list_id: input.listId, p_title: input.title, p_note_document: input.notes ?? '', p_priority: input.priority ?? 'medium', p_due_date: input.dueDate ?? null, p_tags: input.tags ?? [], p_order_key: Date.now() }) })); return taskFromRow(row); },
+    async createTaskIdempotent(input, idempotencyKey) { const row = rpcRecord(await json<TaskRow | TaskRow[]>('/rpc/create_collaboration_task', { method: 'POST', body: JSON.stringify({ p_list_id: input.listId, p_title: input.title, p_note_document: input.notes ?? '', p_priority: input.priority ?? 'medium', p_due_date: input.dueDate ?? null, p_tags: input.tags ?? [], p_order_key: Date.now(), p_idempotency_key: idempotencyKey }) })); return taskFromRow(row); },
     async updateTask(id, input: TodoTaskUpdateInput) { const body: Record<string, unknown> = { ...input }; if ('notes' in body) { body.note_document = body.notes; delete body.notes; } if ('dueDate' in body) { body.due_date = body.dueDate; delete body.dueDate; } return updateTask(id, body); },
     async completeTask(id, isComplete) { return updateTask(id, { status: isComplete ? 'done' : 'todo' }); },
     async deleteTask(id) { return updateTask(id, { status: 'deleted', deleted_at: new Date().toISOString() }); },

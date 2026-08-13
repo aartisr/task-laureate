@@ -180,3 +180,13 @@ export interface TodoRepository {
   exportWorkspace(): Promise<WorkspaceArchiveData>;
   importWorkspace(workspace: WorkspaceArchiveData): Promise<void>;
 }
+
+/** Optional server capability required for safely replaying create commands. */
+export interface IdempotentCreationRepository {
+  createListIdempotent(input: TodoListInput, idempotencyKey: string): Promise<TodoList>;
+  createTaskIdempotent(input: TodoTaskInput, idempotencyKey: string): Promise<TodoItem>;
+}
+
+export function supportsIdempotentCreation(repository: TodoRepository): repository is TodoRepository & IdempotentCreationRepository {
+  return 'createListIdempotent' in repository && 'createTaskIdempotent' in repository;
+}

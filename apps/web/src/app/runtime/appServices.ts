@@ -13,6 +13,8 @@ import { clearBrowserWorkspace, createBufferedPersistence, createEmptyWorkspace,
 import { createSupabaseCollaborationTodoRepository } from '../../infrastructure/persistence/supabaseCollaborationRepository';
 import { authProvider, persistenceConfig } from '../../config/persistence.config';
 import { setPersistenceStatus } from '../../infrastructure/persistence/status';
+import { remoteSync } from '../../infrastructure/antiBacklog/mutationOutbox';
+import { createTodoRemoteMutationDelivery } from '../../core/mutations/remoteMutationDelivery';
 
 export const appServices = {
   repository: createMemoryTodoRepository(createEmptyWorkspace(), { onChange: () => undefined }) as TodoRepository,
@@ -50,11 +52,14 @@ function replaceRepository(repository: TodoRepository) {
   localWorkspaceBuffer = null;
   appServices.queryClient.clear();
   appServices.repository = repository;
+  remoteSync.setDelivery(createTodoRemoteMutationDelivery(repository));
+  remoteSync.setScope(activeUserId);
 }
 
 function disposeActiveWorkspace({ clearCache = false } = {}) {
   if (clearCache) clearBrowserWorkspace();
   activeUserId = null;
+  remoteSync.setScope(null);
 }
 
 function useSignedOutRepository() {

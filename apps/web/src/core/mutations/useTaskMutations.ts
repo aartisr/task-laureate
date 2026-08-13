@@ -12,14 +12,14 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import type { TodoItem } from '../contracts/domain';
-import type { TodoRepository, TodoTaskInput, TodoTaskUpdateInput } from '../contracts/repository';
+import { supportsIdempotentCreation, type TodoRepository, type TodoTaskInput, type TodoTaskUpdateInput } from '../contracts/repository';
 import { createMutationOrchestrator, type MutationOperation } from './mutationOrchestrator';
 import { listTasksQueryOptions } from '../contracts/queryKeys';
 import { queryKeys } from '../contracts/queryKeys';
 import { undoJournal } from './undoJournal';
 import { MAX_NOTE_LENGTH } from '../domain/richNote';
-import { mutationOutbox } from '../../infrastructure/antiBacklog/mutationOutbox';
 import { supportsTaskEvents } from '../contracts/antiBacklog';
+import { createRemoteMutationQueue, resourceStream } from './remoteMutationQueue';
 
 interface TaskMutationContext {
   repository: TodoRepository;
@@ -29,6 +29,7 @@ interface TaskMutationContext {
 export function useTaskMutations(context: TaskMutationContext) {
   const queryClient = useQueryClient();
   const { repository, userId } = context;
+  const remoteQueue = useMemo(() => createRemoteMutationQueue(userId), [userId]);
   const refresh = async (listId?: string) => {
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboard }),
@@ -87,7 +88,9 @@ export function useTaskMutations(context: TaskMutationContext) {
 
       const result = await orchestrator.executeMutation(operation, input);
       if (!result.success) {
-        throw new Error(result.error?.message || 'Failed to create task');
+        const message = result.error?.message || 'Failed to create task';
+        if (supportsIdempotentCreation(repository)) await remoteQueue.preserveOnRetryableFailure(message, { type: 'task.create', stream: resourceStream('task', `create:${input.listId}`), payload: { input } });
+        throw new Error(message);
       }
       let taskId = result.data!.id;
       undoJournal.record({
@@ -156,9 +159,7 @@ export function useTaskMutations(context: TaskMutationContext) {
       const result = await orchestrator.executeMutation(operation, input);
       if (!result.success) {
         const message = result.error?.message || 'Failed to update task';
-        if (/conflict|version|409/i.test(message)) {
-          await mutationOutbox.enqueue({ id: crypto.randomUUID(), type: 'task.update', payload: { taskId, input }, idempotencyKey: `task.update:${taskId}:${crypto.randomUUID()}`, createdAt: new Date().toISOString(), state: 'pending' });
-        }
+        await remoteQueue.preserveOnRetryableFailure(message, { type: 'task.update', stream: resourceStream('task', taskId), payload: { taskId, input } });
         throw new Error(message);
       }
       if (currentTask) {
@@ -209,7 +210,7 @@ export function useTaskMutations(context: TaskMutationContext) {
       const result = await orchestrator.executeMutation(operation, isComplete);
       if (!result.success) {
         const message = result.error?.message || 'Failed to complete task';
-        if (/conflict|version|409/i.test(message)) await mutationOutbox.enqueue({ id: crypto.randomUUID(), type: 'task.complete', payload: { taskId, isComplete }, idempotencyKey: `task.complete:${taskId}:${crypto.randomUUID()}`, createdAt: new Date().toISOString(), state: 'pending' });
+        await remoteQueue.preserveOnRetryableFailure(message, { type: 'task.complete', stream: resourceStream('task', taskId), payload: { taskId, isComplete } });
         throw new Error(message);
       }
       if (currentTask) {
@@ -261,7 +262,7 @@ export function useTaskMutations(context: TaskMutationContext) {
       const result = await orchestrator.executeMutation(operation, taskId);
       if (!result.success) {
         const message = result.error?.message || 'Failed to delete task';
-        if (/conflict|version|409/i.test(message)) await mutationOutbox.enqueue({ id: crypto.randomUUID(), type: 'task.delete', payload: { taskId }, idempotencyKey: `task.delete:${taskId}:${crypto.randomUUID()}`, createdAt: new Date().toISOString(), state: 'pending' });
+        await remoteQueue.preserveOnRetryableFailure(message, { type: 'task.delete', stream: resourceStream('task', taskId), payload: { taskId } });
         throw new Error(message);
       }
       undoJournal.record({
@@ -297,7 +298,9 @@ export function useTaskMutations(context: TaskMutationContext) {
 
       const result = await orchestrator.executeMutation(operation, taskId);
       if (!result.success) {
-        throw new Error(result.error?.message || 'Failed to restore task');
+        const message = result.error?.message || 'Failed to restore task';
+        await remoteQueue.preserveOnRetryableFailure(message, { type: 'task.restore', stream: resourceStream('task', taskId), payload: { taskId } });
+        throw new Error(message);
       }
       undoJournal.record({
         label: `Restored “${result.data!.title}”`,

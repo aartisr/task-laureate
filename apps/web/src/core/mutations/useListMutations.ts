@@ -12,10 +12,11 @@
 import { useMutation, useQueryClient, type MutationOptions } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import type { TodoList, TodoListStatus } from '../contracts/domain';
-import type { TodoRepository, TodoListInput, TodoListUpdateInput } from '../contracts/repository';
+import { supportsIdempotentCreation, type TodoRepository, type TodoListInput, type TodoListUpdateInput } from '../contracts/repository';
 import { createMutationOrchestrator, type MutationOperation } from './mutationOrchestrator';
 import { listQueryOptions, queryKeys } from '../contracts/queryKeys';
 import { undoJournal } from './undoJournal';
+import { createRemoteMutationQueue, resourceStream } from './remoteMutationQueue';
 
 interface ListMutationContext {
   repository: TodoRepository;
@@ -25,6 +26,7 @@ interface ListMutationContext {
 export function useListMutations(context: ListMutationContext) {
   const queryClient = useQueryClient();
   const { repository, userId } = context;
+  const remoteQueue = useMemo(() => createRemoteMutationQueue(userId), [userId]);
   const refresh = async () => {
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboard }),
@@ -75,7 +77,9 @@ export function useListMutations(context: ListMutationContext) {
 
       const result = await orchestrator.executeMutation(operation, input);
       if (!result.success) {
-        throw new Error(result.error?.message || 'Failed to create list');
+        const message = result.error?.message || 'Failed to create list';
+        if (supportsIdempotentCreation(repository)) await remoteQueue.preserveOnRetryableFailure(message, { type: 'list.create', stream: resourceStream('list', 'create'), payload: { input } });
+        throw new Error(message);
       }
       let listId = result.data!.id;
       undoJournal.record({
@@ -134,7 +138,9 @@ export function useListMutations(context: ListMutationContext) {
 
       const result = await orchestrator.executeMutation(operation, input);
       if (!result.success) {
-        throw new Error(result.error?.message || 'Failed to update list');
+        const message = result.error?.message || 'Failed to update list';
+        await remoteQueue.preserveOnRetryableFailure(message, { type: 'list.update', stream: resourceStream('list', listId), payload: { listId, input } });
+        throw new Error(message);
       }
       if (currentList) {
         const before: TodoListUpdateInput = { title: currentList.title, description: currentList.description, status: currentList.status };
@@ -168,7 +174,9 @@ export function useListMutations(context: ListMutationContext) {
 
       const result = await orchestrator.executeMutation(operation, listId);
       if (!result.success) {
-        throw new Error(result.error?.message || 'Failed to archive list');
+        const message = result.error?.message || 'Failed to archive list';
+        await remoteQueue.preserveOnRetryableFailure(message, { type: 'list.archive', stream: resourceStream('list', listId), payload: { listId } });
+        throw new Error(message);
       }
       undoJournal.record({
         label: `Archived list “${result.data!.title}”`,
@@ -209,7 +217,9 @@ export function useListMutations(context: ListMutationContext) {
 
       const result = await orchestrator.executeMutation(operation, listId);
       if (!result.success) {
-        throw new Error(result.error?.message || 'Failed to delete list');
+        const message = result.error?.message || 'Failed to delete list';
+        await remoteQueue.preserveOnRetryableFailure(message, { type: 'list.delete', stream: resourceStream('list', listId), payload: { listId } });
+        throw new Error(message);
       }
       undoJournal.record({
         label: `Deleted list “${result.data!.title}”`,
@@ -241,7 +251,9 @@ export function useListMutations(context: ListMutationContext) {
 
       const result = await orchestrator.executeMutation(operation, listId);
       if (!result.success) {
-        throw new Error(result.error?.message || 'Failed to restore list');
+        const message = result.error?.message || 'Failed to restore list';
+        await remoteQueue.preserveOnRetryableFailure(message, { type: 'list.restore', stream: resourceStream('list', listId), payload: { listId } });
+        throw new Error(message);
       }
       undoJournal.record({
         label: `Restored list “${result.data!.title}”`,

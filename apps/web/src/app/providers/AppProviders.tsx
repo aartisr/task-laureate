@@ -16,6 +16,7 @@ import { getAnalyticsDispatcher } from '../../infrastructure/analytics/analytics
 import { getAnalyticsConfig } from '../../infrastructure/analytics/analyticsConfig';
 import { getConsentDecision } from '../../core/privacy/analyticsConsent';
 import { MutationConflictCenter } from '../../components/MutationConflictCenter';
+import { RemoteSyncStatus } from '../../components/RemoteSyncStatus';
 
 // Initialize the analytics dispatcher once at module load time (browser only).
 // This ensures the dispatcher is registered before any trackGrowthEvent() call.
@@ -110,6 +111,7 @@ export function AppProviders() {
       <QueryClientProvider client={appServices.queryClient}>
         <ThemeProvider>
           {persistenceStatus.phase === 'error' && <div className="persistence-alert" role="alert">{persistenceStatus.detail}</div>}
+          <RemoteSyncStatus />
           <MutationConflictCenter />
           <RouterProvider key={workspaceEpoch} router={router} />
           <Analytics />

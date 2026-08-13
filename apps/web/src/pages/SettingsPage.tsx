@@ -13,6 +13,7 @@ import { AnalyticsConsentControl } from '../components/AnalyticsConsentControl';
 import { AntiBacklogPrivacyControls } from '../components/AntiBacklogPrivacyControls';
 import { CalendarConnectionPanel } from '../components/CalendarConnectionPanel';
 import { isFeatureEnabled } from '../config/featureFlags';
+import { SyncCenter } from '../components/SyncCenter';
 
 /** Keeps everyday preferences visible and infrequent administration available on demand. */
 export function SettingsPage() {
@@ -61,7 +62,7 @@ export function SettingsPage() {
 
         <details className="settings-disclosure">
           <summary><span>Account &amp; sync</span><small>Connect or manage your account</small></summary>
-          <div className="settings-disclosure__body"><CloudSyncAuthPanel provider={authProvider} /></div>
+          <div className="settings-disclosure__body"><CloudSyncAuthPanel provider={authProvider} /><SyncCenter /></div>
         </details>
 
         <details className="settings-disclosure">
