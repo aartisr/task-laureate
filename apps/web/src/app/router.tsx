@@ -14,7 +14,7 @@ import { listQueryOptions, listTasksQueryOptions, dashboardQueryOptions, activit
 import { trackGrowthEvent } from '../infrastructure/analytics/growthTelemetry';
 
 const page = <T extends Record<string, ComponentType<any>>>(load: () => Promise<T>, name: keyof T) => lazy(async () => ({ default: (await load())[name] }));
-const ActivityPage = page(() => import('../pages/ActivityPage'), 'ActivityPage'); const DashboardPage = page(() => import('../pages/DashboardPage'), 'DashboardPage'); const ListDetailPage = page(() => import('../pages/ListDetailPage'), 'ListDetailPage'); const ListsPage = page(() => import('../pages/ListsPage'), 'ListsPage'); const TasksPage = page(() => import('../pages/TasksPage'), 'TasksPage'); const CompletedPage = page(() => import('../pages/CompletedPage'), 'CompletedPage'); const ProgressPage = page(() => import('../pages/ProgressPage'), 'ProgressPage'); const SearchPage = page(() => import('../pages/SearchPage'), 'SearchPage'); const SettingsPage = page(() => import('../pages/SettingsPage'), 'SettingsPage'); const SupportPage = page(() => import('../pages/SupportPage'), 'SupportPage'); const AuthCallbackPage = page(() => import('../pages/AuthCallbackPage'), 'AuthCallbackPage'); const SignInPage = page(() => import('../pages/SignInPage'), 'SignInPage'); const TaskFocusPage = page(() => import('../pages/TaskFocusPage'), 'TaskFocusPage'); const SharedWithMePage = page(() => import('../pages/SharedWithMePage'), 'SharedWithMePage'); const AcceptSharePage = page(() => import('../pages/AcceptSharePage'), 'AcceptSharePage'); const SampleWorkspacePage = page(() => import('../pages/SampleWorkspacePage'), 'SampleWorkspacePage');
+const ActivityPage = page(() => import('../pages/ActivityPage'), 'ActivityPage'); const DashboardPage = page(() => import('../pages/DashboardPage'), 'DashboardPage'); const ListDetailPage = page(() => import('../pages/ListDetailPage'), 'ListDetailPage'); const ListsPage = page(() => import('../pages/ListsPage'), 'ListsPage'); const TasksPage = page(() => import('../pages/TasksPage'), 'TasksPage'); const CompletedPage = page(() => import('../pages/CompletedPage'), 'CompletedPage'); const ProgressPage = page(() => import('../pages/ProgressPage'), 'ProgressPage'); const SearchPage = page(() => import('../pages/SearchPage'), 'SearchPage'); const SettingsPage = page(() => import('../pages/SettingsPage'), 'SettingsPage'); const SupportPage = page(() => import('../pages/SupportPage'), 'SupportPage'); const PrivacyPage = page(() => import('../pages/PrivacyPage'), 'PrivacyPage'); const AuthCallbackPage = page(() => import('../pages/AuthCallbackPage'), 'AuthCallbackPage'); const SignInPage = page(() => import('../pages/SignInPage'), 'SignInPage'); const TaskFocusPage = page(() => import('../pages/TaskFocusPage'), 'TaskFocusPage'); const SharedWithMePage = page(() => import('../pages/SharedWithMePage'), 'SharedWithMePage'); const AcceptSharePage = page(() => import('../pages/AcceptSharePage'), 'AcceptSharePage'); const SampleWorkspacePage = page(() => import('../pages/SampleWorkspacePage'), 'SampleWorkspacePage');
 const PuckEditorPage = page(() => import('../pages/PuckEditorPage'), 'PuckEditorPage');
 const ExecutionPage = page(() => import('../pages/ExecutionPage'), 'ExecutionPage');
 const CapturePage = page(() => import('../pages/CapturePage'), 'CapturePage');
@@ -141,6 +141,12 @@ const supportRoute = createRoute({
   component: () => <Lazy><SupportPage /></Lazy>,
 });
 
+const privacyRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: 'privacy',
+  component: () => <Lazy><PrivacyPage /></Lazy>,
+});
+
 const authCallbackRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: 'auth/callback',
@@ -172,6 +178,7 @@ const routeTree = rootRoute.addChildren([
   completedRoute,
   progressRoute,
   supportRoute,
+  privacyRoute,
   authCallbackRoute,
   signInRoute,
   puckEditorRoute,

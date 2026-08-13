@@ -139,6 +139,16 @@ html[data-theme='warm-community'] .background-watermark { opacity: .09; }
 .calendar-connection-panel__redirect span { font-weight: var(--font-weight-semibold); }
 .calendar-connection-panel__redirect code { overflow-wrap: anywhere; padding: .5rem .6rem; border: 1px solid var(--color-border-default); border-radius: var(--radius-sm); background: var(--color-bg-primary); color: var(--color-text-primary); font-family: var(--font-family-mono, ui-monospace, SFMono-Regular, Menlo, monospace); font-size: .78rem; }
 
+.privacy-notice { display: grid; gap: clamp(1.5rem, 4vw, 2.5rem); max-inline-size: 50rem; margin-inline: auto; color: var(--color-text-secondary); font-size: 1rem; line-height: 1.72; }
+.privacy-notice section { display: grid; gap: .7rem; }
+.privacy-notice h2 { margin: 0; color: var(--color-text-primary); font-size: clamp(1.15rem, 2.5vw, 1.45rem); line-height: 1.25; letter-spacing: -.02em; }
+.privacy-notice p, .privacy-notice ul { margin: 0; }
+.privacy-notice ul { display: grid; gap: .45rem; padding-inline-start: 1.2rem; }
+.privacy-notice a { color: var(--color-action-primary); font-weight: var(--font-weight-semibold); text-decoration: underline; text-underline-offset: .18em; }
+.privacy-notice__promise { display: flex; gap: 1rem; align-items: flex-start; padding: clamp(1rem, 3vw, 1.4rem); border: 1px solid color-mix(in srgb, var(--color-action-primary) 38%, var(--color-border-default)); border-radius: var(--radius-xl); background: linear-gradient(135deg, color-mix(in srgb, var(--color-action-primary) 12%, var(--color-bg-secondary)), var(--color-bg-secondary)); color: var(--color-text-secondary); }
+.privacy-notice__promise > span { display: grid; flex: 0 0 auto; inline-size: 2.25rem; block-size: 2.25rem; place-items: center; border-radius: 50%; background: color-mix(in srgb, var(--color-action-primary) 18%, transparent); color: var(--color-action-primary); font-size: 1.35rem; }
+.privacy-notice__promise strong { display: block; color: var(--color-text-primary); font-size: 1.02rem; }.privacy-notice__promise p { margin-top: .2rem; }.privacy-notice__updated { color: var(--color-text-tertiary); font-size: .82rem; }
+
 @media (max-width: 47.9375rem) {
   .calendar-schedule-control__form { grid-template-columns: minmax(0, 1fr); }
   .calendar-schedule-control__actions { display: grid; grid-template-columns: minmax(0, 1fr); }

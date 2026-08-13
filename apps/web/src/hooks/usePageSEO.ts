@@ -172,6 +172,11 @@ export const PAGE_SEO = {
     description: 'Answers to every question, keyboard shortcuts, quick-navigation links, and ways to connect with the community.',
     breadcrumb: SITE('Help & Support', '/support'),
   },
+  privacy: {
+    title: 'Privacy Notice',
+    description: 'How Task-Laureate handles task data, optional Google Calendar scheduling, AI decomposition, cloud sync, and your privacy choices.',
+    breadcrumb: SITE('Privacy', '/privacy'),
+  },
   listDetail: (listTitle: string) => ({
     title: listTitle,
     description: `Manage tasks in "${listTitle}". Add, prioritise, complete, and track every item in this list.`,
