@@ -114,6 +114,14 @@ html[data-theme='warm-community'] .background-watermark { opacity: .09; }
 .calendar-schedule-control :is(input, select):focus-visible { border-color: var(--color-status-info); outline: 3px solid color-mix(in srgb, var(--color-status-info) 26%, transparent); outline-offset: 1px; }
 .calendar-schedule-control__actions { display: flex; flex-wrap: wrap; gap: var(--spacing-2); }
 .calendar-schedule-control__actions .secondary-button { display: inline-flex; align-items: center; text-decoration: none; }
+.calendar-schedule-control__actions .primary-button { display: inline-flex; align-items: center; gap: .35rem; text-decoration: none; }
+.calendar-schedule-control__sync-status { display: flex; align-items: flex-start; gap: .7rem; padding: .8rem .9rem; border: 1px solid color-mix(in srgb, var(--color-status-success, #1b8a5a) 38%, var(--color-border-default)); border-radius: var(--radius-md); background: color-mix(in srgb, var(--color-status-success, #1b8a5a) 9%, var(--color-bg-primary)); }
+.calendar-schedule-control__sync-status > span { display: grid; place-items: center; flex: 0 0 1.35rem; inline-size: 1.35rem; block-size: 1.35rem; border-radius: 50%; background: var(--color-status-success, #1b8a5a); color: white; font-size: .8rem; font-weight: var(--font-weight-bold); }
+.calendar-schedule-control__sync-status > div { display: grid; gap: .18rem; }
+.calendar-schedule-control__sync-status strong { font-size: .875rem; }
+.calendar-schedule-control__sync-status small { color: var(--color-text-secondary); font-size: .78rem; line-height: 1.4; }
+.calendar-schedule-control__sync-status--attention { border-color: color-mix(in srgb, var(--color-status-warning, #b86f00) 50%, var(--color-border-default)); background: color-mix(in srgb, var(--color-status-warning, #b86f00) 10%, var(--color-bg-primary)); }
+.calendar-schedule-control__sync-status--attention > span { background: var(--color-status-warning, #b86f00); }
 .calendar-schedule-control__disconnect { margin-inline-start: auto; padding: .4rem .2rem; border: 0; background: transparent; color: var(--color-text-secondary); cursor: pointer; font: inherit; font-size: .78rem; text-decoration: underline; text-underline-offset: .18em; }
 .calendar-schedule-control__disconnect:hover { color: var(--color-text-primary); }
 .calendar-schedule-control__notice { padding: .65rem .75rem; border-radius: var(--radius-sm); background: color-mix(in srgb, var(--color-status-info) 10%, var(--color-bg-primary)); color: var(--color-text-primary); font-size: .875rem; }
