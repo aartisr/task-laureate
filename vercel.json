@@ -8,6 +8,13 @@
     { "path": "/api/cron/notifications", "schedule": "0 13 * * *" }
   ],
   "rewrites": [
+    { "source": "/api/calendar/google/connect", "destination": "/api/calendar?route=google-connect" },
+    { "source": "/api/calendar/google/callback", "destination": "/api/calendar?route=google-callback" },
+    { "source": "/api/calendar/status", "destination": "/api/calendar?route=status" },
+    { "source": "/api/calendar/task-block", "destination": "/api/calendar?route=task-block" },
+    { "source": "/api/calendar/schedule", "destination": "/api/calendar?route=schedule" },
+    { "source": "/api/calendar/remove", "destination": "/api/calendar?route=remove" },
+    { "source": "/api/calendar/disconnect", "destination": "/api/calendar?route=disconnect" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [
