@@ -29,6 +29,11 @@ export default defineConfig({
     },
   },
   build: {
+    // Puck is loaded only by the lazy /puck/$pageId editor route. Its editor
+    // package is deliberately isolated below; the enforced gzip performance
+    // budget is the meaningful guard for user-facing payloads, rather than
+    // Vite's generic uncompressed 500 kB advisory.
+    chunkSizeWarningLimit: 800,
     rollupOptions: {
       output: {
         manualChunks: {
