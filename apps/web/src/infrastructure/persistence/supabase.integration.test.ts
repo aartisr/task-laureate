@@ -98,4 +98,36 @@ describe.runIf(enabled)('Supabase production-readiness integration', () => {
     const deleted = await repository.deleteTask(task.id);
     expect(deleted).toMatchObject({ id: task.id, status: 'deleted' });
   });
+
+  it('proves idempotent creation, execution-event persistence, and retrospective reads end to end', async () => {
+    assertConfigured();
+    const repository = createRepository();
+    const suffix = crypto.randomUUID();
+    const listKey = `integration:list:${suffix}`;
+    const list = await repository.createListIdempotent({ title: `Offline-safe ${suffix}`, description: 'Disposable durable-sync fixture.' }, listKey);
+    testListIds.add(list.id);
+    const repeatedList = await repository.createListIdempotent({ title: `Offline-safe ${suffix}`, description: 'Disposable durable-sync fixture.' }, listKey);
+    expect(repeatedList.id).toBe(list.id);
+
+    const taskKey = `integration:task:${suffix}`;
+    const task = await repository.createTaskIdempotent({ listId: list.id, title: `Execution evidence ${suffix}`, priority: 'medium' }, taskKey);
+    const repeatedTask = await repository.createTaskIdempotent({ listId: list.id, title: `Execution evidence ${suffix}`, priority: 'medium' }, taskKey);
+    expect(repeatedTask.id).toBe(task.id);
+
+    await repository.saveTaskPlanning(task.id, { estimateMinutes: 30, energyLevel: 'deep', scheduledStartAt: null, parentTaskId: null, needsClarity: false });
+    const tomorrow = new Date(Date.now() + 86_400_000).toISOString().slice(0, 10);
+    await repository.updateTask(task.id, { dueDate: tomorrow });
+    await repository.recordTaskEvent({ taskId: task.id, type: 'snoozed', occurredAt: new Date().toISOString(), idempotencyKey: `integration:snoozed:${suffix}`, payload: { until: tomorrow } });
+    await repository.updateTask(task.id, { status: 'blocked' });
+    await repository.recordTaskEvent({ taskId: task.id, type: 'parked', occurredAt: new Date().toISOString(), idempotencyKey: `integration:parked:${suffix}` });
+    await repository.completeTask(task.id, true);
+    await repository.recordTaskEvent({ taskId: task.id, type: 'completed', occurredAt: new Date().toISOString(), idempotencyKey: `integration:completed:${suffix}`, payload: { estimateMinutes: 30, energyLevel: 'deep' } });
+
+    const events = await repository.listTaskEvents({ since: new Date(Date.now() - 60_000).toISOString(), limit: 50 });
+    expect(events).toEqual(expect.arrayContaining([
+      expect.objectContaining({ taskId: task.id, type: 'snoozed', payload: expect.objectContaining({ until: tomorrow }) }),
+      expect.objectContaining({ taskId: task.id, type: 'parked' }),
+      expect.objectContaining({ taskId: task.id, type: 'completed', payload: expect.objectContaining({ estimateMinutes: 30, energyLevel: 'deep' }) }),
+    ]));
+  });
 });

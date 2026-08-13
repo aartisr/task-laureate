@@ -44,6 +44,17 @@ describe('normalized collaboration repository', () => {
     expect(JSON.parse(String(requests[0].init?.body))).toMatchObject({ p_task_id: 'task-id', p_origin: 'ai', p_steps: [{ title: 'Call the clinic' }] });
   });
 
+  it('loads the durable event feed used by the retrospective', async () => {
+    const requests: Array<{ endpoint: string; init?: RequestInit }> = [];
+    const repository = createSupabaseCollaborationTodoRepository(config, async (url, init) => {
+      requests.push({ endpoint: String(url), init });
+      return new Response(JSON.stringify([{ id: 'event-1', task_id: 'task-id', event_type: 'completed', occurred_at: '2026-08-13T12:00:00Z', payload: { estimateMinutes: 30, energyLevel: 'deep' } }]), { status: 200 });
+    });
+    await expect(repository.listTaskEvents({ since: '2026-08-06T00:00:00Z', limit: 20 })).resolves.toEqual([expect.objectContaining({ taskId: 'task-id', type: 'completed', payload: { estimateMinutes: 30, energyLevel: 'deep' } })]);
+    expect(requests[0].endpoint).toContain('/task_events?select=id,task_id,event_type,occurred_at,payload');
+    expect(requests[0].endpoint).toContain('occurred_at=gte.2026-08-06T00%3A00%3A00Z');
+  });
+
   it('removes attachment variants through the Storage API before deleting metadata', async () => {
     const requests: Array<{ endpoint: string; init?: RequestInit }> = [];
     const repository = createSupabaseCollaborationTodoRepository(config, async (url, init) => {
