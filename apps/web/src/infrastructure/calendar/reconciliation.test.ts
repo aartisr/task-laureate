@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { durationMinutes, isFreshNotification, ownedEventChange, shouldApply, validInstant } from '../../../lib/calendar/reconciliation.mjs';
+import { durationMinutes, googleTaskEventPayload, isFreshNotification, ownedEventChange, shouldApply, validInstant } from '../../../lib/calendar/reconciliation.mjs';
 
 const connectionId = '55555555-5555-4555-8555-555555555555';
 const block = {
@@ -21,6 +21,13 @@ const event = (overrides: Record<string, unknown> = {}) => ({
 });
 
 describe('provider-neutral calendar reconciliation', () => {
+  it('explicitly restores a Google block that was previously cancelled', () => {
+    expect(googleTaskEventPayload({ eventId: 'event-1', taskId: block.task_id, connectionId, title: 'Finish report', listTitle: 'Work', startsAt: '2026-08-14T14:00:00.000Z', durationMinutes: 30 })).toMatchObject({
+      id: 'event-1', status: 'confirmed', summary: 'Finish report',
+      start: { dateTime: '2026-08-14T14:00:00.000Z' }, end: { dateTime: '2026-08-14T14:30:00.000Z' },
+    });
+  });
+
   it('accepts a valid owned time move and normalizes its values', () => {
     expect(ownedEventChange(event(), block, connectionId)).toEqual({
       deleted: false, revision: '"revision-2"', updatedAt: '2026-08-13T11:00:00.000Z',

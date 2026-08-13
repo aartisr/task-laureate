@@ -8,6 +8,20 @@ export function durationMinutes(start, end) {
   return Number.isInteger(minutes) && minutes >= 5 && minutes <= 1440 ? minutes : null;
 }
 
+/** A full Google event update must explicitly un-cancel a previously deleted block. */
+export function googleTaskEventPayload({ eventId, taskId, connectionId, title, listTitle, startsAt, durationMinutes: minutes }) {
+  const start = new Date(startsAt).toISOString();
+  return {
+    id: eventId,
+    status: 'confirmed',
+    summary: title,
+    description: `Scheduled from Task-Laureate\n\nList: ${listTitle || 'Task-Laureate'}`,
+    start: { dateTime: start },
+    end: { dateTime: new Date(Date.parse(start) + minutes * 60_000).toISOString() },
+    extendedProperties: { private: { taskLaureateTaskId: taskId, taskLaureateConnectionId: connectionId, schedulingMode: 'two-way' } },
+  };
+}
+
 export function ownedEventChange(event, block, connectionId) {
   if (!event || !block || event.id !== block.external_event_id) return null;
   const properties = event.extendedProperties?.private;
