@@ -43,6 +43,7 @@ Important:
 - `VITE_INVITATION_DELIVERY_URL` (production)
 - `VITE_VAPID_PUBLIC_KEY` (only for browser push)
 - `VITE_POSTHOG_ENABLED` / `VITE_POSTHOG_KEY` / `VITE_POSTHOG_HOST` / `VITE_POSTHOG_CONSENT_VERSION` (if product analytics enabled)
+- `VITE_FEATURE_CALENDAR_INTEGRATION=true` (only after the calendar release checks below pass)
 
 #### Server-only
 
@@ -51,8 +52,32 @@ Important:
 - `PUBLIC_APP_URL`
 - Push keys: `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`
 - SMS (optional): `SMS_PROVIDER=twilio`, `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER`
+- Google Calendar (one-way scheduling): `CALENDAR_SCHEDULING_ENABLED=true`, `GOOGLE_CALENDAR_CLIENT_ID`, `GOOGLE_CALENDAR_CLIENT_SECRET`, `CALENDAR_OAUTH_STATE_SECRET`, `CALENDAR_TOKEN_ENCRYPTION_KEY` (base64-encoded 32-byte key)
 
 Rule: never place server-only values in `VITE_*`.
+
+### Step 3a: Google Calendar one-way scheduling
+
+1. Apply migration `030_one_way_calendar_scheduling.sql` after migrations
+   `001`–`029`.
+2. In Google Cloud, enable the Google Calendar API and create an OAuth **Web
+   application** client. Add the exact callback URL for every environment:
+   `https://<app-origin>/api/calendar/google/callback`.
+3. Set the browser feature flag and all server-only values above in the same
+   Vercel environment. Generate `CALENDAR_OAUTH_STATE_SECRET` with at least 32
+   random bytes and `CALENDAR_TOKEN_ENCRYPTION_KEY` as a base64-encoded,
+   32-byte AES-256 key. Keep both server-only.
+4. Sign in as a non-production user, open an editable task, and connect Google
+   Calendar from its **Calendar block** panel. Choose a calendar, schedule a
+   block, update it, open it in Google Calendar, and remove it.
+5. Confirm that only explicitly scheduled Task-Laureate blocks are created;
+   the app deliberately does not read in, modify, or reconcile ordinary Google
+   Calendar events. Revoke Google consent and confirm the app requests a
+   reconnect without changing the task.
+
+The current integration is one-way by design: Task-Laureate owns only events
+it created. Do not promise Google-to-task synchronization until the separate
+two-way reconciliation work item is complete.
 
 ### Step 4: Auth provider setup
 

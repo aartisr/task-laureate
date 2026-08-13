@@ -47,7 +47,7 @@ variable.
 | P0 | Production environment and delivery setup | Complete | Vercel project/domain, Supabase URL/key, public app URL, and selected delivery channels | Marked complete by product-owner acceptance on 2026-08-12. Keep [OPERATIONS.md](OPERATIONS.md) as the deployment-change and release regression runbook. |
 | P0 | External capture distribution | Complete | Production app URL, manual browser-extension packaging and install testing | Marked complete by product-owner acceptance on 2026-08-12. Keep [CAPTURE_CHANNELS.md](CAPTURE_CHANNELS.md) as the installation, distribution, and regression-test guide. |
 | P1 | Real AI task decomposition | Complete | Gemini free-tier preview, server-only configuration, restricted internal allowlist, migrations `028`–`029`, consent, validation, cache, quotas, audit trail, and atomic acceptance | Verified and accepted on 2026-08-12. Keep the unpaid preview restricted to opted-in internal users and non-sensitive task text; use the [Gemini plan](GEMINI_FREE_TIER_AI_DECOMPOSITION_PLAN.md) for operational regression and future-provider migration. |
-| P1 | One-way calendar scheduling | Needs implementation | Choose Google Calendar, Microsoft 365, or a first provider; create an OAuth application | Create, update, disconnect, and retry task blocks using encrypted server-side tokens. |
+| P1 | One-way calendar scheduling | Ready for connection | Google Calendar adapter, OAuth callback/state validation, server-only AES-GCM refresh-token storage, idempotent create/update/remove endpoints, durable blocks, and task-level scheduling UX are implemented in migration `030` | Configure the Google OAuth web client and Vercel secrets, apply migration `030`, then run the calendar release checks in [OPERATIONS.md](OPERATIONS.md). |
 | P1 | Calendar reconciliation / two-way sync | Needs implementation | Provider webhook or polling design, conflict policy, and subscription credentials | Prove rescheduling, cancellation, duplicate prevention, and conflict resolution. |
 | P1 | Durable remote offline sync | Needs implementation | Remote replay protocol and conflict-resolution product decisions | Pass offline → reconnect end-to-end tests without data loss or silent overwrites. |
 | P1 | Execution actions and proposal review | Needs implementation | Final behavior decisions for delegate/archive and editing generated steps | Ship clarify, snooze, park, delegate, archive, and proposal accept/edit/discard flows with tests. |
@@ -152,18 +152,21 @@ Gemini preview completed the following implementation and release controls on
 Start with one provider and **one-way scheduling**. Two-way sync should only
 follow after its conflict rules are proven.
 
-1. Choose the first provider (Google Calendar or Microsoft 365 is usually the
-   clearest launch choice), account type, and minimum calendar scopes.
-2. Register a server-side OAuth client. Register exact development, preview,
-   and production redirect URIs. Keep client secrets and refresh tokens
-   server-side; encrypt tokens at rest and make disconnect/revocation work.
-3. Implement create/update/delete task blocks with a durable calendar-link
-   record containing external event ID, provider revision, and last-sync time.
-4. Make scheduling idempotent and explicit: no duplicate event after retry,
-   no silent overwrite of user edits, and no success UI until the provider
-   confirms it.
-5. Add one-way tests for connect, expired token, denied consent, update,
-   delete, disconnect, timezone/DST, and retry after a transient failure.
+1. The first provider is **Google Calendar**, behind a provider-neutral
+   endpoint and durable connection/block model. Microsoft 365 remains a future
+   adapter, not a core-domain rewrite.
+2. Register a server-side Google OAuth Web client with exact development,
+   preview, and production callback URLs. Keep client secrets and AES-GCM
+   encrypted refresh tokens server-side; use [OPERATIONS.md](OPERATIONS.md).
+3. Migration `030` creates durable connection and Task-Laureate-owned block
+   records including provider event ID, revision, and state.
+4. Scheduling uses a deterministic provider event ID per task/connection,
+   confirms Google success before saving UI state, and offers explicit update
+   and removal. It never imports or silently overwrites ordinary calendar
+   events.
+5. Before public enablement, run connect, denied-consent, expired-token,
+   update, delete, reconnect, timezone/DST, and retry checks against a
+   non-production Google account.
 6. Before two-way sync, define source-of-truth and conflict behavior. Then add
    webhook signature validation or bounded polling, cursor storage,
    reconciliation jobs, audit events, and a visible resolution UI.

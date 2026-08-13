@@ -88,6 +88,43 @@ html[data-theme='warm-community'] .background-watermark { opacity: .09; }
   html.dark .background-watermark { opacity: .14; }
 }
 
+.calendar-schedule-control {
+  display: grid;
+  gap: var(--spacing-4);
+  padding: clamp(1rem, 3vw, 1.35rem);
+  border: 1px solid color-mix(in srgb, var(--color-status-info) 38%, var(--color-border-default));
+  border-radius: var(--radius-xl);
+  background:
+    radial-gradient(circle at 96% 8%, color-mix(in srgb, var(--color-status-info) 13%, transparent), transparent 14rem),
+    color-mix(in srgb, var(--color-bg-secondary) 88%, var(--color-bg-primary));
+  color: var(--color-text-primary);
+}
+
+.calendar-schedule-control--unavailable { border-style: dashed; background: var(--color-bg-secondary); }
+.calendar-schedule-control h3, .calendar-schedule-control p { margin: 0; }
+.calendar-schedule-control h3 { margin-top: var(--spacing-1); font-size: 1.1rem; }
+.calendar-schedule-control > div > p:not(.calendar-schedule-control__eyebrow) { max-inline-size: 62ch; margin-top: var(--spacing-1); color: var(--color-text-secondary); line-height: var(--line-height-relaxed); }
+.calendar-schedule-control__eyebrow { color: var(--color-status-info); font-size: .72rem; font-weight: var(--font-weight-bold); letter-spacing: .1em; text-transform: uppercase; }
+.calendar-schedule-control > .primary-button { justify-self: start; }
+.calendar-schedule-control__form { display: grid; grid-template-columns: minmax(13rem, 1.35fr) minmax(8rem, .7fr) minmax(10rem, 1fr); gap: var(--spacing-3); padding-top: var(--spacing-3); border-top: 1px solid color-mix(in srgb, var(--color-border-default) 78%, var(--color-status-info)); }
+.calendar-schedule-control .field { display: grid; gap: .4rem; min-inline-size: 0; }
+.calendar-schedule-control .field span { color: var(--color-text-secondary); font-size: .78rem; font-weight: var(--font-weight-semibold); }
+.calendar-schedule-control .field small { color: var(--color-text-tertiary); font-size: .72rem; line-height: 1.35; }
+.calendar-schedule-control :is(input, select) { min-inline-size: 0; min-block-size: 2.7rem; padding: .4rem .55rem; border: 1px solid var(--color-border-default); border-radius: var(--radius-sm); background: var(--color-bg-primary); color: var(--color-text-primary); font: inherit; }
+.calendar-schedule-control :is(input, select):focus-visible { border-color: var(--color-status-info); outline: 3px solid color-mix(in srgb, var(--color-status-info) 26%, transparent); outline-offset: 1px; }
+.calendar-schedule-control__actions { display: flex; flex-wrap: wrap; gap: var(--spacing-2); }
+.calendar-schedule-control__actions .secondary-button { display: inline-flex; align-items: center; text-decoration: none; }
+.calendar-schedule-control__disconnect { margin-inline-start: auto; padding: .4rem .2rem; border: 0; background: transparent; color: var(--color-text-secondary); cursor: pointer; font: inherit; font-size: .78rem; text-decoration: underline; text-underline-offset: .18em; }
+.calendar-schedule-control__disconnect:hover { color: var(--color-text-primary); }
+.calendar-schedule-control__notice { padding: .65rem .75rem; border-radius: var(--radius-sm); background: color-mix(in srgb, var(--color-status-info) 10%, var(--color-bg-primary)); color: var(--color-text-primary); font-size: .875rem; }
+
+@media (max-width: 47.9375rem) {
+  .calendar-schedule-control__form { grid-template-columns: minmax(0, 1fr); }
+  .calendar-schedule-control__actions { display: grid; grid-template-columns: minmax(0, 1fr); }
+  .calendar-schedule-control__actions > * { justify-content: center; inline-size: 100%; }
+  .calendar-schedule-control__disconnect { margin-inline-start: 0; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .background-watermark { transform: none; }
 }

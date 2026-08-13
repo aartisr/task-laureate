@@ -16,4 +16,11 @@ describe('feature flags', () => {
     const { isFeatureEnabled } = await import('./featureFlags');
     expect(isFeatureEnabled('aiDecomposition')).toBe(false);
   });
+
+  it('keeps calendar scheduling disabled until an environment explicitly enables it', async () => {
+    vi.stubEnv('VITE_FEATURE_CALENDAR_INTEGRATION', 'true');
+    vi.resetModules();
+    const { isFeatureEnabled } = await import('./featureFlags');
+    expect(isFeatureEnabled('calendarIntegration')).toBe(true);
+  });
 });
