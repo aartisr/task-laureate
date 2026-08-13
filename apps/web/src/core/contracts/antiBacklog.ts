@@ -25,6 +25,22 @@ export interface TaskEventRepository {
   recordTaskEvent(input: { taskId: string; type: string; occurredAt: string; idempotencyKey: string; payload?: Record<string, unknown> }): Promise<void>;
 }
 
+export interface TaskEventRecord {
+  id: string;
+  taskId: string;
+  type: string;
+  occurredAt: string;
+  payload: Record<string, unknown>;
+}
+
+export interface TaskEventFeedRepository extends TaskEventRepository {
+  listTaskEvents(input?: { since?: string; limit?: number }): Promise<TaskEventRecord[]>;
+}
+
+export function supportsTaskEventFeed(repository: unknown): repository is TaskEventFeedRepository {
+  return supportsTaskEvents(repository) && 'listTaskEvents' in repository && typeof (repository as { listTaskEvents?: unknown }).listTaskEvents === 'function';
+}
+
 export function supportsTaskEvents(repository: unknown): repository is TaskEventRepository {
   return typeof repository === 'object' && repository !== null && 'recordTaskEvent' in repository && typeof (repository as { recordTaskEvent?: unknown }).recordTaskEvent === 'function';
 }

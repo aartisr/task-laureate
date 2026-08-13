@@ -2,6 +2,7 @@ import { useId, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import type { TodoItem } from '../core/contracts/domain';
 import { createTemplateProposal, type EnergyLevel, type TaskPlanProposal } from '../core/domain/antiBacklog';
+import { supportsTaskEvents } from '../core/contracts/antiBacklog';
 import { createTaskPlanningService } from '../core/services/taskPlanning';
 import { appServices } from '../app/runtime/appServices';
 import { useTodoMutations } from '../core/mutations/useTodoMutations';
@@ -70,13 +71,19 @@ export function TaskExecutionControls({ task }: { task: TodoItem }) {
     const messages: Record<string, string> = { consent_required: 'Confirm the preview consent before sending non-sensitive task text to Gemini.', not_signed_in: 'Sign in to use the internal AI preview.', content_not_allowed: 'This preview accepts only non-sensitive task text. Try the template breakdown instead.', rate_limited: 'The preview has reached its limit for now. The template breakdown is ready instead.', provider_unavailable: 'AI preview is unavailable right now. The template breakdown is ready instead.', disabled: 'AI preview is not enabled for this environment.', invalid_output: 'The AI response was not safe to use. The template breakdown is ready instead.', not_eligible: 'AI preview is limited to the approved internal cohort.' };
     showProposal(templateProposal); setNotice({ message: messages[result.reason], tone: 'error' });
   };
+  const record = async (type: string, payload: Record<string, unknown> = {}) => {
+    if (!supportsTaskEvents(appServices.repository)) return;
+    await appServices.repository.recordTaskEvent({ taskId: task.id, type, occurredAt: new Date().toISOString(), idempotencyKey: `execution:${type}:${task.id}:${crypto.randomUUID()}`, payload });
+    await queryClient.invalidateQueries({ queryKey: ['task-events'] });
+  };
   const snooze = async () => {
     const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
     await mutations.updateTask.mutateAsync({ taskId: task.id, input: { dueDate: tomorrow.toISOString().slice(0, 10) } });
+    await record('snoozed', { until: tomorrow.toISOString().slice(0, 10) });
     setNotice({ message: 'Snoozed until tomorrow.', tone: 'success' });
   };
-  const park = async () => { await mutations.updateTask.mutateAsync({ taskId: task.id, input: { status: 'blocked' } }); setNotice({ message: 'Parked for later review.', tone: 'success' }); };
-  const archive = async () => { await mutations.deleteTask.mutateAsync(task.id); setNotice({ message: 'Archived from active work.', tone: 'success' }); };
+  const park = async () => { await mutations.updateTask.mutateAsync({ taskId: task.id, input: { status: 'blocked' } }); await record('parked'); setNotice({ message: 'Parked for later review.', tone: 'success' }); };
+  const archive = async () => { await mutations.deleteTask.mutateAsync(task.id); await record('archived'); setNotice({ message: 'Archived from active work.', tone: 'success' }); };
   return <section className="panel task-execution-controls" aria-label="Execution planning">
     <div className="task-execution-controls__header">
       <div>

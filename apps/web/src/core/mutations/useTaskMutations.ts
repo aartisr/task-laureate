@@ -214,7 +214,13 @@ export function useTaskMutations(context: TaskMutationContext) {
         throw new Error(message);
       }
       if (currentTask) {
-        if (supportsTaskEvents(repository)) await repository.recordTaskEvent({ taskId, type: isComplete ? 'completed' : 'reopened', occurredAt: new Date().toISOString(), idempotencyKey: `task.${isComplete ? 'complete' : 'reopen'}:${taskId}:${result.data!.updatedAt}` });
+        if (supportsTaskEvents(repository)) {
+          const planning = await (async () => {
+            if ('getTaskPlanning' in repository && typeof repository.getTaskPlanning === 'function') return repository.getTaskPlanning(taskId);
+            return null;
+          })();
+          await repository.recordTaskEvent({ taskId, type: isComplete ? 'completed' : 'reopened', occurredAt: new Date().toISOString(), idempotencyKey: `task.${isComplete ? 'complete' : 'reopen'}:${taskId}:${result.data!.updatedAt}`, payload: { estimateMinutes: planning?.estimateMinutes ?? null, energyLevel: planning?.energyLevel ?? null } });
+        }
         const priorComplete = currentTask.status === 'done';
         undoJournal.record({
           label: isComplete ? `Completed “${currentTask.title}”` : `Reopened “${currentTask.title}”`,

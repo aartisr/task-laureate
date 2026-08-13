@@ -6,6 +6,7 @@ import type { TodoItem, Priority } from '../core/contracts/domain';
 import { formatDateOnly, isDueDateBeforeToday, isDueDateToday } from '../core/domain/dateOnly';
 import { usePageSEO, PAGE_SEO } from '../hooks/usePageSEO';
 import { buildWeeklyReflection } from '../core/domain/reflection';
+import { supportsTaskEventFeed } from '../core/contracts/antiBacklog';
 
 const PRIORITY_ORDER: Priority[] = ['urgent', 'high', 'medium', 'low'];
 const PRIORITY_META: Record<Priority, { label: string; icon: string; color: string }> = {
@@ -71,6 +72,7 @@ function useAllTasks() {
 export function ProgressPage() {
   usePageSEO(PAGE_SEO.progress);
   const { allTasks, loading, lists } = useAllTasks();
+  const eventFeed = useQuery({ queryKey: ['task-events', 'weekly'], queryFn: () => supportsTaskEventFeed(appServices.repository) ? appServices.repository.listTaskEvents({ since: new Date(Date.now() - 7 * 86_400_000).toISOString() }) : Promise.resolve([]), staleTime: 30_000 });
 
   if (loading) return <div className="page-surface">Loading progress…</div>;
 
@@ -80,7 +82,7 @@ export function ProgressPage() {
   const blocked = allTasks.filter((t) => t.status === 'blocked').length;
   const todo = allTasks.filter((t) => t.status === 'todo').length;
   const overallPct = total > 0 ? Math.round((done / total) * 100) : 0;
-  const reflection = buildWeeklyReflection(allTasks.filter((task) => task.status === 'done' && task.completedAt).map((task) => ({ occurredAt: task.completedAt!, energyLevel: null, estimateMinutes: null })));
+  const reflection = buildWeeklyReflection((eventFeed.data ?? []).filter((event) => event.type === 'completed').map((event) => ({ occurredAt: event.occurredAt, energyLevel: typeof event.payload.energyLevel === 'string' && ['deep', 'light', 'quick'].includes(event.payload.energyLevel) ? event.payload.energyLevel as 'deep' | 'light' | 'quick' : null, estimateMinutes: typeof event.payload.estimateMinutes === 'number' ? event.payload.estimateMinutes : null })));
 
   // Priority breakdown
   const byPriority = PRIORITY_ORDER.map((p) => {
@@ -169,6 +171,7 @@ export function ProgressPage() {
           <div className="insight-chip insight-chip--success">✓ Completed <strong>{reflection.completedCount}</strong> tasks in the last seven days.</div>
           <div className="insight-chip">⏱ Estimated focused time: <strong>{reflection.estimatedMinutesCompleted} minutes</strong>.</div>
           {reflection.mostProductiveWeekday ? <div className="insight-chip">📈 Most active completion day: <strong>{reflection.mostProductiveWeekday}</strong>.</div> : null}
+          {!supportsTaskEventFeed(appServices.repository) ? <div className="insight-chip">Connect secure sync to build this reflection from your real activity.</div> : null}
         </div>
       </div>
 
