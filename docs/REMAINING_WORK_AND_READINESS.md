@@ -5,7 +5,7 @@ anti-backlog implementation. It distinguishes an implemented experience from
 an external integration that still needs credentials, an operational decision,
 or production evidence.
 
-**Last reviewed:** 2026-08-12
+**Last reviewed:** 2026-08-13
 **Scope:** application integrations, credentials, production validation, and
 launch operations. It does not replace the product design in
 [ANTI_BACKLOG_IMPLEMENTATION_PLAN.md](ANTI_BACKLOG_IMPLEMENTATION_PLAN.md).
@@ -47,8 +47,8 @@ variable.
 | P0 | Production environment and delivery setup | Complete | Vercel project/domain, Supabase URL/key, public app URL, and selected delivery channels | Marked complete by product-owner acceptance on 2026-08-12. Keep [OPERATIONS.md](OPERATIONS.md) as the deployment-change and release regression runbook. |
 | P0 | External capture distribution | Complete | Production app URL, manual browser-extension packaging and install testing | Marked complete by product-owner acceptance on 2026-08-12. Keep [CAPTURE_CHANNELS.md](CAPTURE_CHANNELS.md) as the installation, distribution, and regression-test guide. |
 | P1 | Real AI task decomposition | Complete | Gemini free-tier preview, server-only configuration, restricted internal allowlist, migrations `028`–`029`, consent, validation, cache, quotas, audit trail, and atomic acceptance | Verified and accepted on 2026-08-12. Keep the unpaid preview restricted to opted-in internal users and non-sensitive task text; use the [Gemini plan](GEMINI_FREE_TIER_AI_DECOMPOSITION_PLAN.md) for operational regression and future-provider migration. |
-| P1 | One-way calendar scheduling | Ready for connection | Google Calendar adapter, OAuth callback/state validation, server-only AES-GCM refresh-token storage, idempotent create/update/remove endpoints, durable blocks, and task-level scheduling UX are implemented in migration `030` | Configure the Google OAuth web client and Vercel secrets, apply migration `030`, then run the calendar release checks in [OPERATIONS.md](OPERATIONS.md). |
-| P1 | Calendar reconciliation / two-way sync | Needs implementation | Provider webhook or polling design, conflict policy, and subscription credentials | Prove rescheduling, cancellation, duplicate prevention, and conflict resolution. |
+| P1 | One-way calendar scheduling | Complete | Google Calendar adapter, OAuth callback/state validation, server-only AES-GCM refresh-token storage, idempotent create/update/remove endpoints, durable blocks, and task-level scheduling UX are implemented in migration `030` | Marked complete by product-owner acceptance on 2026-08-13. Keep [OPERATIONS.md](OPERATIONS.md) for calendar-provider configuration and release regression checks. |
+| P1 | Calendar reconciliation / two-way sync | Complete | Provider-neutral cursor/reconciliation contract, Google push signals, incremental sync, ownership verification, cancellation handling, and migration `031` | Implemented and covered by reconciliation tests on 2026-08-13. Apply migration `031` and run the Google release checks in [OPERATIONS.md](OPERATIONS.md). |
 | P1 | Durable remote offline sync | Needs implementation | Remote replay protocol and conflict-resolution product decisions | Pass offline → reconnect end-to-end tests without data loss or silent overwrites. |
 | P1 | Execution actions and proposal review | Needs implementation | Final behavior decisions for delegate/archive and editing generated steps | Ship clarify, snooze, park, delegate, archive, and proposal accept/edit/discard flows with tests. |
 | P1 | Event-backed retrospective | Needs implementation | Confirm retention and privacy requirements | Persist task events and show the weekly retrospective from those events. |

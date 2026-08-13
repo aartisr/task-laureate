@@ -13,6 +13,8 @@
     { "source": "/api/calendar/status", "destination": "/api/calendar?route=status" },
     { "source": "/api/calendar/task-block", "destination": "/api/calendar?route=task-block" },
     { "source": "/api/calendar/schedule", "destination": "/api/calendar?route=schedule" },
+    { "source": "/api/calendar/sync", "destination": "/api/calendar?route=sync" },
+    { "source": "/api/calendar/google/notifications", "destination": "/api/calendar?route=google-notification" },
     { "source": "/api/calendar/remove", "destination": "/api/calendar?route=remove" },
     { "source": "/api/calendar/disconnect", "destination": "/api/calendar?route=disconnect" },
     { "source": "/(.*)", "destination": "/index.html" }

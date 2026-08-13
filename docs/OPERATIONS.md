@@ -52,14 +52,14 @@ Important:
 - `PUBLIC_APP_URL`
 - Push keys: `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`
 - SMS (optional): `SMS_PROVIDER=twilio`, `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER`
-- Google Calendar (one-way scheduling): `CALENDAR_SCHEDULING_ENABLED=true`, `GOOGLE_CALENDAR_CLIENT_ID`, `GOOGLE_CALENDAR_CLIENT_SECRET`, `CALENDAR_OAUTH_STATE_SECRET`, `CALENDAR_TOKEN_ENCRYPTION_KEY` (base64-encoded 32-byte key)
+- Google Calendar (two-way scheduling): `CALENDAR_SCHEDULING_ENABLED=true`, `GOOGLE_CALENDAR_CLIENT_ID`, `GOOGLE_CALENDAR_CLIENT_SECRET`, `CALENDAR_OAUTH_STATE_SECRET`, `CALENDAR_TOKEN_ENCRYPTION_KEY` (base64-encoded 32-byte key)
 
 Rule: never place server-only values in `VITE_*`.
 
-### Step 3a: Google Calendar one-way scheduling
+### Step 3a: Google Calendar two-way scheduling
 
-1. Apply migration `030_one_way_calendar_scheduling.sql` after migrations
-   `001`–`029`.
+1. Apply migrations `030_one_way_calendar_scheduling.sql` and
+   `031_calendar_reconciliation.sql` after migrations `001`–`029`.
 2. In Google Cloud, enable the Google Calendar API and create an OAuth **Web
    application** client. Add the exact callback URL for every environment:
    `https://<app-origin>/api/calendar/google/callback`.
@@ -67,17 +67,19 @@ Rule: never place server-only values in `VITE_*`.
    Vercel environment. Generate `CALENDAR_OAUTH_STATE_SECRET` with at least 32
    random bytes and `CALENDAR_TOKEN_ENCRYPTION_KEY` as a base64-encoded,
    32-byte AES-256 key. Keep both server-only.
-4. Sign in as a non-production user, open an editable task, and connect Google
-   Calendar from its **Calendar block** panel. Choose a calendar, schedule a
-   block, update it, open it in Google Calendar, and remove it.
-5. Confirm that only explicitly scheduled Task-Laureate blocks are created;
-   the app deliberately does not read in, modify, or reconcile ordinary Google
-   Calendar events. Revoke Google consent and confirm the app requests a
-   reconnect without changing the task.
+4. Sign in as a non-production user, open an editable task, connect Google
+   Calendar, choose a calendar, schedule a block, then change that block’s
+   start time and duration in Google Calendar. Return to the task or select
+   **Check calendar now** and confirm the task plan matches. Delete the block
+   in Google and confirm its scheduled time is cleared while the task remains.
+5. Confirm that ordinary Google Calendar events are never imported, modified,
+   or deleted. The integration verifies Task-Laureate ownership metadata before
+   applying a provider change. Revoke Google consent and confirm the app asks
+   for reconnection without changing the task.
 
-The current integration is one-way by design: Task-Laureate owns only events
-it created. Do not promise Google-to-task synchronization until the separate
-two-way reconciliation work item is complete.
+Google push notifications only signal that a calendar changed; the server
+performs a cursor-based incremental sync to fetch and verify the actual delta.
+Channels are renewed when a user schedules or explicitly checks a calendar.
 
 ### Step 4: Auth provider setup
 

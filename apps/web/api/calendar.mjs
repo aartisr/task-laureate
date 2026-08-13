@@ -6,6 +6,8 @@ const routes = Object.freeze({
   status: handlers.status,
   'task-block': handlers.taskBlock,
   schedule: handlers.schedule,
+  sync: handlers.sync,
+  'google-notification': handlers.googleNotification,
   remove: handlers.remove,
   disconnect: handlers.disconnect,
 });

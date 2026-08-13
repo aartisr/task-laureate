@@ -4,7 +4,7 @@ export type CalendarConnectionStatus = 'unavailable' | 'disconnected' | 'connect
 export type CalendarConfigurationIssue = 'disabled' | 'missing_configuration' | 'invalid_token_encryption_key';
 export type CalendarOption = { id: string; summary: string; primary: boolean };
 export type CalendarStatus = { status: CalendarConnectionStatus; redirectUri?: string | null; configurationIssue?: CalendarConfigurationIssue; connectionId?: string; defaultCalendarId?: string; calendars?: CalendarOption[] };
-export type CalendarBlock = { id: string; calendar_id: string; starts_at: string; duration_minutes: number; external_event_url?: string | null };
+export type CalendarBlock = { id: string; calendar_id: string; starts_at: string; duration_minutes: number; external_event_url?: string | null; sync_state?: 'active' | 'removed_external' | 'error' | 'reauthorization_required'; last_reconciled_at?: string | null };
 const sessionTimeoutMs = 5_000;
 const requestTimeoutMs = 8_000;
 const calendarStatuses = new Set<CalendarConnectionStatus>(['unavailable', 'disconnected', 'connected', 'reauthorization_required']);
@@ -58,6 +58,7 @@ export async function scheduleCalendarBlock(input: { taskId: string; connectionI
   return authenticatedRequest('/api/calendar/schedule', { method: 'POST', body: JSON.stringify(input) }) as Promise<{ block: CalendarBlock; eventUrl?: string | null }>;
 }
 export async function removeCalendarBlock(taskId: string, connectionId: string) { await authenticatedRequest('/api/calendar/remove', { method: 'POST', body: JSON.stringify({ taskId, connectionId }) }); }
+export async function reconcileCalendar(connectionId: string, calendarId: string) { await authenticatedRequest('/api/calendar/sync', { method: 'POST', body: JSON.stringify({ connectionId, calendarId }) }); }
 export async function disconnectGoogleCalendar() { await authenticatedRequest('/api/calendar/disconnect', { method: 'POST' }); }
 export async function getCalendarTaskBlock(taskId: string) {
   const payload = await authenticatedRequest(`/api/calendar/task-block?taskId=${encodeURIComponent(taskId)}`) as { block?: CalendarBlock | null } | null;

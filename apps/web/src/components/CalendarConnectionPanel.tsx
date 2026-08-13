@@ -96,7 +96,7 @@ export function CalendarConnectionPanel({ enabled }: { enabled: boolean }) {
       <div>
         <p className="calendar-connection-panel__eyebrow">Google Calendar</p>
         <h3>Connect once, schedule deliberately</h3>
-        <p>Task-Laureate only creates or updates blocks that you explicitly schedule. It never imports, edits, or removes your existing calendar events.</p>
+        <p>Task-Laureate only syncs blocks that you explicitly schedule. It never imports, edits, or removes ordinary calendar events.</p>
         <RedirectUri value={status.redirectUri} />
       </div>
       <button className="primary-button" type="button" disabled={busy} onClick={() => void connect()}>
@@ -110,7 +110,7 @@ export function CalendarConnectionPanel({ enabled }: { enabled: boolean }) {
     <div>
       <p className="calendar-connection-panel__eyebrow">Google Calendar connected</p>
       <h3>Ready when a task deserves protected time</h3>
-      <p>Open any editable task to choose a start time and create a one-way calendar block. Calendar changes remain under your control.</p>
+      <p>Open any editable task to protect time. Changes you make to that Task-Laureate block in Google Calendar stay in sync with the task.</p>
       <RedirectUri value={status.redirectUri} />
     </div>
     <button className="secondary-button" type="button" disabled={busy} onClick={() => void disconnect()}>
