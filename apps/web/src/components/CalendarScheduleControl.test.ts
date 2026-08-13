@@ -28,7 +28,7 @@ describe('calendar sync checkpoint labels', () => {
   });
 
   it('allows a missing block to be restored using its saved Google calendar even when the calendar list is empty', () => {
-    expect(canScheduleCalendarBlock({ startsAt: '2026-08-13T11:15', existingBlock: { calendar_id: 'primary' } })).toBe(true);
-    expect(canScheduleCalendarBlock({ startsAt: '2026-08-13T11:15' })).toBe(false);
+    expect(canScheduleCalendarBlock({ startsAt: '2026-08-13T11:15', connected: true })).toBe(true);
+    expect(canScheduleCalendarBlock({ startsAt: '2026-08-13T11:15', connected: false })).toBe(false);
   });
 });
