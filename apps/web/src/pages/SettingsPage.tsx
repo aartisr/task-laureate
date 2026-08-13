@@ -11,12 +11,15 @@ import { NotificationInbox } from '../components/NotificationInbox';
 import { ReminderDeliveryPreferences } from '../components/ReminderDeliveryPreferences';
 import { AnalyticsConsentControl } from '../components/AnalyticsConsentControl';
 import { AntiBacklogPrivacyControls } from '../components/AntiBacklogPrivacyControls';
+import { CalendarConnectionPanel } from '../components/CalendarConnectionPanel';
+import { isFeatureEnabled } from '../config/featureFlags';
 
 /** Keeps everyday preferences visible and infrequent administration available on demand. */
 export function SettingsPage() {
   usePageSEO(PAGE_SEO.settings);
   const { currentTheme } = useTheme();
   const currentThemeLabel = THEME_OPTIONS.find((theme) => theme.name === currentTheme)?.label ?? 'Unknown';
+  const calendarEnabled = isFeatureEnabled('calendarIntegration');
 
   return (
     <PageContainer
@@ -59,6 +62,11 @@ export function SettingsPage() {
         <details className="settings-disclosure">
           <summary><span>Account &amp; sync</span><small>Connect or manage your account</small></summary>
           <div className="settings-disclosure__body"><CloudSyncAuthPanel provider={authProvider} /></div>
+        </details>
+
+        <details className="settings-disclosure">
+          <summary><span>Calendar scheduling</span><small>Protect time for focused work</small></summary>
+          <div className="settings-disclosure__body"><CalendarConnectionPanel enabled={calendarEnabled} /></div>
         </details>
 
         <details className="settings-disclosure">
