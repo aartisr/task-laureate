@@ -29,6 +29,11 @@ for (const [name, config] of [['vercel.json', rootVercel], ['apps/web/vercel.jso
   requireValue(typeof config.buildCommand === 'string' && config.buildCommand.includes('verify:production'), `${name} must run the production preflight before building.`);
   requireValue(Array.isArray(config.crons) && config.crons.some((cron) => cron.path === '/api/cron/notifications'), `${name} must retain the notification cron route.`);
   requireValue(Array.isArray(config.rewrites) && config.rewrites.some((rewrite) => rewrite.destination === '/index.html'), `${name} must preserve SPA deep-link routing.`);
+  const headers = Array.isArray(config.headers) ? config.headers : [];
+  const workerHeaders = headers.find((rule) => rule.source === '/service-worker.js')?.headers;
+  requireValue(Array.isArray(workerHeaders) && workerHeaders.some((header) => header.key === 'Cache-Control' && header.value === 'no-cache, no-store, must-revalidate'), `${name} must prevent HTTP caching of the service worker.`);
+  const publicAssetHeaders = headers.find((rule) => typeof rule.source === 'string' && rule.source.includes('manifest.json'));
+  requireValue(typeof publicAssetHeaders?.source === 'string' && publicAssetHeaders.source.includes('icons/(.*)'), `${name} must publish PWA icons with the public app assets.`);
 }
 
 for (const file of [
