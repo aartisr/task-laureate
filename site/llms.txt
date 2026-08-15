@@ -5,6 +5,8 @@ This is the public, static product overview for Task-Laureate. It complements th
 - Primary application: https://tasks.ai-aarti.com/
 - Public product overview: https://tasks.ai-aarti.com/about/
 - Source code: https://github.com/aartisr/task-laureate
+- Documentation hub: https://aartisr.github.io/task-laureate/docs/
+- Project Wiki: https://github.com/aartisr/task-laureate/wiki
 - Primary machine-readable product summary: https://tasks.ai-aarti.com/llms.txt
 
 Task-Laureate is a free, open-source, privacy-minded, local-first task workspace for students, makers, and focused individuals. It supports quick capture, natural-language parsing, lists, tasks, priorities, due dates, notes, attachments, task dependencies, focused execution views, progress reflection, and deliberate collaboration controls.

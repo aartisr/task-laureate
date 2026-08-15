@@ -20,6 +20,8 @@
 
 - Product overview: https://tasks.ai-aarti.com/about/
 - GitHub Pages product story: https://aartisr.github.io/task-laureate/
+- GitHub Pages documentation hub: https://aartisr.github.io/task-laureate/docs/
+- Project Wiki: https://github.com/aartisr/task-laureate/wiki
 - Support: https://tasks.ai-aarti.com/support
 - Application: https://tasks.ai-aarti.com/
 - Source repository: https://github.com/aartisr/task-laureate
@@ -31,6 +33,7 @@ Students, makers, and focused individuals who want a clean personal task workspa
 ## Source and documentation
 
 - README and setup: https://github.com/aartisr/task-laureate/blob/master/README.md
+- Documentation index: https://github.com/aartisr/task-laureate/blob/master/docs/INDEX.md
 - Production and self-hosting: https://github.com/aartisr/task-laureate/blob/master/docs/OPERATIONS.md
 - Architecture: https://github.com/aartisr/task-laureate/blob/master/docs/ARCHITECTURE_GUIDE.md
 - Task dependencies: https://github.com/aartisr/task-laureate/blob/master/docs/TASK_DEPENDENCIES.md

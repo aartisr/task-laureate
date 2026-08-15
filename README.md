@@ -2,7 +2,7 @@
 
 [![Production quality and security gates](https://github.com/aartisr/task-laureate/actions/workflows/quality.yml/badge.svg)](https://github.com/aartisr/task-laureate/actions/workflows/quality.yml)
 
-[**Open Task-Laureate →**](https://tasks.ai-aarti.com) · [**Try the sample workspace →**](https://tasks.ai-aarti.com/sample) · [Product overview](https://aartisr.github.io/task-laureate/)
+[**Open Task-Laureate →**](https://tasks.ai-aarti.com) · [**Try the sample workspace →**](https://tasks.ai-aarti.com/sample) · [Product overview](https://aartisr.github.io/task-laureate/) · [Documentation hub](https://aartisr.github.io/task-laureate/docs/) · [Wiki](https://github.com/aartisr/task-laureate/wiki)
 
 > A task manager should return attention to its owner—not demand more of it.
 
@@ -169,6 +169,8 @@ that must be reviewed before use.
 - **Edit Puck-managed pages:** [Puck editor guide](docs/PUCK_EDITOR_GUIDE.md)
 - **See delivery status and future work:** [Readiness tracker](docs/REMAINING_WORK_AND_READINESS.md)
 - **Find everything:** [Documentation index](docs/INDEX.md)
+- **Browse the quick reference:** [GitHub Wiki](https://github.com/aartisr/task-laureate/wiki)
+- **Publish the Wiki:** [Wiki publishing guide](docs/GITHUB_WIKI_PUBLISHING.md)
 
 ## Contributing
 
