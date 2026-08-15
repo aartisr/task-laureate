@@ -21,6 +21,11 @@ jobs:
           cache: npm
       - run: npm ci --include=dev --include=optional
       - run: npm run quality:gate
+      # Date-only logic must remain correct for users outside the UTC CI host.
+      - name: Verify PWA and date boundaries in America/New_York
+        env:
+          TZ: America/New_York
+        run: npm run test:pwa-contract -w apps/web && npm run test -w apps/web -- src/core/domain/dateOnly.test.ts
 
   security:
     name: Production dependency security scan

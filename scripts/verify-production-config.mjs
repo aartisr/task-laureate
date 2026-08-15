@@ -36,6 +36,10 @@ for (const [name, config] of [['vercel.json', rootVercel], ['apps/web/vercel.jso
   requireValue(Array.isArray(iconHeaders) && iconHeaders.some((header) => header.key === 'Cache-Control' && header.value === 'public, max-age=86400'), `${name} must publish PWA icons with the public app assets.`);
 }
 
+const rootPwaHeaders = (rootVercel.headers ?? []).filter((rule) => rule.source === '/service-worker.js' || rule.source === '/icons/:path*');
+const webPwaHeaders = (webVercel.headers ?? []).filter((rule) => rule.source === '/service-worker.js' || rule.source === '/icons/:path*');
+requireValue(JSON.stringify(rootPwaHeaders) === JSON.stringify(webPwaHeaders), 'Root and web Vercel configurations must keep identical PWA header rules.');
+
 for (const file of [
   'package-lock.json',
   '.npmrc',
