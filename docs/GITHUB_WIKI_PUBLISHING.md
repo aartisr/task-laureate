@@ -1,10 +1,22 @@
 # Publishing the GitHub Wiki
 
 The editable, reviewable source for the project Wiki is stored in
-[`wiki/`](../wiki). GitHub Wikis are a separate Git repository, so publishing
-requires a maintainer with GitHub write access.
+[`wiki/`](../wiki). GitHub Wikis are a separate Git repository. The committed
+`Publish GitHub Wiki` workflow synchronizes the source automatically whenever
+`wiki/` changes on `master`.
 
-## Publish the source
+## Automatic publishing
+
+After the Wiki feature is enabled, push the repository change that adds or
+updates `wiki/`. The GitHub Actions workflow clones the Wiki repository, copies
+the maintained Markdown pages, and commits them. Its first successful run makes
+the Wiki visible at `https://github.com/aartisr/task-laureate/wiki`.
+
+If a run fails because the repository token cannot write to the Wiki, use the
+one-time manual fallback below and check that the workflow has `contents: write`
+permission in the Actions settings.
+
+## Manual fallback
 
 ```sh
 git clone https://github.com/aartisr/task-laureate.wiki.git
