@@ -1,8 +1,17 @@
 * [Home](Home)
 * [Getting Started](Getting-Started)
+* [Product Guide](Product-Guide)
 * [Install Task-Laureate](Install-Task-Laureate)
+* [FAQ](FAQ)
+* [Glossary](Glossary)
 * [Architecture](Architecture)
+* [Data & Sync](Data-and-Sync)
+* [Collaboration](Collaboration)
 * [Operations](Operations)
+* [Release Playbook](Release-Playbook)
+* [Privacy & Security](Privacy-and-Security)
+* [Reliability & PWA](Reliability-and-PWA)
+* [Accessibility & Interaction](Accessibility-and-Interaction)
 * [Contributing](Contributing)
 
 ---

@@ -13,11 +13,16 @@ Created by [Aarti S Ravikumar](https://ai-aarti.com).
 | If you want to… | Go here |
 | --- | --- |
 | Use the product | [Open Task-Laureate](https://tasks.ai-aarti.com) · [Sample workspace](https://tasks.ai-aarti.com/sample) |
+| Learn the workflow | [Product Guide](Product-Guide) |
 | Install it on a phone | [Install Task-Laureate](Install-Task-Laureate) |
 | Understand the product | [GitHub Pages product overview](https://aartisr.github.io/task-laureate/) |
 | Run it locally | [Getting Started](Getting-Started) |
 | Understand the design | [Architecture](Architecture) |
 | Deploy or operate it | [Operations](Operations) |
+| Review privacy and reliability | [Privacy & Security](Privacy-and-Security) · [Reliability & PWA](Reliability-and-PWA) |
+| Learn how data and teamwork work | [Data & Sync](Data-and-Sync) · [Collaboration](Collaboration) |
+| Improve the experience | [Accessibility & Interaction](Accessibility-and-Interaction) · [Release Playbook](Release-Playbook) |
+| Find a term or answer | [Glossary](Glossary) · [FAQ](FAQ) |
 | Contribute | [Contributing](Contributing) |
 
 ## Documentation map
@@ -42,3 +47,8 @@ reviewable alongside code.
 - [Live product](https://tasks.ai-aarti.com)
 - [Support](https://tasks.ai-aarti.com/support)
 - [Privacy](https://tasks.ai-aarti.com/privacy)
+- [Full versioned documentation](https://github.com/aartisr/task-laureate/blob/master/docs/INDEX.md)
+
+## Keeping this Wiki useful
+
+The Wiki is a curated orientation layer. Detailed implementation and operations guidance remains versioned beside the code. When behavior changes, update the relevant Wiki page and linked source guide in the same pull request.
