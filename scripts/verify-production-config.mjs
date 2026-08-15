@@ -34,7 +34,10 @@ for (const [name, config] of [['vercel.json', rootVercel], ['apps/web/vercel.jso
 for (const file of [
   'package-lock.json',
   '.npmrc',
-  'apps/web/public/push-worker.js',
+  // A single root worker provides both app-shell caching and Web Push. Keeping
+  // this contract aligned prevents a release check from resurrecting a second
+  // worker that would contend for the same scope.
+  'apps/web/public/service-worker.js',
   'apps/web/api/cron/notifications.mjs',
   'apps/web/api/cron/webPush.mjs',
   'apps/web/api/notifications/providers.mjs',
