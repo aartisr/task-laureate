@@ -6,6 +6,8 @@ Task-Laureate is an open-source, local-first task workspace built with React,
 TypeScript, Supabase, and Vercel. Start with the live product, explore a safe
 sample workspace, or use the guides below to contribute and operate it.
 
+Created by [Aarti S Ravikumar](https://ai-aarti.com).
+
 ## Start here
 
 | If you want to… | Go here |

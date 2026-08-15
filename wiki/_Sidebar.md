@@ -10,3 +10,4 @@
 * [Live app](https://tasks.ai-aarti.com)
 * [GitHub Pages docs](https://aartisr.github.io/task-laureate/docs/)
 * [Repository](https://github.com/aartisr/task-laureate)
+* [Created by Aarti S Ravikumar](https://ai-aarti.com)
