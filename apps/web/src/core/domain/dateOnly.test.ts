@@ -25,11 +25,14 @@ describe('date-only helpers', () => {
   });
 
   it('does not mark a Sept 7 task overdue at any time on Sept 7 locally', () => {
-    const lateOnDueDate = new Date('2026-09-07T23:59:59-04:00');
+    // Construct local calendar times. An ISO value with `-04:00` represents an
+    // absolute instant; in UTC CI that instant is already Sept 8, which is not
+    // the local-calendar scenario this test is exercising.
+    const lateOnDueDate = new Date(2026, 8, 7, 23, 59, 59);
 
     expect(getDueDateState('2026-09-07', lateOnDueDate)).toBe('today');
     expect(getDueDateState('2026-09-07T00:00:00.000Z', lateOnDueDate)).toBe('today');
     expect(isDueDateBeforeToday('2026-09-07', lateOnDueDate)).toBe(false);
-    expect(getDueDateState('2026-09-07', new Date('2026-09-08T00:00:00-04:00'))).toBe('overdue');
+    expect(getDueDateState('2026-09-07', new Date(2026, 8, 8, 0, 0, 0))).toBe('overdue');
   });
 });
