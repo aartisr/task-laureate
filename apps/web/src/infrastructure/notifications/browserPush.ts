@@ -28,7 +28,7 @@ async function request(path: string, init: RequestInit = {}) {
 }
 
 async function registration() {
-  return navigator.serviceWorker.register('/push-worker.js', { scope: '/' }).then(() => navigator.serviceWorker.ready);
+  return navigator.serviceWorker.register('/service-worker.js', { scope: '/' }).then(() => navigator.serviceWorker.ready);
 }
 
 export async function getBrowserPushState(): Promise<BrowserPushState> {

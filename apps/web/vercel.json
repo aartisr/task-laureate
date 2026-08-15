@@ -21,6 +21,12 @@
   ],
   "headers": [
     {
+      "source": "/service-worker.js",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
+      ]
+    },
+    {
       "source": "/(lists-overview|lists|tasks|completed|progress|search|activity|settings|sign-in|auth)(.*)",
       "headers": [
         { "key": "X-Robots-Tag", "value": "noindex, nofollow" }
@@ -42,7 +48,7 @@
       ]
     },
     {
-      "source": "/(robots.txt|sitemap.xml|manifest.json|llms.txt|og-image.svg|og-image-v2.png|favicon.svg)",
+      "source": "/(robots.txt|sitemap.xml|manifest.json|llms.txt|og-image.svg|og-image-v2.png|favicon.svg|icons/(.*))",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=86400" },
         { "key": "Access-Control-Allow-Origin", "value": "*" }

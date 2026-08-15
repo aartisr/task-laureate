@@ -1,0 +1,9 @@
+<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <!-- Deliberate safe zone for Android adaptive-icon masks. -->
+  <rect width="64" height="64" fill="#2e1065"/>
+  <circle cx="32" cy="32" r="25" fill="#fffaf0"/>
+  <circle cx="32" cy="32" r="23" fill="none" stroke="#f59e0b" stroke-width="1.8"/>
+  <path d="M 16 32 C 16 26, 23 26, 27 32 C 30 38, 38 38, 41 32 C 43 26, 49 26, 49 32 C 49 38, 43 38, 40 32 C 36 26, 29 26, 25 32 C 21 38, 16 38, 16 32 Z" fill="none" stroke="#f59e0b" stroke-width="3.8" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="32" cy="32" r="5" fill="none" stroke="#f59e0b" stroke-width="2.1"/>
+  <path d="M 32 18 C 29.5 21, 31 23.5, 32 25 C 33 23.5, 34.5 21, 32 18 Z" fill="#fb923c"/>
+</svg>

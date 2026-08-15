@@ -17,6 +17,7 @@ import { getAnalyticsConfig } from '../../infrastructure/analytics/analyticsConf
 import { getConsentDecision } from '../../core/privacy/analyticsConsent';
 import { MutationConflictCenter } from '../../components/MutationConflictCenter';
 import { RemoteSyncStatus } from '../../components/RemoteSyncStatus';
+import { PwaInstallExperience } from '../../components/PwaInstallExperience';
 
 // Initialize the analytics dispatcher once at module load time (browser only).
 // This ensures the dispatcher is registered before any trackGrowthEvent() call.
@@ -114,6 +115,7 @@ export function AppProviders() {
           <RemoteSyncStatus />
           <MutationConflictCenter />
           <RouterProvider key={workspaceEpoch} router={router} />
+          <PwaInstallExperience />
           <Analytics />
         </ThemeProvider>
       </QueryClientProvider>

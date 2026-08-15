@@ -7,6 +7,7 @@ kept below for when they become relevant.
 | --- | --- |
 | Use Task-Laureate | [Quick feature guide](QUICK_FEATURE_GUIDE.md) |
 | Run or deploy it | [Production operations](OPERATIONS.md) |
+| Release it as an installable phone app | [PWA release and install guide](PWA_RELEASE_AND_INSTALL_GUIDE.md) |
 | Change or extend it | [Architecture guide](ARCHITECTURE_GUIDE.md) |
 | Build the anti-backlog product vision | [Anti-backlog implementation plan](ANTI_BACKLOG_IMPLEMENTATION_PLAN.md) |
 | See what remains before launch | [Remaining work and launch readiness](REMAINING_WORK_AND_READINESS.md) |

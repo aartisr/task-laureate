@@ -114,6 +114,7 @@ In Supabase Auth:
    - reminder dispatch path
 6. Validate deep-link refresh on routes like `/settings` and invitation links.
 7. For public releases, validate `/`, `/about/`, `/support`, `/robots.txt`, `/sitemap.xml`, `/llms.txt`, and `/og-image-v2.png`; then follow [LAUNCH_AND_DISCOVERY_PLAYBOOK.md](LAUNCH_AND_DISCOVERY_PLAYBOOK.md) for account-owner search and launch work.
+8. For the installable web-app release and real-device acceptance checks, follow [PWA release and install guide](PWA_RELEASE_AND_INSTALL_GUIDE.md).
 
 ## 4) Reminder operations runbook
 

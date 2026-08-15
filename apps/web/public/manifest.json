@@ -1,9 +1,11 @@
 {
   "name": "Task-Laureate",
   "short_name": "Task-Laureate",
+  "id": "/",
   "description": "Premium task orchestration for high-performance teams. Calm, fast, beautiful.",
   "start_url": "/now",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
   "background_color": "#0f172a",
   "theme_color": "#8b5cf6",
   "orientation": "portrait-primary",
@@ -14,10 +16,22 @@
   "keywords": ["tasks", "productivity", "todo", "project management", "team collaboration"],
   "icons": [
     {
-      "src": "/favicon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "maskable any"
+      "src": "/icons/task-laureate-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/task-laureate-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/task-laureate-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ],
   "shortcuts": [
@@ -26,28 +40,28 @@
       "short_name": "Capture",
       "description": "Capture a thought without leaving your flow",
       "url": "/capture",
-      "icons": [{ "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }]
+      "icons": [{ "src": "/icons/task-laureate-192.png", "sizes": "192x192", "type": "image/png" }]
     },
     {
       "name": "All Tasks",
       "short_name": "Tasks",
       "description": "View and manage all your tasks",
       "url": "/tasks",
-      "icons": [{ "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }]
+      "icons": [{ "src": "/icons/task-laureate-192.png", "sizes": "192x192", "type": "image/png" }]
     },
     {
       "name": "Progress",
       "short_name": "Progress",
       "description": "View your progress analytics",
       "url": "/progress",
-      "icons": [{ "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }]
+      "icons": [{ "src": "/icons/task-laureate-192.png", "sizes": "192x192", "type": "image/png" }]
     },
     {
       "name": "Search",
       "short_name": "Search",
       "description": "Search across all lists and tasks",
       "url": "/search",
-      "icons": [{ "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }]
+      "icons": [{ "src": "/icons/task-laureate-192.png", "sizes": "192x192", "type": "image/png" }]
     }
   ],
   "share_target": {
