@@ -32,8 +32,8 @@ for (const [name, config] of [['vercel.json', rootVercel], ['apps/web/vercel.jso
   const headers = Array.isArray(config.headers) ? config.headers : [];
   const workerHeaders = headers.find((rule) => rule.source === '/service-worker.js')?.headers;
   requireValue(Array.isArray(workerHeaders) && workerHeaders.some((header) => header.key === 'Cache-Control' && header.value === 'no-cache, no-store, must-revalidate'), `${name} must prevent HTTP caching of the service worker.`);
-  const publicAssetHeaders = headers.find((rule) => typeof rule.source === 'string' && rule.source.includes('manifest.json'));
-  requireValue(typeof publicAssetHeaders?.source === 'string' && publicAssetHeaders.source.includes('icons/(.*)'), `${name} must publish PWA icons with the public app assets.`);
+  const iconHeaders = headers.find((rule) => rule.source === '/icons/:path*')?.headers;
+  requireValue(Array.isArray(iconHeaders) && iconHeaders.some((header) => header.key === 'Cache-Control' && header.value === 'public, max-age=86400'), `${name} must publish PWA icons with the public app assets.`);
 }
 
 for (const file of [

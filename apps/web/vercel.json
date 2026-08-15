@@ -48,7 +48,14 @@
       ]
     },
     {
-      "source": "/(robots.txt|sitemap.xml|manifest.json|llms.txt|og-image.svg|og-image-v2.png|favicon.svg|icons/(.*))",
+      "source": "/icons/:path*",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=86400" },
+        { "key": "Access-Control-Allow-Origin", "value": "*" }
+      ]
+    },
+    {
+      "source": "/(robots.txt|sitemap.xml|manifest.json|llms.txt|og-image.svg|og-image-v2.png|favicon.svg)",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=86400" },
         { "key": "Access-Control-Allow-Origin", "value": "*" }
