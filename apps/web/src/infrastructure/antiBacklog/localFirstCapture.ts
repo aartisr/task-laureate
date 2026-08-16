@@ -18,6 +18,8 @@ export interface OutboxItem<T = unknown> {
 export interface CaptureOutboxPayload {
   rawInput: string;
   parsed: ParsedCapture;
+  /** null means the frictionless default Inbox; a list ID is an explicit choice. */
+  listId: string | null;
 }
 
 export interface OutboxStore {
@@ -42,9 +44,9 @@ export function createOutboxStore(): OutboxStore {
   return asCaptureOutbox(typeof indexedDB === 'undefined' ? createMemoryDurableQueueStore([], options.sort) : createIndexedDbDurableQueueStore(options));
 }
 
-export function createCaptureOutboxItem(rawInput: string, parsed: ParsedCapture, now = new Date()): OutboxItem<CaptureOutboxPayload> {
+export function createCaptureOutboxItem(rawInput: string, parsed: ParsedCapture, listId: string | null = null, now = new Date()): OutboxItem<CaptureOutboxPayload> {
   const id = crypto.randomUUID();
-  return { id, type: 'capture', payload: { rawInput, parsed }, idempotencyKey: `capture:${id}`, createdAt: now.toISOString(), attempts: 0, lastError: null };
+  return { id, type: 'capture', payload: { rawInput, parsed, listId }, idempotencyKey: `capture:${id}`, createdAt: now.toISOString(), attempts: 0, lastError: null };
 }
 
 /**

@@ -11,6 +11,7 @@ Task-Laureate is a Vite/React SPA backed by Supabase Auth + Postgres RLS.
   - `/api/invitations` for share invitation creation + Resend delivery
   - `/api/cron/notifications` for scheduled reminder delivery
   - `/api/status-update-requests` for one-time, owner-authorized shared-task update requests
+  - `/api/support/exception-reports` for user-approved, sanitized GitHub support issues
 - Service-role keys and provider secrets never reach the browser.
 
 ## 2) Day-0 environment setup runbook
@@ -53,8 +54,35 @@ Important:
 - `PUBLIC_APP_URL`
 - Push keys: `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`
 - Google Calendar (two-way scheduling): `CALENDAR_SCHEDULING_ENABLED=true`, `GOOGLE_CALENDAR_CLIENT_ID`, `GOOGLE_CALENDAR_CLIENT_SECRET`, `CALENDAR_OAUTH_STATE_SECRET`, `CALENDAR_TOKEN_ENCRYPTION_KEY` (base64-encoded 32-byte key)
+- GitHub support reporting: `GITHUB_ISSUES_REPOSITORY` (`owner/repository`) and `GITHUB_ISSUES_TOKEN`
 
 Rule: never place server-only values in `VITE_*`.
+
+### Step 3b: User-approved exception reporting
+
+The app offers a **Report issue** action after an unhandled runtime error and a
+**Send report to Support** action in the React recovery screen. It does not
+send anything automatically. Before enabling it in Vercel:
+
+1. Choose a support repository. Use a private repository if support reports
+   should not be publicly visible.
+2. Create a GitHub fine-grained personal access token (or GitHub App
+   installation token) restricted to that single repository with only
+   **Issues: Read and write** permission. Do not use a classic broad-scope
+   token, and never expose this value to the browser.
+3. In Vercel, add `GITHUB_ISSUES_REPOSITORY=owner/repository` and
+   `GITHUB_ISSUES_TOKEN=<token>` to each environment that should accept
+   reports, then redeploy.
+4. Sign in with a test user, use the report preview, and confirm an issue is
+   created with a sanitized route, message, release, browser, source, and
+   optional stack trace. Confirm that an Authorization header, a JWT-like
+   value, URL query string, and an `api_key` sample appear as `[REDACTED]`.
+
+The Vercel function verifies the caller’s Supabase session, applies its own
+redaction and size limits (so a modified browser cannot bypass them), avoids
+adding the reporter identity to the issue, and keeps a short best-effort
+duplicate guard. Review GitHub repository access separately; anyone who can
+read the selected repository can read the submitted issue.
 
 ### Step 3a: Google Calendar two-way scheduling
 
@@ -112,6 +140,7 @@ In Supabase Auth:
    - dependency creation, cycle rejection, blocked completion, and unblocking after prerequisite completion
    - To do → In progress → Done task state transitions
    - scheduled reminder dispatch and explicit status-request delivery paths
+   - user-approved exception reporting, including a GitHub issue creation in a test repository
 6. Validate deep-link refresh on routes like `/settings` and invitation links.
 7. For public releases, validate `/`, `/about/`, `/support`, `/robots.txt`, `/sitemap.xml`, `/llms.txt`, and `/og-image-v2.png`; then follow [LAUNCH_AND_DISCOVERY_PLAYBOOK.md](LAUNCH_AND_DISCOVERY_PLAYBOOK.md) for account-owner search and launch work.
 8. For the installable web-app release and real-device acceptance checks, follow [PWA release and install guide](PWA_RELEASE_AND_INSTALL_GUIDE.md).
@@ -189,6 +218,18 @@ Notes:
 
 1. Confirm Vercel Root Directory is `apps/web`.
 2. Confirm SPA rewrite config from [apps/web/vercel.json](../apps/web/vercel.json).
+
+### Symptom: Support report cannot be sent
+
+1. Confirm the user is signed in and their session is current.
+2. Confirm `SUPABASE_URL` (or `VITE_SUPABASE_URL`) and
+   `SUPABASE_PUBLISHABLE_KEY` (or its `VITE_` equivalent) are available to
+   the Vercel function.
+3. Confirm `GITHUB_ISSUES_REPOSITORY` is exactly `owner/repository` and that
+   `GITHUB_ISSUES_TOKEN` is a server-only, repository-limited credential with
+   **Issues: write** permission.
+4. Check Vercel logs for the HTTP status only. Never paste submitted reports,
+   authorization headers, or GitHub tokens into logs or issue comments.
 
 ## 7) Security and reliability guardrails
 

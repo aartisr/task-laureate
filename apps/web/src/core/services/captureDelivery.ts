@@ -4,14 +4,14 @@ import type { ParsedCapture } from '../domain/antiBacklog';
 import type { OutboxItem, OutboxStore } from '../../infrastructure/antiBacklog/localFirstCapture';
 import { flushOutbox } from '../../infrastructure/antiBacklog/localFirstCapture';
 
-type CapturePayload = { rawInput: string; parsed: ParsedCapture };
+type CapturePayload = { rawInput: string; parsed: ParsedCapture; listId: string | null };
 
 function isCapture(item: OutboxItem): item is OutboxItem<CapturePayload> {
   return item.type === 'capture' && typeof (item.payload as Partial<CapturePayload>).rawInput === 'string';
 }
 
 async function captureIntoLocalInbox(repository: TodoRepository, item: OutboxItem<CapturePayload>) {
-  const requestedList = (item.payload as CapturePayload & { listId?: string | null }).listId;
+  const requestedList = item.payload.listId;
   const lists = await repository.listLists();
   const inbox = requestedList ? lists.find((list) => list.id === requestedList) : lists.find((list) => list.title === 'Inbox' && list.status === 'active');
   const destination = inbox ?? await repository.createList({ title: 'Inbox', description: 'Fast capture inbox' });
@@ -23,7 +23,7 @@ export async function flushCaptureOutbox(store: OutboxStore, repository: TodoRep
   return flushOutbox(store, async (item) => {
     if (!isCapture(item)) throw new Error('Outbox item is not a valid capture.');
     if (supportsCaptureTask(repository)) {
-      await repository.captureTask({ idempotencyKey: item.idempotencyKey, rawInput: item.payload.rawInput, parsed: item.payload.parsed });
+      await repository.captureTask({ idempotencyKey: item.idempotencyKey, rawInput: item.payload.rawInput, parsed: item.payload.parsed, listId: item.payload.listId });
       return;
     }
     await captureIntoLocalInbox(repository, item);

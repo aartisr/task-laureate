@@ -4,6 +4,8 @@
  */
 
 import React, { ReactNode } from 'react';
+import { ExceptionReportDialog } from './ExceptionReportDialog';
+import { createExceptionReportDraft } from '../infrastructure/support/exceptionReporting';
 
 interface Props {
   children: ReactNode;
@@ -13,16 +15,17 @@ interface Props {
 interface State {
   hasError: boolean;
   error?: Error;
+  reportOpen: boolean;
 }
 
 export class ErrorBoundary extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props);
-    this.state = { hasError: false };
+    this.state = { hasError: false, reportOpen: false };
   }
 
   static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error };
+    return { hasError: true, error, reportOpen: false };
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
@@ -30,7 +33,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
   }
 
   handleReset = () => {
-    this.setState({ hasError: false, error: undefined });
+    this.setState({ hasError: false, error: undefined, reportOpen: false });
   };
 
   render() {
@@ -73,31 +76,6 @@ export class ErrorBoundary extends React.Component<Props, State> {
                 We encountered an unexpected error. Try refreshing the page or contact support if
                 the problem persists.
               </p>
-              {this.state.error && (
-                <details
-                  style={{
-                    textAlign: 'left',
-                    padding: '1rem',
-                    backgroundColor: 'rgba(220, 38, 38, 0.1)',
-                    borderRadius: '0.5rem',
-                    marginBottom: '1.5rem',
-                    borderLeft: '3px solid #dc2626',
-                  }}
-                >
-                  <summary style={{ cursor: 'pointer', fontWeight: 500 }}>Error details</summary>
-                  <pre
-                    style={{
-                      marginTop: '0.5rem',
-                      fontSize: '0.875rem',
-                      overflow: 'auto',
-                      maxHeight: '200px',
-                      color: '#dc2626',
-                    }}
-                  >
-                    {this.state.error.toString()}
-                  </pre>
-                </details>
-              )}
               <button
                 onClick={this.handleReset}
                 className="primary-button"
@@ -108,11 +86,13 @@ export class ErrorBoundary extends React.Component<Props, State> {
                 Try Again
               </button>
               <button
-                onClick={() => (window.location.href = '/')}
+                onClick={() => this.setState({ reportOpen: true })}
                 className="secondary-button"
               >
-                Back to Home
+                Send report to Support
               </button>
+              <button onClick={() => (window.location.href = '/')} className="secondary-button">Back to Home</button>
+              {this.state.reportOpen && this.state.error ? <ExceptionReportDialog draft={createExceptionReportDraft(this.state.error)} onClose={() => this.setState({ reportOpen: false })} /> : null}
             </div>
           </div>
         )

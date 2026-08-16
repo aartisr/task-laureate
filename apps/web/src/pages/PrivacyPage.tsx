@@ -52,6 +52,7 @@ export function PrivacyPage() {
       <section>
         <h2>Analytics and essential service data</h2>
         <p>Optional product analytics are governed by your choice in Settings. Essential operational information may be processed to deliver authentication, synchronization, security, error handling, and features you request. We do not sell personal information.</p>
+        <p>Support reports are never sent automatically. If you choose <strong>Send to Support</strong>, you can review the diagnostic preview first; common credentials and URL query strings are redacted before a configured GitHub support issue is created. Avoid adding personal or workspace content to the optional note.</p>
       </section>
 
       <section>

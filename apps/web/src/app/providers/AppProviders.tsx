@@ -18,6 +18,9 @@ import { getConsentDecision } from '../../core/privacy/analyticsConsent';
 import { MutationConflictCenter } from '../../components/MutationConflictCenter';
 import { RemoteSyncStatus } from '../../components/RemoteSyncStatus';
 import { PwaInstallExperience } from '../../components/PwaInstallExperience';
+import { GlobalExceptionReporter } from '../../components/GlobalExceptionReporter';
+import { ExceptionReportDialog } from '../../components/ExceptionReportDialog';
+import { createExceptionReportDraft } from '../../infrastructure/support/exceptionReporting';
 
 // Initialize the analytics dispatcher once at module load time (browser only).
 // This ensures the dispatcher is registered before any trackGrowthEvent() call.
@@ -28,6 +31,7 @@ if (typeof window !== 'undefined') {
 export function AppProviders() {
   const [ready, setReady] = useState(false);
   const [startupError, setStartupError] = useState<Error | null>(null);
+  const [startupReportOpen, setStartupReportOpen] = useState(false);
   const [persistenceStatus, setPersistenceStatus] = useState<PersistenceStatus>(getPersistenceStatus);
   const [workspaceEpoch, setWorkspaceEpoch] = useState(0);
   const [startupDelayed, setStartupDelayed] = useState(false);
@@ -91,6 +95,7 @@ export function AppProviders() {
 
   const retryStartup = () => {
     setStartupError(null);
+    setStartupReportOpen(false);
     setReady(false);
     setStartupDelayed(false);
     resetWorkspaceForAuthChange();
@@ -101,7 +106,8 @@ export function AppProviders() {
   };
 
   if (startupError) return <main className="app-startup-error" role="alert">
-    <div><p>Workspace unavailable</p><h1>We could not prepare your secure workspace.</h1><span>{startupError.message}</span><button type="button" className="primary-button" onClick={retryStartup}>Try again</button></div>
+    <div><p>Workspace unavailable</p><h1>We could not prepare your secure workspace.</h1><span>{startupError.message}</span><div className="button-row"><button type="button" className="primary-button" onClick={retryStartup}>Try again</button><button type="button" className="secondary-button" onClick={() => setStartupReportOpen(true)}>Send report to Support</button></div></div>
+    {startupReportOpen ? <ExceptionReportDialog draft={createExceptionReportDraft(startupError, 'window')} onClose={() => setStartupReportOpen(false)} /> : null}
   </main>;
   if (!ready) return <main className="app-startup-shell" aria-busy="true" aria-label="Preparing Task Laureate">
     <aside className="app-startup-shell__sidebar" aria-hidden="true"><div className="app-startup-shell__brand"><img src="/.well-known/logo-small.svg" alt="" /><span>Task Laureate</span></div><div className="app-startup-shell__nav"><b /><b /><b /><b /></div><div className="app-startup-shell__account"><i /><span><b /><b /></span></div></aside>
@@ -114,6 +120,7 @@ export function AppProviders() {
           {persistenceStatus.phase === 'error' && <div className="persistence-alert" role="alert">{persistenceStatus.detail}</div>}
           <RemoteSyncStatus />
           <MutationConflictCenter />
+          <GlobalExceptionReporter />
           <RouterProvider key={workspaceEpoch} router={router} />
           <PwaInstallExperience />
           <Analytics />

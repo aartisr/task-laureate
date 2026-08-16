@@ -17,4 +17,16 @@ describe('capture delivery', () => {
     expect(await repository.listTasks(lists[0].id)).toMatchObject([{ title: 'Send report', tags: ['work'] }]);
     expect(await store.list()).toEqual([]);
   });
+
+  it('preserves an explicit existing-list destination through offline delivery', async () => {
+    const repository = createMemoryTodoRepository(createEmptyWorkspace());
+    const destination = await repository.createList({ title: 'Spring launch' });
+    const store = createOutboxStore();
+    await store.enqueue(createCaptureOutboxItem('Draft launch email', parseCapture('Draft launch email'), destination.id));
+
+    await flushCaptureOutbox(store, repository);
+
+    expect(await repository.listTasks(destination.id)).toMatchObject([{ title: 'Draft launch email' }]);
+    expect((await repository.listLists()).map((list) => list.title)).toEqual(['Spring launch']);
+  });
 });

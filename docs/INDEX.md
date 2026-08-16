@@ -7,6 +7,7 @@ kept below for when they become relevant.
 | --- | --- |
 | Use Task-Laureate | [Quick feature guide](QUICK_FEATURE_GUIDE.md) |
 | Run or deploy it | [Production operations](OPERATIONS.md) |
+| Enable user-approved error reporting | [Production operations: exception reporting](OPERATIONS.md#step-3b-user-approved-exception-reporting) |
 | Release it as an installable phone app | [PWA release and install guide](PWA_RELEASE_AND_INSTALL_GUIDE.md) |
 | Publish the project Wiki | [GitHub Wiki publishing](GITHUB_WIKI_PUBLISHING.md) |
 | Change or extend it | [Architecture guide](ARCHITECTURE_GUIDE.md) |

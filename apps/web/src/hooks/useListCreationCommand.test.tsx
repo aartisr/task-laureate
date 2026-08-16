@@ -18,6 +18,7 @@ describe('useListCreationCommand', () => {
     host = document.createElement('div');
     document.body.appendChild(host);
     root = createRoot(host);
+    window.sessionStorage.clear();
   });
 
   afterEach(async () => {
@@ -30,6 +31,13 @@ describe('useListCreationCommand', () => {
     expect(host.textContent).toBe('closed');
 
     await act(async () => requestListCreation());
+    expect(host.textContent).toBe('opened');
+  });
+
+  it('preserves a request made before the Dashboard listener mounts', async () => {
+    await act(async () => requestListCreation());
+    await act(async () => root.render(<Harness />));
+
     expect(host.textContent).toBe('opened');
   });
 });
