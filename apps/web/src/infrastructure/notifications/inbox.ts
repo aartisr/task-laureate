@@ -4,7 +4,7 @@ export type NotificationEvent = {
   id: string;
   title: string;
   body: string;
-  kind: 'due_soon' | 'weekly_digest' | 'task_assigned' | 'task_reminder';
+  kind: 'due_soon' | 'weekly_digest' | 'task_assigned' | 'task_reminder' | 'status_update_request';
   created_at: string;
   read_at: string | null;
 };

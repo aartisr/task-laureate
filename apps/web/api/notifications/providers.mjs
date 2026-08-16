@@ -6,12 +6,12 @@ function missing(...names) { return names.filter((name) => !process.env[name]); 
  * Provider adapters deliberately return a normalized result. Adding another
  * vendor is isolated here; the scheduler and its delivery audit do not change.
  */
-export async function sendReminderEmail({ to, subject, text, html, idempotencyKey }) {
+export async function sendReminderEmail({ to, subject, text, html, idempotencyKey, category = 'task_reminder' }) {
   const absent = missing('RESEND_API_KEY', 'RESEND_FROM_EMAIL');
   if (absent.length) return { status: 'skipped', reason: `Email is not configured (${absent.join(', ')}).` };
   const response = await fetch('https://api.resend.com/emails', {
     method: 'POST', headers: { ...json, Authorization: `Bearer ${process.env.RESEND_API_KEY}`, 'Idempotency-Key': idempotencyKey },
-    body: JSON.stringify({ from: process.env.RESEND_FROM_EMAIL, ...(process.env.RESEND_REPLY_TO ? { reply_to: process.env.RESEND_REPLY_TO } : {}), to: [to], subject, text, html, tags: [{ name: 'category', value: 'task_reminder' }] }),
+    body: JSON.stringify({ from: process.env.RESEND_FROM_EMAIL, ...(process.env.RESEND_REPLY_TO ? { reply_to: process.env.RESEND_REPLY_TO } : {}), to: [to], subject, text, html, tags: [{ name: 'category', value: category }] }),
   });
   if (!response.ok) return { status: 'failed', reason: `Resend returned HTTP ${response.status}.` };
   const body = await response.json().catch(() => ({}));

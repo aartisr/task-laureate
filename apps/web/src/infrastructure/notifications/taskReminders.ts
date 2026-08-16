@@ -28,3 +28,16 @@ export async function getTaskReminderSetup(taskId: string) {
 }
 export async function setTaskAssignee(taskId: string, userId: string, assigned: boolean) { await request('rpc/set_task_assignment', { method: 'POST', body: JSON.stringify({ p_task_id: taskId, p_user_id: userId, p_assigned: assigned }) }); }
 export async function saveTaskReminder(taskId: string, configuration: TaskReminderConfiguration) { await request('rpc/configure_task_reminder', { method: 'POST', body: JSON.stringify({ p_task_id: taskId, p_enabled: configuration.enabled, p_offset_minutes: configuration.offset_minutes, p_channels: configuration.channels }) }); }
+
+export async function requestTaskStatusUpdate(taskId: string) {
+  const session = await authProvider.getSession();
+  if (!session) throw new Error('Sign in to request a status update.');
+  const response = await fetch('/api/status-update-requests', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${session.accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ taskId }),
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(typeof payload?.message === 'string' ? payload.message : 'We could not request a status update.');
+  return payload as { requested: number; emailSent: number; emailSkipped: number; alreadyRequested: boolean };
+}

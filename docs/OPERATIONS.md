@@ -10,6 +10,7 @@ Task-Laureate is a Vite/React SPA backed by Supabase Auth + Postgres RLS.
 - Server-only Vercel functions handle privileged flows:
   - `/api/invitations` for share invitation creation + Resend delivery
   - `/api/cron/notifications` for scheduled reminder delivery
+  - `/api/status-update-requests` for one-time, owner-authorized shared-task update requests
 - Service-role keys and provider secrets never reach the browser.
 
 ## 2) Day-0 environment setup runbook
@@ -18,7 +19,7 @@ Task-Laureate is a Vite/React SPA backed by Supabase Auth + Postgres RLS.
 
 Apply migrations in order from [supabase/migrations](../supabase/migrations):
 
-- `001` through `027` for a new environment.
+- `001` through `037` for a new environment.
 
 Important:
 
@@ -51,7 +52,6 @@ Important:
 - `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, optional `RESEND_REPLY_TO`
 - `PUBLIC_APP_URL`
 - Push keys: `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`
-- SMS (optional): `SMS_PROVIDER=twilio`, `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER`
 - Google Calendar (two-way scheduling): `CALENDAR_SCHEDULING_ENABLED=true`, `GOOGLE_CALENDAR_CLIENT_ID`, `GOOGLE_CALENDAR_CLIENT_SECRET`, `CALENDAR_OAUTH_STATE_SECRET`, `CALENDAR_TOKEN_ENCRYPTION_KEY` (base64-encoded 32-byte key)
 
 Rule: never place server-only values in `VITE_*`.
@@ -91,8 +91,8 @@ In Supabase Auth:
 
 ### Step 5: Delivery provider setup
 
-- Verify Resend sending domain before production invitation/reminder email.
-- Validate reminder channel settings (in-app/email/SMS) with test accounts.
+- Verify Resend sending domain before production invitation, reminder, and status-request email.
+- Validate in-app and email reminders with test accounts. SMS is deliberately not offered.
 
 ## 3) Release runbook (every deployment)
 
@@ -111,7 +111,7 @@ In Supabase Auth:
    - attachment upload, preview, and removal by an attachment owner and list editor
    - dependency creation, cycle rejection, blocked completion, and unblocking after prerequisite completion
    - To do → In progress → Done task state transitions
-   - reminder dispatch path
+   - scheduled reminder dispatch and explicit status-request delivery paths
 6. Validate deep-link refresh on routes like `/settings` and invitation links.
 7. For public releases, validate `/`, `/about/`, `/support`, `/robots.txt`, `/sitemap.xml`, `/llms.txt`, and `/og-image-v2.png`; then follow [LAUNCH_AND_DISCOVERY_PLAYBOOK.md](LAUNCH_AND_DISCOVERY_PLAYBOOK.md) for account-owner search and launch work.
 8. For the installable web-app release and real-device acceptance checks, follow [PWA release and install guide](PWA_RELEASE_AND_INSTALL_GUIDE.md).
@@ -131,6 +131,18 @@ Operational checks:
 2. Confirm recipient opted-in to channel.
 3. Trigger cron securely.
 4. Inspect `task_reminder_deliveries` status and provider logs.
+
+### Explicit status requests
+
+- Only the owner of an active shared task can request an update.
+- Only assigned collaborators receive it; the owner never receives their own request.
+- The database records an in-app notification first. Email is then attempted only
+  when Resend is configured and the recipient has kept email reminders enabled.
+- A requester can contact the same recipient about the same task once per UTC
+  day. Repeated clicks are safe and do not create another notification or email.
+- Inspect `task_status_update_requests` and Vercel function logs if delivery is
+  unexpectedly skipped. The request itself remains in-app even if email is not
+  configured or the provider is unavailable.
 
 ## 5) Environment reset runbook (non-production only)
 
