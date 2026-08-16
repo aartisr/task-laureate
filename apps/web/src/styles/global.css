@@ -2601,6 +2601,22 @@ button {
   overflow: hidden;
 }
 
+button.sidebar-link {
+  inline-size: calc(100% - .5rem);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+@media (max-width: 767px) {
+  button.mobile-navigation__link {
+    inline-size: 100%;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+}
+
 button:active {
   animation: buttonPress 0.2s ease-out;
 }

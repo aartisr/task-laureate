@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { Link } from '@tanstack/react-router';
+import { Link, useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
 import { appServices } from '../app/runtime/appServices';
 import { dashboardQueryOptions, queryKeys } from '../core/contracts/queryKeys';
@@ -11,6 +11,7 @@ import type { TodoList, TodoListStatus } from '../core/contracts/domain';
 import { usePageSEO, PAGE_SEO } from '../hooks/usePageSEO';
 import { ShareResourcePanel } from '../components/ShareResourcePanel';
 import { supportsCollaboration } from '../core/contracts/repository';
+import { requestListCreation } from '../hooks/useListCreationCommand';
 
 type SortKey = 'title' | 'progress' | 'tasks' | 'created';
 type FilterStatus = 'all' | TodoListStatus;
@@ -51,6 +52,7 @@ function StatusBadge({ status }: { status: TodoListStatus }) {
 
 export function ListsPage() {
   usePageSEO(PAGE_SEO.listsOverview);
+  const navigate = useNavigate();
   const { data } = useQuery(dashboardQueryOptions(appServices.repository));
   const [filter, setFilter] = useState<FilterStatus>('active');
   const [sort, setSort] = useState<SortKey>('created');
@@ -171,7 +173,7 @@ export function ListsPage() {
         <div className="empty-state">
           <span className="empty-state__icon">📋</span>
           <p>No lists match your filters.</p>
-          <Link className="primary-button" to="/?newList=1">Create a list</Link>
+          <button type="button" className="primary-button" onClick={() => { requestListCreation(); void navigate({ to: '/' }); }}>Create a list</button>
         </div>
       ) : (
         <div className="lists-grid">

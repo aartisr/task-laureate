@@ -1,4 +1,4 @@
-import { type FormEvent, useEffect, useRef, useState } from 'react';
+import { type FormEvent, useLayoutEffect, useRef, useState } from 'react';
 import type { TodoListInput } from '../core/contracts/repository';
 
 export function ListComposer({ onCreate, onCancel, initialInput, restoredDraft = false }: {
@@ -17,7 +17,7 @@ export function ListComposer({ onCreate, onCancel, initialInput, restoredDraft =
   // This component is only mounted after someone deliberately asks to create a
   // List. Keeping the reveal and focus here guarantees every entry point
   // (navigation, keyboard shortcut, and cards) lands at the same first step.
-  useEffect(() => {
+  useLayoutEffect(() => {
     const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
     composerRef.current?.scrollIntoView?.({ block: 'center', behavior: reducedMotion ? 'auto' : 'smooth' });
     titleInputRef.current?.focus({ preventScroll: true });

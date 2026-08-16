@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import type { ReactNode } from 'react';
-import { Link, Outlet, useRouterState } from '@tanstack/react-router';
+import { Link, Outlet, useNavigate, useRouterState } from '@tanstack/react-router';
 import { useTheme } from '../core/themes/ThemeProvider';
 import type { NavItem } from '../core/contracts/feature';
 import { AccountStatus } from './AccountStatus';
@@ -104,6 +104,7 @@ function MobileBottomNavLink({ item }: { item: ResolvedMobileTab }) {
 
 export function AppShell({ children, navItems }: AppShellProps) {
   const { currentTheme } = useTheme();
+  const navigate = useNavigate();
   const isDarkTheme = currentTheme !== 'luxury-minimal';
   const isMobileViewport = useSyncExternalStore(subscribeToMobileViewport, getMobileViewportSnapshot, () => false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -178,6 +179,15 @@ export function AppShell({ children, navItems }: AppShellProps) {
     window.localStorage.setItem(workspaceNavigationPreferenceKey, String(next));
   };
 
+  // A button is intentional here. A route string containing a query parameter
+  // can be treated differently by router versions, which previously made this
+  // high-value action look inert. The durable command is issued first, then we
+  // navigate to its one canonical destination.
+  const beginListCreation = () => {
+    requestListCreation();
+    void navigate({ to: '/' });
+  };
+
   return (
     <div className={`app-shell ${shellThemeClass}`}>
       <a className="skip-link" href="#main-content">Skip to main content</a>
@@ -208,9 +218,9 @@ export function AppShell({ children, navItems }: AppShellProps) {
           <span>Task Laureate</span>
         </div>
         <nav className="sidebar-nav" aria-label="Primary Navigation">
-          <Link to="/?newList=1" className="sidebar-link sidebar-link--create" aria-label="Create a new List" onClick={requestListCreation}>
+          <button type="button" className="sidebar-link sidebar-link--create" aria-label="Create a new List" onClick={beginListCreation}>
             <span className="sidebar-link__create-icon" aria-hidden="true">＋</span> New List
-          </Link>
+          </button>
           <p className="sidebar-nav__label">Focus</p>
           {desktopNavigation.primary.map((item) => {
             const hasRecovery = item.to === '/settings' && recoveryAvailable;
@@ -315,10 +325,10 @@ export function AppShell({ children, navItems }: AppShellProps) {
           </div>
 
           <div className="mobile-navigation__items">
-            <Link to="/?newList=1" className="mobile-navigation__link mobile-navigation__link--create" onClick={() => { requestListCreation(); setIsMobileMenuOpen(false); }}>
+            <button type="button" className="mobile-navigation__link mobile-navigation__link--create" onClick={() => { beginListCreation(); setIsMobileMenuOpen(false); }}>
               <span className="mobile-navigation__icon" aria-hidden="true">＋</span>
               <span className="mobile-navigation__text"><strong>New List</strong><small>Name it now; add tasks next.</small></span>
-            </Link>
+            </button>
             <AccountStatus provider={authProvider} onNavigate={() => setIsMobileMenuOpen(false)} />
             <NotificationCenter onNavigate={() => setIsMobileMenuOpen(false)} />
             {mobilePrimaryTabs.map((item) => {
