@@ -4,6 +4,14 @@ on:
   pull_request:
   push:
     branches: [master]
+  workflow_dispatch:
+
+# A newer commit supersedes an older validation run for the same pull request
+# or branch. This keeps the status Vercel and reviewers see aligned with the
+# code that is actually about to ship.
+concurrency:
+  group: production-quality-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -39,3 +47,22 @@ jobs:
           cache: npm
       - run: npm ci --include=optional
       - run: npm run check:security
+
+  database:
+    name: Replay every Supabase migration from scratch
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          # Keep the CI database engine aligned with the committed CLI. A
+          # floating "latest" version can make the same migration pass one day
+          # and fail the next without a repository change.
+          version: 2.110.0
+      - name: Start an isolated Supabase stack
+        run: supabase db start
+      - name: Prove the schema is reproducible
+        run: supabase db reset --local --no-seed
+      - name: Lint the resulting database schema
+        run: supabase db lint --local --fail-on error

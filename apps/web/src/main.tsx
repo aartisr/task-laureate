@@ -5,6 +5,7 @@ import { installModuleVersionRecovery } from './app/runtime/moduleRecovery';
 import { registerServiceWorker } from './infrastructure/pwa/registerServiceWorker';
 import './core/themes/themes.css';
 import './styles/global.css';
+import './styles/premium-finish.css';
 
 const rootElement = document.getElementById('root');
 
