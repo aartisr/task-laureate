@@ -33,12 +33,15 @@ export function ShareResourcePanel({ repository, resource, resourceName, onClose
     // missing migration 035 must not prevent someone from creating an invite;
     // pending invitations remain visible and the owner can repair the optional
     // roster display independently.
+    setCollaborators([]);
     if (collaboratorsResult.reason instanceof CollaborationPersistenceError && collaboratorsResult.reason.isConfigurationFailure) {
-      setCollaborators([]);
       setCollaboratorWarning('Couldn’t load collaborator emails yet. Sharing still works; apply Supabase migration 035, then reload the PostgREST schema cache to restore this roster.');
-      return;
+    } else {
+      // A roster is useful context, but it must not make a valid invitation
+      // impossible. This also protects owners while a prior deployment sends a
+      // legacy resource-type value that the newer roster RPC rejects.
+      setCollaboratorWarning('Couldn’t load collaborator emails for this Task yet. You can still create a secure invitation.');
     }
-    throw collaboratorsResult.reason;
   };
   useEffect(() => { void load().catch((error: unknown) => setMessage(error instanceof Error ? error.message : 'Could not load invitations.')); }, [resource.resourceId, resource.resourceType]);
   useEffect(() => {

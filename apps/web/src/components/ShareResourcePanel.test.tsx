@@ -36,4 +36,19 @@ describe('ShareResourcePanel', () => {
     expect(host.textContent).toContain('Couldn’t load collaborator emails yet.');
     expect(Array.from(host.querySelectorAll('button')).find((button) => button.textContent === 'Create secure invite')).toBeDefined();
   });
+
+  it('does not block a secure invite when the roster RPC rejects a legacy resource value', async () => {
+    const repository = {
+      listOutgoingInvitations: vi.fn().mockResolvedValue([]),
+      listCollaborators: vi.fn().mockRejectedValue(new Error('Task request failed: Invalid resource type')),
+    } as unknown as CollaborationRepository;
+
+    await act(async () => {
+      root.render(<ShareResourcePanel repository={repository} resource={{ resourceType: 'task', resourceId: 'task-id' }} resourceName="Launch brief" onClose={vi.fn()} />);
+      await Promise.resolve();
+    });
+
+    expect(host.textContent).toContain('You can still create a secure invitation.');
+    expect(Array.from(host.querySelectorAll('button')).find((button) => button.textContent === 'Create secure invite')).toBeDefined();
+  });
 });

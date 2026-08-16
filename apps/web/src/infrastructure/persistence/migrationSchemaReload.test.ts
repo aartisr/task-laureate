@@ -16,4 +16,15 @@ describe('PostgREST schema-cache migration contract', () => {
     expect(existsSync(repairMigration)).toBe(true);
     expect(readFileSync(repairMigration, 'utf8')).toContain("notify pgrst, 'reload schema';");
   });
+
+  it('normalizes roster resource types for both new and already-deployed databases', () => {
+    const rosterMigration = migration('035_expose_collaborator_emails_to_resource_owners.sql');
+    const repairMigration = migration('039_normalize_collaborator_roster_resource_type.sql');
+
+    expect(readFileSync(rosterMigration, 'utf8')).toContain("lower(trim(coalesce(p_resource_type, '')))");
+    expect(existsSync(repairMigration)).toBe(true);
+    const repair = readFileSync(repairMigration, 'utf8');
+    expect(repair).toContain("lower(trim(coalesce(p_resource_type, '')))");
+    expect(repair).toContain("notify pgrst, 'reload schema';");
+  });
 });

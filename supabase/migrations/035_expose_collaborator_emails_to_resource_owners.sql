@@ -15,8 +15,9 @@ returns table (
   updated_at timestamptz
 )
 language plpgsql security definer set search_path = '' as $$
+declare normalized_resource_type text := lower(trim(coalesce(p_resource_type, '')));
 begin
-  if p_resource_type = 'list' then
+  if normalized_resource_type = 'list' then
     if not private.can_manage_list_access(p_resource_id) then raise exception 'Only the List owner can view collaborator identities'; end if;
     return query
       select member.user_id, lower(account.email), member.role, member.granted_by, member.created_at, member.updated_at
@@ -24,7 +25,7 @@ begin
       join auth.users account on account.id = member.user_id
       where member.list_id = p_resource_id
       order by lower(account.email);
-  elsif p_resource_type = 'task' then
+  elsif normalized_resource_type = 'task' then
     if not private.can_manage_task_access(p_resource_id) then raise exception 'Only the Task owner can view collaborator identities'; end if;
     return query
       select member.user_id, lower(account.email), member.role, member.granted_by, member.created_at, member.updated_at
