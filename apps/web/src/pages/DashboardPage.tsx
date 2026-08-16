@@ -1,4 +1,4 @@
-import { useMemo, useState, useRef } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { PageContainer, EmptyState, LoadingState, Grid, Card, Section } from '../components/layouts';
@@ -25,6 +25,15 @@ export function DashboardPage() {
   const listTitleInputRef = useRef<HTMLInputElement>(null);
   const pendingSave = getPendingSaveIntent();
   const pendingList = pendingSave?.kind === 'list' && pendingSave.returnTo === '/' ? pendingSave : null;
+
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('newList') !== '1') return;
+    setIsCreatingList(true);
+    // The creation affordance is a one-shot command. Keep refresh/back from
+    // unexpectedly reopening it after someone has acted or cancelled.
+    window.history.replaceState(window.history.state, '', window.location.pathname);
+    window.setTimeout(() => listTitleInputRef.current?.focus(), 0);
+  }, []);
 
   const { data: dashboard, isLoading } = useSuspenseQuery({
     queryKey: queryKeys.dashboard,
