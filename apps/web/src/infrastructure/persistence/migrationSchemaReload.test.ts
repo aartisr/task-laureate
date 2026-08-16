@@ -47,4 +47,19 @@ describe('PostgREST schema-cache migration contract', () => {
     expect(ownership).toContain('task.owner_id = (select auth.uid()) or list.owner_id = (select auth.uid())');
     expect(ownership).toContain("notify pgrst, 'reload schema';");
   });
+
+  it('defines one authoritative collaborator roster boundary', () => {
+    const rosterMigration = migration('042_harden_collaborator_roster_access.sql');
+    const roster = readFileSync(rosterMigration, 'utf8');
+
+    expect(roster).toContain("current_setting('request.jwt.claims', true)");
+    expect(roster).toContain("current_setting('request.jwt.claim.sub', true)");
+    expect(roster).toContain("auth.jwt() ->> 'sub'");
+    expect(roster).toContain('list.owner_id = request_user_id');
+    expect(roster).toContain('task.owner_id = request_user_id or list.owner_id = request_user_id');
+    expect(roster).not.toContain('private.can_manage_');
+    expect(roster.match(/return query/g)).toHaveLength(2);
+    expect(roster.match(/\n    return;\n/g)).toHaveLength(2);
+    expect(roster).toContain("notify pgrst, 'reload schema';");
+  });
 });
