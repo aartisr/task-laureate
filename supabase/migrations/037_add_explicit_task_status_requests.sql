@@ -73,3 +73,4 @@ $$;
 revoke all on table public.task_status_update_requests from public;
 revoke all on function public.request_task_status_update(uuid) from public;
 grant execute on function public.request_task_status_update(uuid) to authenticated;
+notify pgrst, 'reload schema';

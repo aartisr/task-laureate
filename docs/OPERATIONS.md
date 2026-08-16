@@ -20,7 +20,7 @@ Task-Laureate is a Vite/React SPA backed by Supabase Auth + Postgres RLS.
 
 Apply migrations in order from [supabase/migrations](../supabase/migrations):
 
-- `001` through `037` for a new environment.
+- `001` through `038` for a new environment.
 
 Important:
 
@@ -192,8 +192,9 @@ Notes:
 ### Symptom: RLS 403 / missing RPC
 
 1. Verify migration order.
-2. Run `010_reload_postgrest_schema_cache.sql`.
-3. Re-test endpoint/RPC.
+2. Apply all pending migrations. In particular, `038_reload_postgrest_schema_after_status_requests.sql` repairs the schema-cache reload that was missing after the status-update RPC migration.
+3. If the project is already fully migrated and an RPC still returns `PGRST202` or “Could not find the function”, run `010_reload_postgrest_schema_cache.sql` in the Supabase SQL Editor.
+4. Re-test endpoint/RPC.
 
 ### Symptom: Invitation email failure
 
