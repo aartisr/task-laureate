@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { PageContainer, EmptyState, LoadingState, Grid, Card, Section } from '../components/layouts';
@@ -14,6 +14,7 @@ import { ShareResourcePanel } from '../components/ShareResourcePanel';
 import { supportsCollaboration, type TodoListInput } from '../core/contracts/repository';
 import type { TodoList } from '../core/contracts/domain';
 import { clearPendingSaveIntent, getPendingSaveIntent, requireSignInForSave } from '../core/auth/pendingSave';
+import { useListCreationCommand } from '../hooks/useListCreationCommand';
 
 export function DashboardPage() {
   usePageSEO(PAGE_SEO.dashboard);
@@ -26,14 +27,22 @@ export function DashboardPage() {
   const pendingSave = getPendingSaveIntent();
   const pendingList = pendingSave?.kind === 'list' && pendingSave.returnTo === '/' ? pendingSave : null;
 
-  useEffect(() => {
-    if (new URLSearchParams(window.location.search).get('newList') !== '1') return;
+  const openComposer = useCallback(() => {
     setIsCreatingList(true);
-    // The creation affordance is a one-shot command. Keep refresh/back from
-    // unexpectedly reopening it after someone has acted or cancelled.
-    window.history.replaceState(window.history.state, '', window.location.pathname);
     window.setTimeout(() => listTitleInputRef.current?.focus(), 0);
   }, []);
+
+  useListCreationCommand(openComposer);
+
+  useEffect(() => {
+    const requestedFromNavigation = new URLSearchParams(window.location.search).get('newList') === '1';
+    if (requestedFromNavigation) {
+      openComposer();
+      // The creation affordance is a one-shot command. Keep refresh/back from
+      // unexpectedly reopening it after someone has acted or cancelled.
+      window.history.replaceState(window.history.state, '', window.location.pathname);
+    }
+  }, [openComposer]);
 
   const { data: dashboard, isLoading } = useSuspenseQuery({
     queryKey: queryKeys.dashboard,

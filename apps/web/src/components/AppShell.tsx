@@ -8,6 +8,7 @@ import { NotificationCenter } from './NotificationCenter';
 import { authProvider } from '../config/persistence.config';
 import { recoveryNeedsAttention, undoJournal } from '../core/mutations/undoJournal';
 import { QuickCapture } from './QuickCapture';
+import { requestListCreation } from '../hooks/useListCreationCommand';
 
 interface AppShellProps {
   children?: ReactNode;
@@ -170,7 +171,7 @@ export function AppShell({ children, navItems }: AppShellProps) {
           <span>Task Laureate</span>
         </div>
         <nav className="sidebar-nav" aria-label="Primary Navigation">
-          <Link to="/?newList=1" className="sidebar-link sidebar-link--create" aria-label="Create a new List">
+          <Link to="/?newList=1" className="sidebar-link sidebar-link--create" aria-label="Create a new List" onClick={requestListCreation}>
             <span className="sidebar-link__create-icon" aria-hidden="true">＋</span> New List
           </Link>
           <p className="sidebar-nav__label">Focus</p>
@@ -277,7 +278,7 @@ export function AppShell({ children, navItems }: AppShellProps) {
           </div>
 
           <div className="mobile-navigation__items">
-            <Link to="/?newList=1" className="mobile-navigation__link mobile-navigation__link--create" onClick={() => setIsMobileMenuOpen(false)}>
+            <Link to="/?newList=1" className="mobile-navigation__link mobile-navigation__link--create" onClick={() => { requestListCreation(); setIsMobileMenuOpen(false); }}>
               <span className="mobile-navigation__icon" aria-hidden="true">＋</span>
               <span className="mobile-navigation__text"><strong>New List</strong><small>Name it now; add tasks next.</small></span>
             </Link>
