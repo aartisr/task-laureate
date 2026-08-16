@@ -107,13 +107,12 @@ export function ListsPage() {
             {page?.total ?? 0} matching list{(page?.total ?? 0) !== 1 ? 's' : ''} · {totalTasks} tasks total · {avgProgress}% avg progress
           </p>
         </div>
-        <div className="hero-actions">
-          <Link className="secondary-button" to="/">← Dashboard</Link>
-        </div>
       </header>
 
-      {/* Summary bar */}
-      <div className="summary-row">
+      {/* Keep collection-level reporting available without delaying the list-finding task. */}
+      <details className="page-insights">
+        <summary>See workspace totals</summary>
+        <div className="summary-row">
         <div className="summary-chip">
           <span className="summary-chip__value">{page?.total ?? 0}</span>
           <span className="summary-chip__label">Matching lists</span>
@@ -130,7 +129,8 @@ export function ListsPage() {
           <span className="summary-chip__value">{avgProgress}%</span>
           <span className="summary-chip__label">Avg progress</span>
         </div>
-      </div>
+        </div>
+      </details>
 
       {/* Controls */}
       <div className="list-controls">
@@ -171,7 +171,7 @@ export function ListsPage() {
         <div className="empty-state">
           <span className="empty-state__icon">📋</span>
           <p>No lists match your filters.</p>
-          <Link className="primary-button" to="/">Create a list</Link>
+          <Link className="primary-button" to="/?newList=1">Create a list</Link>
         </div>
       ) : (
         <div className="lists-grid">

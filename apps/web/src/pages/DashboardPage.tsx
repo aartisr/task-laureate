@@ -106,6 +106,8 @@ export function DashboardPage() {
     );
   }
 
+  const isEmptyWorkspace = stats.totalLists === 0 && stats.totalTasks === 0;
+
   const footer = (
     <details className="page-shortcuts">
       <summary>Keyboard shortcuts</summary>
@@ -124,7 +126,7 @@ export function DashboardPage() {
       spacing="spacious"
       footer={footer}
     >
-      <section className="dashboard-primary-action panel" aria-label="Start your work"><div className="dashboard-primary-action__content"><p className="eyebrow">Start here</p><h2>What deserves your attention now?</h2><p>Choose one feasible next action before looking at the whole workspace.</p></div><Link to="/now" className="primary-button dashboard-primary-action__cta">Open Now <span aria-hidden="true">→</span></Link></section>
+      <section className="dashboard-primary-action panel" aria-label={isEmptyWorkspace ? 'Start your first list' : 'Start your work'}><div className="dashboard-primary-action__content"><p className="eyebrow">Start here</p><h2>{isEmptyWorkspace ? 'Start with one simple list.' : 'What deserves your attention now?'}</h2><p>{isEmptyWorkspace ? 'Name one area of work first. You can add tasks when you are ready.' : 'Choose one feasible next action before looking at the whole workspace.'}</p></div>{isEmptyWorkspace ? <button type="button" className="primary-button dashboard-primary-action__cta" onClick={() => { clearPendingSaveIntent(); openComposer(); }}>Create a list <span aria-hidden="true">→</span></button> : <Link to="/now" className="primary-button dashboard-primary-action__cta">Open Now <span aria-hidden="true">→</span></Link>}</section>
 
       <details className="dashboard-details"><summary>Workspace snapshot</summary><Grid columns={4} gap="normal">
         <Card variant="elevated" ariaLabel="Lists summary" onClick={() => navigate({ to: '/lists-overview' })}>
@@ -213,11 +215,6 @@ export function DashboardPage() {
         </Card>
       </Grid></details>
 
-      <section className="panel dashboard-onboarding" aria-label="Try Task-Laureate before signing in">
-        <div className="dashboard-onboarding__content"><p className="eyebrow">Explore safely</p><h2>New to Task-Laureate?</h2><p>Explore a private, non-persistent sample before you decide whether to sign in and sync.</p></div>
-        <Link to="/sample" className="secondary-button dashboard-onboarding__cta">Try the interactive sample <span aria-hidden="true">→</span></Link>
-      </section>
-
       {/* Quick Actions */}
       {(isCreatingList || pendingList) ? <ListComposer initialInput={pendingList?.input} restoredDraft={Boolean(pendingList)} onCreate={handleCreateList} onCancel={() => { clearPendingSaveIntent(); setIsCreatingList(false); }} /> : null}
       <details className="dashboard-details quick-actions-wrapper"><summary>Workspace tools</summary>
@@ -240,6 +237,7 @@ export function DashboardPage() {
             <p className="text-xs text-[var(--color-text-tertiary)] mt-4">Or press Cmd+F</p>
           </Card>
         </Grid>
+        <p className="text-sm text-[var(--color-text-secondary)]">Prefer to look around first? <Link to="/sample">Explore the private sample</Link>.</p>
       </details>
 
       {/* Recent Lists Section */}
@@ -291,7 +289,7 @@ export function DashboardPage() {
           {dashboard.lists.length > 6 && (
             <div className="text-center mt-8">
               <button
-                onClick={() => navigate({ to: '/lists' })}
+                onClick={() => navigate({ to: '/lists-overview' })}
                 className="text-[var(--color-action-primary)] hover:text-[var(--color-action-hover)] font-medium text-sm focus:outline-none focus:underline"
                 aria-label={`View all ${dashboard.lists.length} lists`}
               >
@@ -301,17 +299,7 @@ export function DashboardPage() {
           )}
         </Section>
         </div>
-      ) : (
-        <EmptyState
-          icon="📭"
-          title="No lists yet"
-          description="Create your first list to get started organizing your tasks."
-          action={{
-            label: 'Create First List',
-            onClick: () => { clearPendingSaveIntent(); setIsCreatingList(true); },
-          }}
-        />
-      )}
+      ) : null}
       {sharingList && supportsCollaboration(repository) ? <ShareResourcePanel repository={repository} resource={{ resourceType: 'list', resourceId: sharingList.id }} resourceName={sharingList.title} onClose={() => setSharingList(null)} /> : null}
       {shareNotice ? <div className="mt-6 rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm text-indigo-950" role="status"><div className="flex items-start justify-between gap-3"><span>{shareNotice}</span><button type="button" className="font-semibold underline" onClick={() => setShareNotice(null)}>Dismiss</button></div></div> : null}
     </PageContainer>

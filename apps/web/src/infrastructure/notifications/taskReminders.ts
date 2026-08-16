@@ -2,7 +2,9 @@ import { authProvider } from '../../config/persistence.config';
 
 type Candidate = { user_id: string; email: string; access_role: 'owner' | 'editor' | 'viewer' };
 type Assignment = { user_id: string };
-export type TaskReminderConfiguration = { enabled: boolean; offset_minutes: number; channels: Array<'in_app' | 'email' | 'sms'> };
+export type TaskReminderChannel = 'in_app' | 'email';
+export type TaskReminderConfiguration = { enabled: boolean; offset_minutes: number; channels: TaskReminderChannel[] };
+export const defaultTaskReminderChannels: TaskReminderChannel[] = ['in_app', 'email'];
 
 async function request(path: string, init: RequestInit = {}) {
   const session = await authProvider.getSession();
@@ -22,7 +24,7 @@ export async function getTaskReminderSetup(taskId: string) {
     request(`task_reminder_rules?task_id=eq.${encodeURIComponent(taskId)}&select=enabled,offset_minutes,channels&limit=1`),
   ]);
   const [candidates, assignments, rules] = await Promise.all([candidatesResponse.json() as Promise<Candidate[]>, assignmentsResponse.json() as Promise<Assignment[]>, rulesResponse.json() as Promise<TaskReminderConfiguration[]>]);
-  return { candidates, assigned: new Set(assignments.map((item) => item.user_id)), rule: rules[0] ?? { enabled: false, offset_minutes: 1440, channels: ['in_app'] } };
+  return { candidates, assigned: new Set(assignments.map((item) => item.user_id)), rule: rules[0] ?? { enabled: false, offset_minutes: 1440, channels: defaultTaskReminderChannels } };
 }
 export async function setTaskAssignee(taskId: string, userId: string, assigned: boolean) { await request('rpc/set_task_assignment', { method: 'POST', body: JSON.stringify({ p_task_id: taskId, p_user_id: userId, p_assigned: assigned }) }); }
 export async function saveTaskReminder(taskId: string, configuration: TaskReminderConfiguration) { await request('rpc/configure_task_reminder', { method: 'POST', body: JSON.stringify({ p_task_id: taskId, p_enabled: configuration.enabled, p_offset_minutes: configuration.offset_minutes, p_channels: configuration.channels }) }); }

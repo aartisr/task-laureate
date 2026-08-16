@@ -17,6 +17,7 @@ interface AppShellProps {
 
 type MobileTabDefinition = Readonly<{ to: string; fallbackLabel: string; displayLabel: string; icon: string }>;
 type ResolvedMobileTab = NavItem & { mobileLabel: string };
+type DesktopNavigation = Readonly<{ primary: NavItem[]; workspace: NavItem[]; utility: NavItem[] }>;
 
 const workspaceNavigationPreferenceKey = 'task-laureate.workspace-navigation-expanded';
 const mobileBreakpointQuery = '(max-width: 48rem)';
@@ -44,6 +45,32 @@ export function resolveMobilePrimaryTabs(navItems: readonly NavItem[]): Resolved
       mobileLabel: tab.displayLabel,
     };
   });
+}
+
+/**
+ * Keeps desktop navigation in the same mental model as mobile: start at the
+ * overview, choose what matters now, then organize or look back only when
+ * needed. Feature navigation may enrich labels and icons, but cannot reorder
+ * the core journey.
+ */
+export function resolveDesktopNavigation(navItems: readonly NavItem[]): DesktopNavigation {
+  const find = (to: string, fallback: NavItem) => navItems.find((item) => item.to === to) ?? fallback;
+
+  return {
+    primary: [
+      { label: 'Dashboard', to: '/', icon: '⌂', description: 'Your workspace overview' },
+      find('/now', { label: 'Now', to: '/now', icon: '⚡', description: 'Choose one feasible action' }),
+      { label: 'Tasks', to: '/tasks', icon: '✓', description: 'All active work' },
+      find('/search', { label: 'Search', to: '/search', icon: '⌕', description: 'Find anything' }),
+    ],
+    workspace: [
+      { label: 'Lists', to: '/lists-overview', icon: '☷', description: 'Projects and lists' },
+      find('/shared-with-me', { label: 'Shared with me', to: '/shared-with-me', icon: '↗', description: 'Work shared with you' }),
+      find('/activity', { label: 'Activity', to: '/activity', icon: '◌', description: 'Recent changes' }),
+      { label: 'Progress', to: '/progress', icon: '◔', description: 'Reflect on momentum' },
+    ],
+    utility: [find('/settings', { label: 'Settings', to: '/settings', icon: '⚙', description: 'Preferences and privacy' })],
+  };
 }
 
 function readWorkspaceNavigationPreference() {
@@ -97,18 +124,7 @@ export function AppShell({ children, navItems }: AppShellProps) {
     { label: 'Help & Support', to: '/support', icon: '?', description: 'Help center' },
   ].filter((item, index, items) => items.findIndex((candidate) => candidate.to === item.to) === index), [navItems]);
 
-  const desktopNavigation = useMemo(() => {
-    const find = (to: string, fallback: NavItem) => navItems.find((item) => item.to === to) ?? fallback;
-    const primary = [
-      find('/now', { label: 'Now', to: '/now', icon: '⚡', description: 'Choose one feasible action' }),
-      { label: 'Tasks', to: '/tasks', icon: '✓', description: 'All active work' },
-      find('/search', { label: 'Search', to: '/search', icon: '⌕', description: 'Find anything' }),
-      { label: 'Progress', to: '/progress', icon: '◔', description: 'Reflect on momentum' },
-    ];
-    const workspace = [{ label: 'Dashboard', to: '/', icon: '⌂', description: 'Workspace overview' }, { label: 'Lists', to: '/lists-overview', icon: '☷', description: 'Projects and lists' }, find('/shared-with-me', { label: 'Shared with me', to: '/shared-with-me', icon: '↗', description: 'Work shared with you' }), find('/activity', { label: 'Activity', to: '/activity', icon: '◌', description: 'Recent changes' })];
-    const utility = [find('/settings', { label: 'Settings', to: '/settings', icon: '⚙', description: 'Preferences and privacy' })];
-    return { primary, workspace, utility };
-  }, [navItems]);
+  const desktopNavigation = useMemo(() => resolveDesktopNavigation(navItems), [navItems]);
 
   const currentSection = useMemo(
     () =>

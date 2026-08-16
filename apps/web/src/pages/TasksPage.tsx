@@ -117,13 +117,12 @@ export function TasksPage() {
           <h1>Everything in flight</h1>
           <p className="lede">{allTasks.length} tasks across {lists.length} lists{bounded ? ' · Refine your view to load the next set' : ''}</p>
         </div>
-        <div className="hero-actions">
-          <Link className="secondary-button" to="/">← Dashboard</Link>
-        </div>
       </header>
 
-      {/* Summary row */}
-      <div className="summary-row">
+      {/* Counts support planning, but the working view stays uncluttered by default. */}
+      <details className="page-insights">
+        <summary>See task totals</summary>
+        <div className="summary-row">
         <div className="summary-chip">
           <span className="summary-chip__value">{allTasks.length}</span>
           <span className="summary-chip__label">Total</span>
@@ -140,7 +139,8 @@ export function TasksPage() {
           <span className="summary-chip__value">{blockedCount}</span>
           <span className="summary-chip__label">Blocked</span>
         </div>
-      </div>
+        </div>
+      </details>
 
       {/* Controls */}
       <div className="list-controls list-controls--wrap">
