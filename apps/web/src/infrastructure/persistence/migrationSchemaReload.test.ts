@@ -27,4 +27,14 @@ describe('PostgREST schema-cache migration contract', () => {
     expect(repair).toContain("lower(trim(coalesce(p_resource_type, '')))");
     expect(repair).toContain("notify pgrst, 'reload schema';");
   });
+
+  it('recovers an obsolete roster resource type only after confirming owner access', () => {
+    const recoveryMigration = migration('040_recover_legacy_collaborator_roster_requests.sql');
+    const recovery = readFileSync(recoveryMigration, 'utf8');
+
+    expect(recovery).toContain('private.resolve_managed_resource_type');
+    expect(recovery).toContain('if private.can_manage_list_access(p_resource_id) then return \'list\'; end if;');
+    expect(recovery).toContain('if private.can_manage_task_access(p_resource_id) then return \'task\'; end if;');
+    expect(recovery).toContain("notify pgrst, 'reload schema';");
+  });
 });

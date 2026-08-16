@@ -1,7 +1,8 @@
 /* Task Laureate's sole root-scoped worker: app-shell resilience + Web Push. */
-// Bump this whenever caching behavior changes. Keeping old cache namespaces
-// after a deploy can pair a new HTML entrypoint with an old lazy chunk.
-const CACHE_NAME = 'task-laureate-shell-v2';
+// Bump this whenever a recovery release must evict a stale app shell. Keeping
+// an old namespace can leave an installed iOS app on an obsolete bundle even
+// after the Vercel deployment has changed.
+const CACHE_NAME = 'task-laureate-shell-v3';
 const APP_SHELL = ['/', '/index.html', '/offline.html', '/manifest.json', '/icons/task-laureate-192.png', '/icons/task-laureate-512.png', '/icons/task-laureate-maskable-512.png', '/icons/apple-touch-icon-180.png'];
 
 const cacheAppShell = async () => {
