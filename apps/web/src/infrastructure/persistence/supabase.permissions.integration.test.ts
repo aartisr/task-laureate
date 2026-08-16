@@ -22,6 +22,7 @@ const createdListIds = new Set<string>();
 type Identity = { token: string; userId: string; email: string; role?: string };
 type ListRow = { id: string; title: string };
 type TaskRow = { id: string; title: string; list_id: string };
+type CollaboratorRow = { user_id: string; email: string; role: 'editor' | 'viewer' };
 
 function decodeIdentity(token: string | undefined, label: string): Identity {
   expect(token, `${label} access token is required`).toBeTruthy();
@@ -109,6 +110,19 @@ describe.runIf(enabled)('Supabase collaborator permission matrix', () => {
 
     const editorInvitationToken = await invite(owner, editor, sharedListId, 'editor');
     await invite(owner, viewer, sharedListId, 'viewer');
+
+    // This exercises the SECURITY DEFINER roster boundary through PostgREST
+    // with a real signed owner JWT. It catches both authorization regressions
+    // and a PL/pgSQL RETURN QUERY fall-through before production.
+    const ownerRoster = await api<CollaboratorRow[]>(owner, '/rpc/list_resource_collaborators', {
+      method: 'POST',
+      body: JSON.stringify({ p_resource_type: 'list', p_resource_id: sharedListId }),
+    });
+    expect(ownerRoster.response.status, String(ownerRoster.body)).toBe(200);
+    expect(ownerRoster.body).toEqual(expect.arrayContaining([
+      expect.objectContaining({ user_id: editor.userId, email: editor.email, role: 'editor' }),
+      expect.objectContaining({ user_id: viewer.userId, email: viewer.email, role: 'viewer' }),
+    ]));
 
     // A mail client, browser history, or a second tap may reopen an accepted
     // link. The recipient must still reach this exact List, not a dead end.

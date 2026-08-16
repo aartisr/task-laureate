@@ -60,6 +60,8 @@ jobs:
           # floating "latest" version can make the same migration pass one day
           # and fail the next without a repository change.
           version: 2.110.0
+      - name: Verify migration history is complete and unambiguous
+        run: npm run verify:migrations
       - name: Start an isolated Supabase stack
         run: supabase db start
       - name: Prove the schema is reproducible

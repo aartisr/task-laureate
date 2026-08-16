@@ -16,7 +16,8 @@
     "lint": "npm run lint -w apps/web",
     "check:perf-budgets": "npm run check:perf-budgets -w apps/web",
     "check:security": "npm audit --omit=dev --audit-level=high",
-    "quality:gate": "npm run verify:production && npm run lint && npm test && npm run build && npm run check:perf-budgets",
+    "verify:migrations": "node scripts/verify-supabase-migrations.mjs",
+    "quality:gate": "npm run verify:migrations && npm run verify:production && npm run lint && npm test && npm run build && npm run check:perf-budgets",
     "verify:public-registry": "node scripts/verify-public-registry.mjs",
     "verify:production": "npm run verify:public-registry && node scripts/verify-production-config.mjs",
     "generate:vapid": "node scripts/generate-vapid-keys.mjs"

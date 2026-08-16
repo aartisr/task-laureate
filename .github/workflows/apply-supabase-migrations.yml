@@ -1,0 +1,53 @@
+name: Apply Supabase migrations
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: Type APPLY to run pending migrations against the protected production project.
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  apply:
+    if: github.event.inputs.confirmation == 'APPLY'
+    name: Validate and apply protected production migrations
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # Configure required reviewers for this GitHub Environment. The workflow
+    # cannot contact production until that approval has been granted.
+    environment: production
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.110.0
+      - run: npm ci --include=dev --include=optional
+      - run: npm run verify:migrations
+      - name: Prove migrations replay and lint locally before production
+        run: |
+          supabase db start
+          supabase db reset --local --no-seed
+          supabase db lint --local --fail-on error
+      - name: Require the production migration credentials
+        run: |
+          test -n "$SUPABASE_ACCESS_TOKEN"
+          test -n "$SUPABASE_PROJECT_REF"
+          test -n "$SUPABASE_DB_PASSWORD"
+      - name: Link the protected production project
+        run: supabase link --project-ref "$SUPABASE_PROJECT_REF" --password "$SUPABASE_DB_PASSWORD"
+      - name: Apply pending migrations
+        run: supabase db push --linked --include-all
+      - name: Record the resulting migration state
+        run: supabase migration list --linked

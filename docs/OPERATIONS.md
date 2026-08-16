@@ -20,7 +20,7 @@ Task-Laureate is a Vite/React SPA backed by Supabase Auth + Postgres RLS.
 
 Apply migrations in order from [supabase/migrations](../supabase/migrations):
 
-- `001` through `038` for a new environment.
+- `001` through `042` for a new environment.
 
 Important:
 
@@ -29,6 +29,22 @@ Important:
 - `016` through `023` add private task attachments, the required Storage/RLS lifecycle, and metadata deletion behaviour. Keep the `task-attachments` bucket private.
 - `024` through `025` add the directed acyclic task-dependency graph, database completion gate, and batched list-summary projection.
 - Run `010_reload_postgrest_schema_cache.sql` if PostgREST reports missing RPC/schema drift.
+
+### Recommended production migration delivery
+
+Use the approval-gated GitHub workflow, **Apply Supabase migrations**, instead
+of manually copying SQL into the dashboard. It first replays and lints the
+whole schema locally, then applies only pending migrations to the linked
+project. Configure a protected GitHub `production` Environment with required
+reviewers and these Environment secrets:
+
+- `SUPABASE_ACCESS_TOKEN` — a Supabase personal access token permitted to link the project.
+- `SUPABASE_PROJECT_REF` — the project reference, for example `hsgsizwhzauqcvlwoftr`.
+- `SUPABASE_DB_PASSWORD` — the database password; never a browser or service-role key.
+
+Run it only from the reviewed `master` commit, type `APPLY` for its confirmation
+input, and inspect the final migration list in the workflow log. The workflow
+is manual by design: a Vercel deployment never changes your database.
 
 ### Step 2: Vercel project settings
 
@@ -126,6 +142,9 @@ In Supabase Auth:
 
 1. Pull latest mainline code.
 2. Apply pending migrations.
+   Prefer the protected **Apply Supabase migrations** GitHub workflow. If an
+   emergency requires SQL Editor, apply the reviewed migration file verbatim,
+   then record the change and return to the workflow for future releases.
 3. Run quality gates from repo root:
    - `npm run verify:production`
    - `npm run lint`
@@ -141,6 +160,7 @@ In Supabase Auth:
    - To do → In progress → Done task state transitions
    - scheduled reminder dispatch and explicit status-request delivery paths
    - user-approved exception reporting, including a GitHub issue creation in a test repository
+   - the owner’s **Current collaborators** roster after inviting an editor and viewer
 6. Validate deep-link refresh on routes like `/settings` and invitation links.
 7. For public releases, validate `/`, `/about/`, `/support`, `/robots.txt`, `/sitemap.xml`, `/llms.txt`, and `/og-image-v2.png`; then follow [LAUNCH_AND_DISCOVERY_PLAYBOOK.md](LAUNCH_AND_DISCOVERY_PLAYBOOK.md) for account-owner search and launch work.
 8. For the installable web-app release and real-device acceptance checks, follow [PWA release and install guide](PWA_RELEASE_AND_INSTALL_GUIDE.md).
