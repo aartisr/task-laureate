@@ -3,6 +3,7 @@ import type { FormEvent } from 'react';
 import type { CollaborationRepository, ShareResourceInput } from '../core/contracts/repository';
 import type { Collaborator, CollaboratorRole, ShareInvitation } from '../core/domain/sharing';
 import { describeRole, normalizeInvitationEmail } from '../core/domain/sharing';
+import { CollaborationPersistenceError } from '../infrastructure/persistence/collaborationErrors';
 
 export function ShareResourcePanel({ repository, resource, resourceName, onClose }: { repository: CollaborationRepository; resource: ShareResourceInput; resourceName: string; onClose: () => void }) {
   const titleId = useId();
@@ -13,15 +14,31 @@ export function ShareResourcePanel({ repository, resource, resourceName, onClose
   const [sharing, setSharing] = useState(false);
   const [revokingUserId, setRevokingUserId] = useState<string | null>(null);
   const [message, setMessage] = useState('');
+  const [collaboratorWarning, setCollaboratorWarning] = useState('');
   const [createdInvite, setCreatedInvite] = useState<{ email: string; acceptanceUrl: string } | null>(null);
   const dialogRef = useRef<HTMLElement>(null);
   const load = async () => {
-    const [nextInvitations, nextCollaborators] = await Promise.all([
+    const [invitationsResult, collaboratorsResult] = await Promise.allSettled([
       repository.listOutgoingInvitations(resource),
       repository.listCollaborators(resource),
     ]);
-    setInvitations(nextInvitations);
-    setCollaborators(nextCollaborators);
+    if (invitationsResult.status === 'rejected') throw invitationsResult.reason;
+    setInvitations(invitationsResult.value);
+    if (collaboratorsResult.status === 'fulfilled') {
+      setCollaborators(collaboratorsResult.value);
+      setCollaboratorWarning('');
+      return;
+    }
+    // Collaborator email display arrived after the original sharing flow. A
+    // missing migration 035 must not prevent someone from creating an invite;
+    // pending invitations remain visible and the owner can repair the optional
+    // roster display independently.
+    if (collaboratorsResult.reason instanceof CollaborationPersistenceError && collaboratorsResult.reason.isConfigurationFailure) {
+      setCollaborators([]);
+      setCollaboratorWarning('Couldn’t load collaborator emails yet. Sharing still works; apply Supabase migration 035, then reload the PostgREST schema cache to restore this roster.');
+      return;
+    }
+    throw collaboratorsResult.reason;
   };
   useEffect(() => { void load().catch((error: unknown) => setMessage(error instanceof Error ? error.message : 'Could not load invitations.')); }, [resource.resourceId, resource.resourceType]);
   useEffect(() => {
@@ -75,7 +92,7 @@ export function ShareResourcePanel({ repository, resource, resourceName, onClose
       </form>
       {message ? <p className="share-resource-panel__message" role="status">{message}</p> : null}
       {createdInvite ? <section className="share-resource-panel__delivery" aria-label="Send invitation"><h3>Finish inviting {createdInvite.email}</h3><ol><li>Send this private link to the invited email.</li><li>They must open it while signed in to that same email.</li><li>After acceptance, the List appears in their <strong>Shared with me</strong> area.</li></ol><div><input readOnly value={createdInvite.acceptanceUrl} aria-label="Secure invitation link" /><button type="button" className="secondary-button" onClick={() => void navigator.clipboard.writeText(createdInvite.acceptanceUrl).then(() => setMessage('Invitation link copied.')).catch(() => setMessage('Select and copy the invitation link.'))}>Copy link</button></div></section> : null}
-      <section aria-label="Current collaborators"><h3>Current collaborators</h3>{collaborators.length ? <ul>{collaborators.map((collaborator) => <li key={collaborator.userId}><span>{collaborator.email}</span><span>{describeRole(collaborator.role)} <button type="button" className="share-resource-panel__revoke" disabled={revokingUserId !== null} onClick={() => void revokeAccess(collaborator.userId)}>{revokingUserId === collaborator.userId ? 'Revoking…' : 'Remove access'}</button></span></li>)}</ul> : <p>No accepted collaborators yet.</p>}</section>
+      <section aria-label="Current collaborators"><h3>Current collaborators</h3>{collaboratorWarning ? <p className="share-resource-panel__message" role="status">{collaboratorWarning}</p> : collaborators.length ? <ul>{collaborators.map((collaborator) => <li key={collaborator.userId}><span>{collaborator.email}</span><span>{describeRole(collaborator.role)} <button type="button" className="share-resource-panel__revoke" disabled={revokingUserId !== null} onClick={() => void revokeAccess(collaborator.userId)}>{revokingUserId === collaborator.userId ? 'Revoking…' : 'Remove access'}</button></span></li>)}</ul> : <p>No accepted collaborators yet.</p>}</section>
       <section aria-label="Pending invitations"><h3>Pending invitations</h3>{invitations.filter((invite) => invite.status === 'pending').length ? <ul>{invitations.filter((invite) => invite.status === 'pending').map((invite) => <li key={invite.id}><span>{invite.email}</span><span>{describeRole(invite.role)} · Expires {new Date(invite.expiresAt).toLocaleDateString()} <button type="button" className="share-resource-panel__revoke" onClick={() => void repository.revokeShareInvitation(invite.id).then(load).catch((error: unknown) => setMessage(error instanceof Error ? error.message : 'Could not revoke invitation.'))}>Revoke</button></span></li>)}</ul> : <p>No pending invitations.</p>}</section>
     </section>
   </div>;
