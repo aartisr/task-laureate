@@ -26,6 +26,15 @@ describe('PWA production asset contract', () => {
     expect(existsSync(publicFile('/icons/apple-touch-icon-180.png'))).toBe(true);
   });
 
+  it('uses the same infinity mark for the browser favicon and installed app', () => {
+    const document = readFileSync(resolve(process.cwd(), 'index.html'), 'utf8');
+    const favicon = readFileSync(publicFile('/favicon.svg'), 'utf8');
+
+    expect(document).toContain('href="/favicon.svg?v=2"');
+    expect(favicon).toContain('M 12 32 C 12 24');
+    expect(favicon).toContain('fill="#fb923c"');
+  });
+
   it('keeps offline, push, and notification-click handling in the one root worker', () => {
     const worker = readFileSync(publicFile('/service-worker.js'), 'utf8');
     expect(worker).toContain("addEventListener('fetch'");
