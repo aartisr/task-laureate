@@ -37,4 +37,14 @@ describe('PostgREST schema-cache migration contract', () => {
     expect(recovery).toContain('if private.can_manage_task_access(p_resource_id) then return \'task\'; end if;');
     expect(recovery).toContain("notify pgrst, 'reload schema';");
   });
+
+  it('treats a List owner as the manager of every contained Task', () => {
+    const ownershipMigration = migration('041_allow_list_owners_to_manage_contained_tasks.sql');
+    const ownership = readFileSync(ownershipMigration, 'utf8');
+
+    expect(ownership).toContain('create or replace function private.can_manage_task_access');
+    expect(ownership).toContain('join public.collaboration_lists list on list.id = task.list_id');
+    expect(ownership).toContain('task.owner_id = (select auth.uid()) or list.owner_id = (select auth.uid())');
+    expect(ownership).toContain("notify pgrst, 'reload schema';");
+  });
 });
