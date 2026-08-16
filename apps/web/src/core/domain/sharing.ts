@@ -22,6 +22,8 @@ export interface Collaborator {
   resourceType: ShareResourceType;
   resourceId: string;
   userId: string;
+  /** Owner-only display identity returned by the collaboration roster RPC. */
+  email: string;
   role: CollaboratorRole;
   grantedBy: string;
   createdAt: string;

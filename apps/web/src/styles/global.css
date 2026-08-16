@@ -565,13 +565,15 @@ input {
      treatment instead of looking like another destination. */
   .mobile-bottom-nav__capture {
     isolation: isolate;
+    z-index: 1;
+    overflow: visible;
     color: var(--mobile-nav-text-primary);
   }
 
   .mobile-bottom-nav__capture::before {
     content: '';
     position: absolute;
-    z-index: -1;
+    z-index: 0;
     top: -1.35rem;
     width: 3.55rem;
     height: 3.55rem;
@@ -590,14 +592,24 @@ input {
     width: 3.55rem;
     height: 3.55rem;
     color: var(--color-text-on-action);
-    font-size: 2rem;
-    font-weight: 300;
-    line-height: 1;
+    overflow: visible;
+    z-index: 1;
+  }
+
+  .mobile-bottom-nav__capture-icon svg {
+    width: 1.7rem;
+    height: 1.7rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-width: 2.25;
   }
 
   .mobile-bottom-nav__capture .mobile-bottom-nav__label {
     margin-top: 1.65rem;
     color: var(--mobile-nav-text-primary);
+    position: relative;
+    z-index: 1;
   }
 
   .mobile-bottom-nav__capture:hover::before,

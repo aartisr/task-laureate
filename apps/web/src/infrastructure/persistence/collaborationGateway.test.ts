@@ -35,4 +35,22 @@ describe('Supabase collaboration gateway', () => {
     expect(requests[0].url).toContain('/rpc/revoke_share_invitation');
     expect(JSON.parse(String(requests[0].init?.body))).toEqual({ p_invitation_id: 'invite-id' });
   });
+
+  it('loads collaborator emails through the owner-only roster RPC, never a public user lookup', async () => {
+    const requests: Array<{ url: string; init?: RequestInit }> = [];
+    const gateway = createSupabaseCollaborationGateway(config, async (url, init) => {
+      requests.push({ url: String(url), init });
+      return new Response(JSON.stringify([{
+        user_id: 'collaborator-id', email: 'person@example.com', role: 'editor', granted_by: 'owner-id',
+        created_at: '2026-08-16T00:00:00Z', updated_at: '2026-08-16T00:00:00Z',
+      }]), { status: 200 });
+    });
+
+    await expect(gateway.listCollaborators({ resourceType: 'list', resourceId: 'list-id' })).resolves.toEqual([
+      expect.objectContaining({ userId: 'collaborator-id', email: 'person@example.com', role: 'editor' }),
+    ]);
+    expect(requests[0].url).toContain('/rpc/list_resource_collaborators');
+    expect(JSON.parse(String(requests[0].init?.body))).toEqual({ p_resource_type: 'list', p_resource_id: 'list-id' });
+    expect(requests[0].url).not.toContain('auth.users');
+  });
 });

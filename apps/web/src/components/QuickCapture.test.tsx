@@ -25,6 +25,7 @@ describe('QuickCapture mobile trigger', () => {
     const trigger = host.querySelector<HTMLButtonElement>('.mobile-bottom-nav__capture');
     expect(trigger?.getAttribute('aria-label')).toBe('Quick capture a task, idea, or reminder');
     expect(trigger?.textContent).toContain('Capture');
+    expect(trigger?.querySelector('svg path')?.getAttribute('d')).toBe('M12 5v14M5 12h14');
 
     await act(async () => trigger?.click());
     expect(document.querySelector('[role="dialog"]')?.getAttribute('aria-labelledby')).toBe('quick-capture-title');

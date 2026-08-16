@@ -124,7 +124,9 @@ export function QuickCapture({ triggerVariant = 'sidebar' }: QuickCaptureProps) 
           aria-label="Quick capture a task, idea, or reminder"
           onClick={openCapture}
         >
-          <span className="mobile-bottom-nav__capture-icon" aria-hidden="true">＋</span>
+          <span className="mobile-bottom-nav__capture-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" focusable="false"><path d="M12 5v14M5 12h14" /></svg>
+          </span>
           <span className="mobile-bottom-nav__label">Capture</span>
         </button>
       );

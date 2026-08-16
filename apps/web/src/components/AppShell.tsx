@@ -15,8 +15,36 @@ interface AppShellProps {
   navItems: NavItem[];
 }
 
+type MobileTabDefinition = Readonly<{ to: string; fallbackLabel: string; displayLabel: string; icon: string }>;
+type ResolvedMobileTab = NavItem & { mobileLabel: string };
+
 const workspaceNavigationPreferenceKey = 'task-laureate.workspace-navigation-expanded';
 const mobileBreakpointQuery = '(max-width: 48rem)';
+
+/**
+ * The bottom bar is intentionally limited to the four most frequent mobile
+ * destinations. Capture occupies the center action; everything else belongs
+ * behind More, where it remains available without competing for attention.
+ */
+export const mobilePrimaryTabConfig: readonly MobileTabDefinition[] = [
+  { to: '/', fallbackLabel: 'Dashboard', displayLabel: 'Dashboard', icon: '⌂' },
+  { to: '/now', fallbackLabel: 'Now', displayLabel: 'Now', icon: '⚡' },
+  { to: '/search', fallbackLabel: 'Search', displayLabel: 'Search', icon: '🔍' },
+];
+
+/** Resolves optional feature-provided metadata without changing mobile IA. */
+export function resolveMobilePrimaryTabs(navItems: readonly NavItem[]): ResolvedMobileTab[] {
+  return mobilePrimaryTabConfig.map((tab) => {
+    const existing = navItems.find((item) => item.to === tab.to);
+    return {
+      label: tab.fallbackLabel,
+      to: tab.to,
+      icon: existing?.icon ?? tab.icon,
+      description: existing?.description,
+      mobileLabel: tab.displayLabel,
+    };
+  });
+}
 
 function readWorkspaceNavigationPreference() {
   if (typeof window === 'undefined') return false;
@@ -32,6 +60,19 @@ function subscribeToMobileViewport(onStoreChange: () => void) {
 
 function getMobileViewportSnapshot() {
   return typeof window !== 'undefined' && window.matchMedia(mobileBreakpointQuery).matches;
+}
+
+function MobileBottomNavLink({ item }: { item: ResolvedMobileTab }) {
+  return <Link
+    to={item.to}
+    activeOptions={item.to === '/' ? { exact: true } : undefined}
+    activeProps={{ className: 'active' }}
+    className="mobile-bottom-nav__link"
+    aria-label={item.mobileLabel}
+  >
+    <span className="mobile-bottom-nav__icon" aria-hidden="true">{item.icon ?? '•'}</span>
+    <span className="mobile-bottom-nav__label">{item.mobileLabel}</span>
+  </Link>;
 }
 
 export function AppShell({ children, navItems }: AppShellProps) {
@@ -79,27 +120,7 @@ export function AppShell({ children, navItems }: AppShellProps) {
     [currentPath, mobileNavItems],
   );
 
-  const mobileTabConfig = useMemo(
-    () => [
-      { to: '/now', fallbackLabel: 'Now', displayLabel: 'Now', icon: '⚡' },
-      { to: '/tasks', fallbackLabel: 'Tasks', displayLabel: 'Tasks', icon: '✓' },
-      { to: '/search', fallbackLabel: 'Search', displayLabel: 'Search', icon: '🔍' },
-    ],
-    [],
-  );
-
-  const mobilePrimaryTabs = useMemo(() => {
-    return mobileTabConfig.map((tab) => {
-      const existing = mobileNavItems.find((item) => item.to === tab.to);
-      return {
-        label: tab.fallbackLabel,
-        to: tab.to,
-        icon: existing?.icon ?? tab.icon,
-        description: existing?.description,
-        mobileLabel: tab.displayLabel,
-      };
-    });
-  }, [mobileNavItems, mobileTabConfig]);
+  const mobilePrimaryTabs = useMemo(() => resolveMobilePrimaryTabs(mobileNavItems), [mobileNavItems]);
 
   const mobileSecondaryItems = useMemo(
     () => mobileNavItems.filter((item) => !mobilePrimaryTabs.some((tab) => tab.to === item.to)),
@@ -340,45 +361,9 @@ export function AppShell({ children, navItems }: AppShellProps) {
         {children ?? <Outlet />}
       </main>
       <nav className="mobile-bottom-nav" aria-label="Quick Navigation">
-        {mobilePrimaryTabs.slice(0, 2).map((item) => {
-          const hasRecovery = item.to === '/settings' && recoveryAvailable;
-          return (
-            <Link
-              key={item.to}
-              to={item.to}
-              activeOptions={getLinkActiveOptions(item.to)}
-              activeProps={{ className: 'active' }}
-              className="mobile-bottom-nav__link"
-              aria-label={hasRecovery ? 'Settings — recent changes available' : item.mobileLabel ?? item.label}
-            >
-              <span className="mobile-bottom-nav__icon" aria-hidden="true">
-                {item.icon ?? '•'}
-              </span>
-              <span className="mobile-bottom-nav__label">{item.mobileLabel ?? item.label}</span>
-              {hasRecovery ? <span className="mobile-bottom-nav__attention" aria-hidden="true" /> : null}
-            </Link>
-          );
-        })}
+        {mobilePrimaryTabs.slice(0, 2).map((item) => <MobileBottomNavLink key={item.to} item={item} />)}
         {isMobileViewport ? <QuickCapture triggerVariant="mobile" /> : null}
-        {mobilePrimaryTabs.slice(2).map((item) => {
-          const hasRecovery = item.to === '/settings' && recoveryAvailable;
-          return (
-            <Link
-              key={item.to}
-              to={item.to}
-              activeOptions={getLinkActiveOptions(item.to)}
-              activeProps={{ className: 'active' }}
-              className="mobile-bottom-nav__link"
-              aria-label={hasRecovery ? 'Settings — recent changes available' : item.mobileLabel ?? item.label}
-            >
-              <span className="mobile-bottom-nav__icon" aria-hidden="true">
-                {item.icon ?? '•'}
-              </span>
-              <span className="mobile-bottom-nav__label">{item.mobileLabel ?? item.label}</span>
-              {hasRecovery ? <span className="mobile-bottom-nav__attention" aria-hidden="true" /> : null}
-            </Link>
-          );
-        })}
+        {mobilePrimaryTabs.slice(2).map((item) => <MobileBottomNavLink key={item.to} item={item} />)}
         <button
           type="button"
           className={`mobile-bottom-nav__link mobile-bottom-nav__button ${isMobileMenuOpen ? 'active' : ''}`}

@@ -9,7 +9,7 @@ type InvitationRow = {
   id: string; resource_type: ShareResourceType; resource_id: string; email_normalized: string; role: CollaboratorRole;
   status: ShareInvitation['status']; invited_by: string; expires_at: string; created_at: string; accepted_by: string | null;
 };
-type CollaboratorRow = { user_id: string; role: CollaboratorRole; granted_by: string; created_at: string; updated_at: string };
+type CollaboratorRow = { user_id: string; email: string; role: CollaboratorRole; granted_by: string; created_at: string; updated_at: string };
 type SharedResourceRow = { resource_type: ShareResourceType; resource_id: string; title: string; description: string; role: CollaboratorRole; shared_by: string; updated_at: string };
 const REQUEST_TIMEOUT_MS = 15_000;
 
@@ -55,8 +55,6 @@ export function createSupabaseCollaborationGateway(config: SupabasePersistenceCo
     }
     return response;
   };
-  const membersTable = (resourceType: ShareResourceType) => resourceType === 'list' ? 'list_collaborators' : 'task_collaborators';
-  const memberKey = (resourceType: ShareResourceType) => resourceType === 'list' ? 'list_id' : 'task_id';
   const toInvitation = (row: InvitationRow): ShareInvitation => ({ id: row.id, resourceType: row.resource_type, resourceId: row.resource_id, email: row.email_normalized, role: row.role, status: row.status, invitedBy: row.invited_by, expiresAt: row.expires_at, createdAt: row.created_at, acceptedBy: row.accepted_by });
 
   return {
@@ -69,9 +67,8 @@ export function createSupabaseCollaborationGateway(config: SupabasePersistenceCo
       return role ?? null;
     },
     async listCollaborators({ resourceType, resourceId }: ShareResourceInput) {
-      const key = memberKey(resourceType);
-      const rows = await (await authorized(`/${membersTable(resourceType)}?${key}=eq.${encodeURIComponent(resourceId)}&select=user_id,role,granted_by,created_at,updated_at`, { method: 'GET' })).json() as CollaboratorRow[];
-      return rows.map((row) => ({ resourceType, resourceId, userId: row.user_id, role: row.role, grantedBy: row.granted_by, createdAt: row.created_at, updatedAt: row.updated_at }));
+      const rows = await (await authorized('/rpc/list_resource_collaborators', { method: 'POST', body: JSON.stringify({ p_resource_type: resourceType, p_resource_id: resourceId }) })).json() as CollaboratorRow[];
+      return rows.map((row) => ({ resourceType, resourceId, userId: row.user_id, email: row.email, role: row.role, grantedBy: row.granted_by, createdAt: row.created_at, updatedAt: row.updated_at }));
     },
     async listOutgoingInvitations({ resourceType, resourceId }: ShareResourceInput) {
       const query = new URLSearchParams({ resource_type: `eq.${resourceType}`, resource_id: `eq.${resourceId}`, select: 'id,resource_type,resource_id,email_normalized,role,status,invited_by,expires_at,created_at,accepted_by', order: 'created_at.desc' });

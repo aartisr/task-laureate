@@ -1,6 +1,6 @@
 import { authProvider } from '../../config/persistence.config';
 
-type Candidate = { user_id: string; access_role: 'owner' | 'editor' | 'viewer' };
+type Candidate = { user_id: string; email: string; access_role: 'owner' | 'editor' | 'viewer' };
 type Assignment = { user_id: string };
 export type TaskReminderConfiguration = { enabled: boolean; offset_minutes: number; channels: Array<'in_app' | 'email' | 'sms'> };
 
