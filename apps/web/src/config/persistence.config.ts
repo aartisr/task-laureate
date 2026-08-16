@@ -1,4 +1,5 @@
 import type { PersistenceConfig } from '../infrastructure/persistence/config';
+import { resolveInvitationDeliveryUrl } from '../infrastructure/persistence/invitationDelivery';
 import { supabaseAuthProvider } from '../infrastructure/persistence/supabaseAuth';
 
 /** Composition root: replace this adapter to use another identity provider. */
@@ -23,6 +24,6 @@ export const persistenceConfig: PersistenceConfig = {
     requireAuth: true,
     debounceMs: 300,
     fallbackToLocal: true,
-    invitationDeliveryUrl: import.meta.env.VITE_INVITATION_DELIVERY_URL,
+    invitationDeliveryUrl: resolveInvitationDeliveryUrl(import.meta.env.VITE_INVITATION_DELIVERY_URL, import.meta.env.PROD),
   },
 };
