@@ -213,10 +213,10 @@ export function AppShell({ children, navItems }: AppShellProps) {
         </div>
       </header>
       <aside className="sidebar" aria-label="Navigation">
-        <div className="brand-mark" aria-label="Task Laureate">
+        <Link to="/" className="brand-mark" aria-label="Go to Dashboard">
           <img src="/.well-known/logo-small.svg" alt="" aria-hidden="true" />
           <span>Task Laureate</span>
-        </div>
+        </Link>
         <nav className="sidebar-nav" aria-label="Primary Navigation">
           <button type="button" className="sidebar-link sidebar-link--create" aria-label="Create a new List" onClick={beginListCreation}>
             <span className="sidebar-link__create-icon" aria-hidden="true">＋</span> New List

@@ -1020,6 +1020,14 @@ input {
   transition: all var(--transition-base);
   position: relative;
   overflow: hidden;
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.brand-mark:focus-visible {
+  outline: 3px solid var(--color-action-primary);
+  outline-offset: 3px;
 }
 
 .brand-mark::before {
