@@ -82,7 +82,7 @@ export interface MutationResult<TResult> {
  * Create a robust mutation orchestrator
  */
 export function createMutationOrchestrator(context: MutationContext) {
-  const { queryClient, userId, requestId, timestamp } = context;
+  const { queryClient, timestamp } = context;
   const executedMutations = new Map<string, MutationSnapshot>();
 
   /**

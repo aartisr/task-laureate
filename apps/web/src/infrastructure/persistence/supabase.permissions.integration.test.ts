@@ -69,6 +69,7 @@ async function invite(owner: Identity, recipient: Identity, listId: string, role
   const accepted = await api<{ resourceType: string; resourceId: string; role: string }>(recipient, '/rpc/accept_share_invitation', { method: 'POST', body: JSON.stringify({ p_token: rawToken }) });
   expect(accepted.response.status, `${role} could not accept their invitation: ${String(accepted.body)}`).toBe(200);
   expect(accepted.body).toMatchObject({ resourceType: 'list', resourceId: listId, role });
+  return rawToken;
 }
 
 async function cleanup() {
@@ -106,8 +107,14 @@ describe.runIf(enabled)('Supabase collaborator permission matrix', () => {
     expect(ownerTask.response.status, String(ownerTask.body)).toBe(200);
     const taskId = (Array.isArray(ownerTask.body) ? ownerTask.body[0] : ownerTask.body).id;
 
-    await invite(owner, editor, sharedListId, 'editor');
+    const editorInvitationToken = await invite(owner, editor, sharedListId, 'editor');
     await invite(owner, viewer, sharedListId, 'viewer');
+
+    // A mail client, browser history, or a second tap may reopen an accepted
+    // link. The recipient must still reach this exact List, not a dead end.
+    const reopenAcceptedInvite = await api<{ resourceType: string; resourceId: string; role: string }>(editor, '/rpc/accept_share_invitation', { method: 'POST', body: JSON.stringify({ p_token: editorInvitationToken }) });
+    expect(reopenAcceptedInvite.response.status, String(reopenAcceptedInvite.body)).toBe(200);
+    expect(reopenAcceptedInvite.body).toMatchObject({ resourceType: 'list', resourceId: sharedListId, role: 'editor' });
 
     const editorPrivateRead = await api<ListRow[]>(editor, `/collaboration_lists?id=eq.${encodeURIComponent(privateListId)}&select=id`);
     expect(editorPrivateRead.response.status).toBe(200);

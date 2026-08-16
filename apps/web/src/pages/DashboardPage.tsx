@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { PageContainer, EmptyState, LoadingState, Grid, Card, Section } from '../components/layouts';
@@ -6,7 +6,7 @@ import { queryKeys } from '../core/contracts/queryKeys';
 import { getDashboardCompletionPercent } from '../core/domain/logic';
 import { useListMutations } from '../core/mutations/useListMutations';
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
-import { announceToScreenReader, createId } from '../lib/a11y';
+import { announceToScreenReader } from '../lib/a11y';
 import { appServices } from '../app/runtime/appServices';
 import { usePageSEO, PAGE_SEO } from '../hooks/usePageSEO';
 import { ListComposer } from '../components/ListComposer';
@@ -23,13 +23,11 @@ export function DashboardPage() {
   const [isCreatingList, setIsCreatingList] = useState(false);
   const [sharingList, setSharingList] = useState<TodoList | null>(null);
   const [shareNotice, setShareNotice] = useState<string | null>(null);
-  const listTitleInputRef = useRef<HTMLInputElement>(null);
   const pendingSave = getPendingSaveIntent();
   const pendingList = pendingSave?.kind === 'list' && pendingSave.returnTo === '/' ? pendingSave : null;
 
   const openComposer = useCallback(() => {
     setIsCreatingList(true);
-    window.setTimeout(() => listTitleInputRef.current?.focus(), 0);
   }, []);
 
   useListCreationCommand(openComposer);
@@ -57,10 +55,7 @@ export function DashboardPage() {
 
   // Keyboard shortcuts
   useKeyboardShortcuts({
-    onNewList: () => {
-      setIsCreatingList(true);
-      setTimeout(() => listTitleInputRef.current?.focus(), 0);
-    },
+    onNewList: openComposer,
     onFocusSearch: () => navigate({ to: '/search' }),
   });
 
@@ -224,10 +219,10 @@ export function DashboardPage() {
       </section>
 
       {/* Quick Actions */}
-      {(isCreatingList || pendingList) ? <ListComposer titleInputRef={listTitleInputRef} initialInput={pendingList?.input} restoredDraft={Boolean(pendingList)} onCreate={handleCreateList} onCancel={() => { clearPendingSaveIntent(); setIsCreatingList(false); }} /> : null}
+      {(isCreatingList || pendingList) ? <ListComposer initialInput={pendingList?.input} restoredDraft={Boolean(pendingList)} onCreate={handleCreateList} onCancel={() => { clearPendingSaveIntent(); setIsCreatingList(false); }} /> : null}
       <details className="dashboard-details quick-actions-wrapper"><summary>Workspace tools</summary>
         <Grid columns={2} gap="normal">
-          <Card onClick={() => { clearPendingSaveIntent(); setIsCreatingList(true); }} ariaLabel="Create a new list">
+          <Card onClick={() => { clearPendingSaveIntent(); openComposer(); }} ariaLabel="Create a new list">
             <div className="text-4xl mb-4" aria-hidden="true">
               ➕
             </div>

@@ -25,7 +25,6 @@ export interface PageSEOMeta {
 const BASE_URL = SITE_URL;
 const DEFAULT_IMAGE = '/og-image-v2.png';
 const AUTHOR_NAME = 'Aarti S Ravikumar';
-const AUTHOR_URL = 'https://ai-aarti.com';
 
 function setMeta(name: string, content: string, attr: 'name' | 'property' = 'name') {
   let el = document.querySelector<HTMLMetaElement>(`meta[${attr}="${name}"]`);

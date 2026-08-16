@@ -64,7 +64,6 @@ describe('Laureate App Smoke Tests', () => {
     });
 
     it('should have proper heading hierarchy', () => {
-      const h1 = document.querySelector('h1');
       // Allow either h1 or other headings on initial load
       const headings = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
       expect(headings.length).toBeGreaterThanOrEqual(0);
@@ -74,14 +73,12 @@ describe('Laureate App Smoke Tests', () => {
   describe('Accessibility', () => {
     it('should have skip to main content link', () => {
       // Check for sr-only (screen reader only) elements
-      const srOnly = document.querySelector('.sr-only');
       // This may not exist on all pages, but structure should support it
       expect(true).toBe(true);
     });
 
     it('should have proper ARIA labels', () => {
       // Check for at least one ARIA label
-      const ariaElements = document.querySelectorAll('[aria-label]');
       // At minimum, proper structure should allow for ARIA labels
       expect(true).toBe(true);
     });

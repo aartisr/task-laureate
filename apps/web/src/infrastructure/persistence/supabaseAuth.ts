@@ -1,5 +1,5 @@
 import { createClient, type Provider, type Session, type SupabaseClient } from '@supabase/supabase-js';
-import type { AuthIdentity, AuthProvider, AuthSession, EmailConfirmationAuthProvider, PasswordAuthProvider, SocialAuthProvider, SocialProviderId } from '../../core/contracts/auth';
+import type { AuthIdentity, AuthProvider, AuthSession, EmailConfirmationAuthProvider, PasswordAuthProvider, SocialAuthProvider } from '../../core/contracts/auth';
 
 const url = import.meta.env.VITE_SUPABASE_URL;
 const publishableKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;

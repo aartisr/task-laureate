@@ -4,6 +4,7 @@ import type { DashboardSummary, TodoItem, TodoList } from '../contracts/domain';
 import { queryKeys } from '../contracts/queryKeys';
 import type { TodoListInput, TodoListUpdateInput, TodoTaskInput, TodoTaskUpdateInput } from '../contracts/repository';
 import { undoJournal } from './undoJournal';
+import { invalidateWorkspaceOverview } from '../queryCache/invalidation';
 
 interface DashboardCache {
   summary: DashboardSummary;
@@ -24,13 +25,7 @@ function countVisibleTasks(tasks: TodoItem[]) {
 export function useTodoMutations() {
   const queryClient = useQueryClient();
 
-  const refreshWorkspace = async () => {
-    await Promise.all([
-      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard }),
-      queryClient.invalidateQueries({ queryKey: queryKeys.lists }),
-      queryClient.invalidateQueries({ queryKey: queryKeys.activity }),
-    ]);
-  };
+  const refreshWorkspace = () => invalidateWorkspaceOverview(queryClient);
 
   const createList = useMutation({
     mutationFn: (input: TodoListInput) => appServices.repository.createList(input),

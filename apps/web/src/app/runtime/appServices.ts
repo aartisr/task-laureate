@@ -9,7 +9,7 @@ import { settingsFeature } from '../../features/settings/feature';
 import { taskFeature } from '../../features/tasks/feature';
 import { collaborationFeature } from '../../features/collaboration/feature';
 import { executionFeature } from '../../features/execution/feature';
-import { clearBrowserWorkspace, createBufferedPersistence, createEmptyWorkspace, createIndexedDbWorkspaceAdapter, hydrateWorkspace, type WorkspaceData } from '../../infrastructure/persistence/workspace';
+import { clearBrowserWorkspace, createBufferedPersistence, createEmptyWorkspace, createIndexedDbWorkspaceAdapter, hydrateWorkspace } from '../../infrastructure/persistence/workspace';
 import { createSupabaseCollaborationTodoRepository } from '../../infrastructure/persistence/supabaseCollaborationRepository';
 import { authProvider, persistenceConfig } from '../../config/persistence.config';
 import { setPersistenceStatus } from '../../infrastructure/persistence/status';

@@ -1,5 +1,5 @@
 import type { CollaborationRepository, CreateShareInvitationInput, ShareResourceInput } from '../../core/contracts/repository';
-import type { Collaborator, CollaboratorRole, EffectiveRole, ShareInvitation, ShareResourceType, SharedResource } from '../../core/domain/sharing';
+import type { CollaboratorRole, EffectiveRole, ShareInvitation, ShareResourceType, SharedResource } from '../../core/domain/sharing';
 import { normalizeInvitationEmail } from '../../core/domain/sharing';
 import type { SupabasePersistenceConfig } from './config';
 import { collaborationError } from './collaborationErrors';

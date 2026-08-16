@@ -1,4 +1,3 @@
-import { useNavigate } from '@tanstack/react-router';
 import { ActivityTimeline } from '../components/ActivityTimeline';
 import { PageContainer } from '../components/layouts';
 import { usePageNav } from '../hooks/usePageNav';
@@ -7,7 +6,6 @@ import { usePageSEO, PAGE_SEO } from '../hooks/usePageSEO';
 
 export function ActivityPage() {
   usePageSEO(PAGE_SEO.activity);
-  const navigate = useNavigate();
   const repository = appServices.repository;
 
   // Generic page navigation (handles Escape to go back)

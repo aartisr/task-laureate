@@ -10,7 +10,6 @@ import { FormEvent, useState } from 'react';
 import { Link } from '@tanstack/react-router';
 import { appServices } from '../runtime/appServices';
 import { dashboardQueryOptions } from '../../core/contracts/queryKeys';
-import { StatCard } from '../../components/StatCard';
 import { formatCount } from '../../core/domain/format';
 import { useTodoMutations } from '../../core/mutations/useTodoMutations';
 import { usePuckContent } from '../../components/withPuckEditor';

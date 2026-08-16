@@ -1,7 +1,5 @@
 import type {
   ActivityEvent,
-  DashboardSummary,
-  ListTemplate,
   SearchResult,
   TodoItem,
   TodoList,

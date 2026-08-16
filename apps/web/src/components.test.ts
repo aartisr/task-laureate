@@ -263,7 +263,6 @@ describe('StatusPill Component', () => {
 describe('AppShell Component', () => {
   describe('Layout', () => {
     it('should have sidebar', () => {
-      const sidebar = document.querySelector('.sidebar');
       // Sidebar may not exist on all pages/sizes
       expect(true).toBe(true);
     });

@@ -5,7 +5,7 @@ import { queryKeys } from '../core/contracts/queryKeys';
 import { useListMutations } from '../core/mutations/useListMutations';
 import { useTaskMutations } from '../core/mutations/useTaskMutations';
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
-import { announceToScreenReader, createId } from '../lib/a11y';
+import { announceToScreenReader } from '../lib/a11y';
 import { TaskList } from '../components/TaskList';
 import { TaskComposer } from '../components/TaskComposer';
 import { ShareResourcePanel } from '../components/ShareResourcePanel';

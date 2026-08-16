@@ -31,26 +31,23 @@ interface AnalyticsDiagnostics {
   readonly checkedAt: string;
 }
 
-function useConsentState(): [ConsentDecision, boolean] {
+function useConsentState(): ConsentDecision {
   const config = getAnalyticsConfig();
   const [decision, setDecision] = useState<ConsentDecision>(() =>
     getConsentDecision(config.consentVersion),
   );
-  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     return subscribeToConsent((next) => setDecision(next));
   }, []);
 
-  return [decision, busy];
+  return decision;
 }
 
 export function AnalyticsConsentControl() {
   const config = getAnalyticsConfig();
   const analyticsConfigured = config.isValid;
-  const [decision, setBusy] = useConsentState();
-  const [busy] = [false]; // keep API consistent; remove lint warning below
-  void busy; // consumed above
+  const decision = useConsentState();
 
   // We need separate state for the button loading state
   const [submitting, setSubmitting] = useState(false);

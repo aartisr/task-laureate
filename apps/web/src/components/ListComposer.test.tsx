@@ -20,9 +20,14 @@ describe('ListComposer', () => {
   });
 
   it('starts with one required decision and keeps context out of the fast path', async () => {
+    const scrollIntoView = vi.fn();
+    Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', { configurable: true, value: scrollIntoView });
     await act(async () => { root.render(<ListComposer onCreate={vi.fn()} onCancel={vi.fn()} />); });
 
-    expect(host.querySelector<HTMLInputElement>('#list-composer-title')).not.toBeNull();
+    const titleInput = host.querySelector<HTMLInputElement>('#list-composer-title');
+    expect(titleInput).not.toBeNull();
+    expect(document.activeElement).toBe(titleInput);
+    expect(scrollIntoView).toHaveBeenCalledWith(expect.objectContaining({ block: 'center' }));
     expect(host.textContent).toContain('Create & add tasks');
     expect(host.textContent).toContain('Press Enter to create');
 

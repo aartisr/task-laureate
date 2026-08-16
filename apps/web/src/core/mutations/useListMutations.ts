@@ -9,14 +9,15 @@
  * - Performance monitoring
  */
 
-import { useMutation, useQueryClient, type MutationOptions } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
-import type { TodoList, TodoListStatus } from '../contracts/domain';
+import type { TodoList } from '../contracts/domain';
 import { supportsIdempotentCreation, type TodoRepository, type TodoListInput, type TodoListUpdateInput } from '../contracts/repository';
 import { createMutationOrchestrator, type MutationOperation } from './mutationOrchestrator';
-import { listQueryOptions, queryKeys } from '../contracts/queryKeys';
+import { listQueryOptions } from '../contracts/queryKeys';
 import { undoJournal } from './undoJournal';
 import { createRemoteMutationQueue, resourceStream } from './remoteMutationQueue';
+import { invalidateWorkspaceOverview } from '../queryCache/invalidation';
 
 interface ListMutationContext {
   repository: TodoRepository;
@@ -27,13 +28,7 @@ export function useListMutations(context: ListMutationContext) {
   const queryClient = useQueryClient();
   const { repository, userId } = context;
   const remoteQueue = useMemo(() => createRemoteMutationQueue(userId), [userId]);
-  const refresh = async () => {
-    await Promise.all([
-      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard }),
-      queryClient.invalidateQueries({ queryKey: queryKeys.lists }),
-      queryClient.invalidateQueries({ queryKey: queryKeys.activity }),
-    ]);
-  };
+  const refresh = () => invalidateWorkspaceOverview(queryClient);
 
   const orchestrator = useMemo(() => {
     return createMutationOrchestrator({

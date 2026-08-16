@@ -3,7 +3,7 @@
  * Complete workflow testing and performance metrics
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 
 /**
  * E2E Test Suite: Complete User Workflows
@@ -181,7 +181,7 @@ describe('Performance Validation', () => {
       const start = performance.now();
 
       // Simulate dashboard render
-      const tasks = Array.from({ length: 100 }, (_, i) => ({
+      Array.from({ length: 100 }, (_, i) => ({
         id: `task-${i}`,
         title: `Task ${i}`,
         priority: 'medium',

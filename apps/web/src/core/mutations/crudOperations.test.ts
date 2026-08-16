@@ -1,22 +1,12 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { QueryClient } from '@tanstack/react-query';
-import type { TodoList, TodoItem } from '../contracts/domain';
+import type { TodoList } from '../contracts/domain';
 import type { TodoRepository, TodoListInput, TodoTaskInput } from '../contracts/repository';
 import { createMemoryTodoRepository } from '../../infrastructure/mock/memoryRepository';
 import { getDashboardCompletionPercent } from '../domain/logic';
 
 describe('List and Task CRUD Operations', () => {
   let repository: TodoRepository;
-  let queryClient: QueryClient;
-
   beforeEach(() => {
-    queryClient = new QueryClient({
-      defaultOptions: {
-        queries: { retry: false },
-        mutations: { retry: false },
-      },
-    });
-
     repository = createMemoryTodoRepository({
       lists: [],
       tasks: [],

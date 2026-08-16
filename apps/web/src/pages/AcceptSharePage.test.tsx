@@ -7,13 +7,18 @@ const mocked = vi.hoisted(() => ({
   acceptShareInvitation: vi.fn(),
   getSession: vi.fn(),
   signOut: vi.fn(),
+  navigate: vi.fn(),
+  invalidateQueries: vi.fn(),
 }));
 
 vi.mock('@tanstack/react-router', () => ({
   Link: ({ children, ...props }: { children: React.ReactNode }) => <a {...props}>{children}</a>,
-  useNavigate: () => vi.fn(),
+  useNavigate: () => mocked.navigate,
 }));
-vi.mock('../app/runtime/appServices', () => ({ appServices: { repository: { acceptShareInvitation: mocked.acceptShareInvitation } } }));
+vi.mock('../app/runtime/appServices', () => ({ appServices: {
+  repository: { acceptShareInvitation: mocked.acceptShareInvitation },
+  queryClient: { invalidateQueries: mocked.invalidateQueries },
+} }));
 vi.mock('../config/persistence.config', () => ({ authProvider: { getSession: mocked.getSession, signOut: mocked.signOut } }));
 vi.mock('../core/contracts/repository', () => ({ supportsCollaboration: () => true }));
 vi.mock('../hooks/usePageSEO', () => ({ usePageSEO: () => undefined }));
@@ -30,6 +35,8 @@ describe('AcceptSharePage', () => {
     window.history.replaceState({}, '', '/share/accept?token=secure-invite-token');
     mocked.getSession.mockResolvedValue({ user: { id: 'wrong-account', email: 'personal@example.com' }, accessToken: 'token' });
     mocked.acceptShareInvitation.mockRejectedValue(collaborationError(400, { message: 'Invitation does not belong to this account' }, '/rpc/accept_share_invitation'));
+    mocked.navigate.mockResolvedValue(undefined);
+    mocked.invalidateQueries.mockResolvedValue(undefined);
     host = document.createElement('div');
     document.body.appendChild(host);
     root = createRoot(host);
@@ -48,5 +55,19 @@ describe('AcceptSharePage', () => {
     expect(host.textContent).toContain('Use a different account');
     expect(host.textContent).not.toContain('Task request failed');
     expect(host.textContent).not.toContain('Invitation does not belong to this account');
+  });
+
+  it('refreshes access data and opens the exact List immediately after accepting', async () => {
+    mocked.acceptShareInvitation.mockResolvedValue({ role: 'viewer', resourceType: 'list', resourceId: 'invited-list' });
+
+    await act(async () => {
+      root.render(<AcceptSharePage />);
+      await Promise.resolve();
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(mocked.invalidateQueries).toHaveBeenCalledTimes(3);
+    expect(mocked.navigate).toHaveBeenCalledWith({ to: '/lists/$listId', params: { listId: 'invited-list' } });
   });
 });

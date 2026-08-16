@@ -2,12 +2,13 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { appServices } from '../app/runtime/appServices';
 import { supportsCollaboration } from '../core/contracts/repository';
-import { describeRole } from '../core/domain/sharing';
+import { invalidateWorkspaceOverview } from '../core/queryCache/invalidation';
 import { usePageSEO } from '../hooks/usePageSEO';
 import { authProvider } from '../config/persistence.config';
 import { CollaborationPersistenceError } from '../infrastructure/persistence/collaborationErrors';
 
-type State = { kind: 'loading' } | { kind: 'success'; role: 'editor' | 'viewer'; resourceType: 'list' | 'task'; resourceId: string } | { kind: 'error'; message: string; reason?: 'account-mismatch'; signedInEmail?: string | null };
+type AcceptedInvitation = { role: 'editor' | 'viewer'; resourceType: 'list' | 'task'; resourceId: string };
+type State = { kind: 'loading' } | ({ kind: 'opening' } & AcceptedInvitation) | { kind: 'error'; message: string; reason?: 'account-mismatch'; signedInEmail?: string | null };
 
 export function AcceptSharePage() {
   usePageSEO({ title: 'Accept invitation', description: 'Accept a private Task Laureate collaboration invitation.', noindex: true });
@@ -24,7 +25,13 @@ export function AcceptSharePage() {
         return;
       }
       return repository.acceptShareInvitation(token)
-        .then((accepted) => setState({ kind: 'success', ...accepted }))
+        .then(async (accepted) => {
+          // Acceptance changes which records this account may see. Invalidate
+          // before routing so the destination never renders a stale "missing"
+          // view from the pre-invitation cache.
+          await invalidateWorkspaceOverview(appServices.queryClient);
+          setState({ kind: 'opening', ...accepted });
+        })
         .catch((error: unknown) => setState({
           kind: 'error',
           message: error instanceof Error ? error.message : 'This invitation could not be accepted.',
@@ -33,6 +40,17 @@ export function AcceptSharePage() {
         }));
     });
   }, []);
+
+  useEffect(() => {
+    if (state.kind !== 'opening') return;
+    const destination = state.resourceType === 'list'
+      ? { to: '/lists/$listId' as const, params: { listId: state.resourceId } }
+      : { to: '/shared-with-me' as const };
+    void navigate(destination).catch(() => setState({
+      kind: 'error',
+      message: 'Your access was granted, but we could not open the shared work. Use “Shared with me” to find it.',
+    }));
+  }, [navigate, state]);
 
   const switchAccount = async () => {
     setSwitchingAccount(true);
@@ -47,8 +65,7 @@ export function AcceptSharePage() {
   };
 
   if (state.kind === 'loading') return <main className="share-accept-page"><section className="share-accept-card" aria-live="polite"><p>Private invitation</p><h1>Checking your access…</h1><span>Your link is matched to the email it was sent to.</span></section></main>;
+  if (state.kind === 'opening') return <main className="share-accept-page"><section className="share-accept-card" aria-live="polite"><p>Access granted</p><h1>Opening your shared {state.resourceType}…</h1><span>Taking you directly to the work you were invited to.</span></section></main>;
   if (state.kind === 'error' && state.reason === 'account-mismatch') return <main className="share-accept-page"><section className="share-accept-card share-accept-card--recovery"><p>Private invitation</p><span className="share-accept-card__signal" aria-hidden="true">↔</span><h1>This invite is for a different account.</h1><span>To protect the owner’s work, an invitation can only be accepted by the email it was sent to.</span>{state.signedInEmail ? <div className="share-accept-card__account"><small>You’re signed in as</small><strong>{state.signedInEmail}</strong></div> : null}<div className="share-accept-card__actions"><button className="primary-button" type="button" onClick={() => void switchAccount()} disabled={switchingAccount}>{switchingAccount ? 'Switching account…' : 'Use a different account'} <span aria-hidden="true">→</span></button><Link className="share-accept-card__secondary" to="/">Return to Task Laureate</Link></div><small className="share-accept-card__reassurance">The owner can resend the invitation if it was sent to the wrong email. Your personal work remains private.</small></section></main>;
-  if (state.kind === 'error') return <main className="share-accept-page"><section className="share-accept-card"><p>Invitation unavailable</p><h1>We couldn’t open this shared work.</h1><span>{state.message}</span><Link className="primary-button" to="/">Go to Task Laureate</Link></section></main>;
-  const destination = state.resourceType === 'list' ? () => navigate({ to: '/lists/$listId', params: { listId: state.resourceId } }) : () => navigate({ to: '/shared-with-me' });
-  return <main className="share-accept-page"><section className="share-accept-card"><p>Access granted</p><h1>You can {describeRole(state.role).toLowerCase()} this {state.resourceType}.</h1><span>It is now in <strong>Shared with me</strong>, separate from your personal work.</span><button className="primary-button" type="button" onClick={destination}>Open shared {state.resourceType} <span aria-hidden="true">→</span></button><Link className="share-accept-card__secondary" to="/shared-with-me">View all shared work</Link></section></main>;
+  if (state.kind === 'error') return <main className="share-accept-page"><section className="share-accept-card"><p>Invitation unavailable</p><h1>We couldn’t open this shared work.</h1><span>{state.message}</span><div className="share-accept-card__actions"><Link className="primary-button" to="/shared-with-me">View shared work <span aria-hidden="true">→</span></Link><Link className="share-accept-card__secondary" to="/">Go to Task Laureate</Link></div></section></main>;
 }

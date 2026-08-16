@@ -1,12 +1,12 @@
-import { useQueries, useQuery } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import { appServices } from '../app/runtime/appServices';
-import { dashboardQueryOptions, listTasksQueryOptions } from '../core/contracts/queryKeys';
-import type { TodoItem, Priority } from '../core/contracts/domain';
+import type { Priority } from '../core/contracts/domain';
 import { formatDateOnly, isDueDateBeforeToday, isDueDateToday } from '../core/domain/dateOnly';
 import { usePageSEO, PAGE_SEO } from '../hooks/usePageSEO';
 import { buildWeeklyReflection } from '../core/domain/reflection';
 import { supportsTaskEventFeed } from '../core/contracts/antiBacklog';
+import { useAllListTasks } from '../hooks/useAllListTasks';
 
 const PRIORITY_ORDER: Priority[] = ['urgent', 'high', 'medium', 'low'];
 const PRIORITY_META: Record<Priority, { label: string; icon: string; color: string }> = {
@@ -47,31 +47,9 @@ function HorizontalBar({ pct, color }: { pct: number; color?: string }) {
   );
 }
 
-function useAllTasks() {
-  const { data: dashboard } = useQuery(dashboardQueryOptions(appServices.repository));
-  const listIds = (dashboard?.lists ?? []).map((l) => l.id);
-  const listMap = Object.fromEntries((dashboard?.lists ?? []).map((l) => [l.id, l]));
-
-  // `useQueries` is one stable hook call even while the dashboard response
-  // changes the number of lists. Calling `useQuery` inside a dynamic map would
-  // violate the Rules of Hooks after the first data load.
-  const listTaskQueries = useQueries({
-    queries: listIds.map((id) => ({ ...listTasksQueryOptions(appServices.repository, id), enabled: Boolean(id) })),
-  });
-
-  const allTasks: Array<TodoItem & { listTitle: string }> = listIds.flatMap((id, i) =>
-    (listTaskQueries[i].data ?? [])
-      .filter((t) => t.deletedAt === null)
-      .map((t) => ({ ...t, listTitle: listMap[id]?.title ?? id }))
-  );
-
-  const loading = listTaskQueries.some((q) => q.isLoading);
-  return { allTasks, loading, lists: dashboard?.lists ?? [] };
-}
-
 export function ProgressPage() {
   usePageSEO(PAGE_SEO.progress);
-  const { allTasks, loading, lists } = useAllTasks();
+  const { allTasks, loading, lists } = useAllListTasks();
   const eventFeed = useQuery({ queryKey: ['task-events', 'weekly'], queryFn: () => supportsTaskEventFeed(appServices.repository) ? appServices.repository.listTaskEvents({ since: new Date(Date.now() - 7 * 86_400_000).toISOString() }) : Promise.resolve([]), staleTime: 30_000 });
 
   if (loading) return <div className="page-surface">Loading progress…</div>;

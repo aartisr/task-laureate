@@ -14,8 +14,6 @@ describe('Integration: Full Workflow', () => {
   let repository: ReturnType<typeof createMemoryTodoRepository>;
   let queryClient: QueryClient;
   let orchestrator: ReturnType<typeof createMutationOrchestrator>;
-  let undoStack: ReturnType<typeof createUndoStack<AppState>>;
-  let appState: AppState;
 
   beforeEach(() => {
     queryClient = new QueryClient({
@@ -39,12 +37,6 @@ describe('Integration: Full Workflow', () => {
       timestamp: Date.now(),
     });
 
-    appState = {
-      lists: new Map(),
-      tasks: new Map(),
-    };
-
-    undoStack = createUndoStack(appState);
   });
 
   describe('Complete Task Workflow', () => {
@@ -199,7 +191,7 @@ describe('Integration: Full Workflow', () => {
       const update1Promise = repository.updateList(list.id, { title: 'Update 1' });
       const update2Promise = repository.updateList(list.id, { title: 'Update 2' });
 
-      const [result1, result2] = await Promise.all([update1Promise, update2Promise]);
+      await Promise.all([update1Promise, update2Promise]);
 
       // Last write wins (second update)
       const final = await repository.getList(list.id);
@@ -304,7 +296,7 @@ describe('Integration: Full Workflow', () => {
       const list2 = await repository.createList({ title: 'List 2' });
 
       const task1 = await repository.createTask({ listId: list1.id, title: 'Task 1' });
-      const task2 = await repository.createTask({ listId: list1.id, title: 'Task 2' });
+      await repository.createTask({ listId: list1.id, title: 'Task 2' });
       const task3 = await repository.createTask({ listId: list2.id, title: 'Task 3' });
 
       // Complete some tasks

@@ -1,34 +1,12 @@
-import { useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import { useState } from 'react';
-import { appServices } from '../app/runtime/appServices';
-import { dashboardQueryOptions, listTasksQueryOptions } from '../core/contracts/queryKeys';
 import type { TodoItem } from '../core/contracts/domain';
 import { usePageSEO, PAGE_SEO } from '../hooks/usePageSEO';
-
-function useAllTasks() {
-  const { data: dashboard } = useQuery(dashboardQueryOptions(appServices.repository));
-  const listIds = (dashboard?.lists ?? []).map((l) => l.id);
-  const listMap = Object.fromEntries((dashboard?.lists ?? []).map((l) => [l.id, l.title]));
-
-  const listTaskQueries = listIds.map((id) =>
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    useQuery({ ...listTasksQueryOptions(appServices.repository, id), enabled: !!id })
-  );
-
-  const allTasks: Array<TodoItem & { listTitle: string }> = listIds.flatMap((id, i) =>
-    (listTaskQueries[i].data ?? [])
-      .filter((t) => t.deletedAt === null)
-      .map((t) => ({ ...t, listTitle: listMap[id] ?? id }))
-  );
-
-  const loading = listTaskQueries.some((q) => q.isLoading);
-  return { allTasks, loading, lists: dashboard?.lists ?? [] };
-}
+import { useAllListTasks } from '../hooks/useAllListTasks';
 
 export function CompletedPage() {
   usePageSEO(PAGE_SEO.completed);
-  const { allTasks, loading, lists } = useAllTasks();
+  const { allTasks, loading, lists } = useAllListTasks();
   const [groupBy, setGroupBy] = useState<'list' | 'date'>('date');
 
   if (loading) return <div className="page-surface">Loading…</div>;

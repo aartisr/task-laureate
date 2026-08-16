@@ -11,7 +11,6 @@ import { collaborationError } from './collaborationErrors';
 type FetchLike = typeof fetch;
 type ListRow = { id: string; title: string; description: string; status: TodoList['status']; created_at: string; updated_at: string; deleted_at: string | null };
 type TaskRow = { id: string; list_id: string; title: string; note_document: string; status: TodoItem['status']; priority: TodoItem['priority']; due_date: string | null; tags: string[]; order_key: number; created_at: string; updated_at: string; completed_at: string | null; deleted_at: string | null };
-type WorkspaceRow = { id: string; owner_id: string };
 type DashboardRpc = { summary: { listCount: number; completedListCount: number; taskCount: number; completedCount: number; activeCount: number }; lists: Array<ListRow & { task_count: number; completed_task_count: number }> };
 type TaskFeedRow = TaskRow & { list_title: string; next_cursor: string | null };
 type ListPageRow = ListRow & { task_count: number; completed_task_count: number; next_cursor: string | null };
@@ -49,7 +48,6 @@ export function createSupabaseCollaborationTodoRepository(config: SupabasePersis
   const rest = `${config.url.replace(/\/$/, '')}/rest/v1`;
   const storage = `${config.url.replace(/\/$/, '')}/storage/v1`;
   let configurationFailure: Error | null = null;
-  let workspace: WorkspaceRow | null = null;
   const call = async (path: string, init: RequestInit = {}) => {
     if (configurationFailure) throw configurationFailure;
     const accessToken = await config.getAccessToken?.();
@@ -79,11 +77,6 @@ export function createSupabaseCollaborationTodoRepository(config: SupabasePersis
     const response = await request(`${storage}${path}`, { ...init, headers: { apikey: config.publishableKey!, Authorization: `Bearer ${accessToken}`, ...init.headers } });
     if (!response.ok) throw new Error(`Attachment request failed (${response.status}).`);
     return response;
-  };
-  const ensureWorkspace = async () => {
-    if (workspace) return workspace;
-    workspace = rpcRecord(await json<WorkspaceRow | WorkspaceRow[]>('/rpc/ensure_collaboration_workspace', { method: 'POST', body: JSON.stringify({}) }));
-    return workspace;
   };
   const allTasks = () => json<TaskRow[]>('/collaboration_tasks?select=id,list_id,title,note_document,status,priority,due_date,tags,order_key,created_at,updated_at,completed_at,deleted_at&order=order_key.asc');
   const allLists = () => json<ListRow[]>('/collaboration_lists?select=id,title,description,status,created_at,updated_at,deleted_at&order=updated_at.desc');
