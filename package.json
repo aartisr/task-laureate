@@ -23,6 +23,6 @@
     "generate:vapid": "node scripts/generate-vapid-keys.mjs"
   },
   "devDependencies": {
-    "supabase": "^2.110.0"
+    "supabase": "^2.114.0"
   }
 }
