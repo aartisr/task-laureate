@@ -2,7 +2,7 @@ const reloadMarker = 'task-laureate:module-recovery-attempted';
 
 export const isModuleVersionMismatch = (reason: unknown) => {
   const message = reason instanceof Error ? reason.message : String(reason ?? '');
-  return /failed to fetch dynamically imported module|expected a javascript-or-wasm module script|importing a module script failed/i.test(message);
+  return /failed to fetch dynamically imported module|expected a javascript-or-wasm module script|importing a module script failed|text\/html.{0,120}(?:valid|invalid).{0,120}(?:javascript|module)|(?:javascript|module).{0,120}mime.{0,120}text\/html/i.test(message);
 };
 
 /**

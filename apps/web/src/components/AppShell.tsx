@@ -29,7 +29,7 @@ const mobileBreakpointQuery = '(max-width: 48rem)';
  */
 export const mobilePrimaryTabConfig: readonly MobileTabDefinition[] = [
   { to: '/', fallbackLabel: 'Dashboard', displayLabel: 'Dashboard', icon: '⌂' },
-  { to: '/now', fallbackLabel: 'Now', displayLabel: 'Now', icon: '⚡' },
+  { to: '/tasks', fallbackLabel: 'Tasks', displayLabel: 'Tasks', icon: '✓' },
   { to: '/search', fallbackLabel: 'Search', displayLabel: 'Search', icon: '🔍' },
 ];
 

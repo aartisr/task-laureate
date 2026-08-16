@@ -32,6 +32,9 @@ describe('PWA production asset contract', () => {
     expect(worker).toContain("addEventListener('push'");
     expect(worker).toContain("addEventListener('notificationclick'");
     expect(worker).toContain("!url.pathname.startsWith('/api/')");
+    expect(worker).toContain("const CACHE_NAME = 'task-laureate-shell-v2'");
+    expect(worker).toContain('await self.skipWaiting()');
+    expect(worker).toContain('hasExpectedAssetType(request, response)');
     expect(existsSync(publicFile('/push-worker.js'))).toBe(false);
   });
 });

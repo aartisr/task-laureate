@@ -1,5 +1,7 @@
 /* Task Laureate's sole root-scoped worker: app-shell resilience + Web Push. */
-const CACHE_NAME = 'task-laureate-shell-v1';
+// Bump this whenever caching behavior changes. Keeping old cache namespaces
+// after a deploy can pair a new HTML entrypoint with an old lazy chunk.
+const CACHE_NAME = 'task-laureate-shell-v2';
 const APP_SHELL = ['/', '/index.html', '/offline.html', '/manifest.json', '/icons/task-laureate-192.png', '/icons/task-laureate-512.png', '/icons/task-laureate-maskable-512.png', '/icons/apple-touch-icon-180.png'];
 
 const cacheAppShell = async () => {
@@ -7,13 +9,27 @@ const cacheAppShell = async () => {
   await cache.addAll(APP_SHELL);
 };
 
-self.addEventListener('install', (event) => event.waitUntil(cacheAppShell()));
+self.addEventListener('install', (event) => event.waitUntil((async () => {
+  await cacheAppShell();
+  // A versioned shell is safe to activate immediately: every generated Vite
+  // asset is content-addressed, and this avoids Safari retaining v1's bad
+  // script-as-HTML cache entry until every app tab has been closed.
+  await self.skipWaiting();
+})()));
 self.addEventListener('activate', (event) => event.waitUntil((async () => {
   await Promise.all((await caches.keys()).filter((name) => name.startsWith('task-laureate-') && name !== CACHE_NAME).map((name) => caches.delete(name)));
   await self.clients.claim();
 })()));
 
 const isCacheableAsset = (request, url) => request.method === 'GET' && url.origin === self.location.origin && !url.pathname.startsWith('/api/') && ['script', 'style', 'font', 'image'].includes(request.destination);
+const hasExpectedAssetType = (request, response) => {
+  const contentType = response.headers.get('content-type')?.toLowerCase() ?? '';
+  if (request.destination === 'script') return /(?:java|ecma)script|module/.test(contentType);
+  if (request.destination === 'style') return contentType.includes('text/css');
+  if (request.destination === 'font') return /font|octet-stream/.test(contentType);
+  if (request.destination === 'image') return contentType.startsWith('image/');
+  return false;
+};
 
 self.addEventListener('fetch', (event) => {
   const { request } = event;
@@ -34,7 +50,11 @@ self.addEventListener('fetch', (event) => {
   event.respondWith((async () => {
     const cached = await caches.match(request);
     const refresh = fetch(request).then(async (response) => {
-      if (response.ok) (await caches.open(CACHE_NAME)).put(request, response.clone());
+      // Vercel's SPA fallback returns index.html with 200 for a chunk that no
+      // longer exists after a deployment. Never cache that HTML under a JS
+      // URL; doing so turns one transient stale-tab error into a persistent
+      // iOS MIME failure.
+      if (response.ok && hasExpectedAssetType(request, response)) (await caches.open(CACHE_NAME)).put(request, response.clone());
       return response;
     });
     return cached || refresh;

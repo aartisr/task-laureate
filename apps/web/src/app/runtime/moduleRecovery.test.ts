@@ -23,4 +23,12 @@ describe('recoverFromModuleVersionMismatch', () => {
     expect(recoverFromModuleVersionMismatch(new Error('A request timed out'))).toBe(false);
     expect(reload).not.toHaveBeenCalled();
   });
+
+  it('recovers from the iOS MIME message produced when a stale chunk receives the HTML shell', () => {
+    const reload = vi.fn();
+    Object.defineProperty(window, 'location', { configurable: true, value: { reload } });
+
+    expect(recoverFromModuleVersionMismatch(new TypeError("'text/html' is not a valid JavaScript MIME type."))).toBe(true);
+    expect(reload).toHaveBeenCalledOnce();
+  });
 });
