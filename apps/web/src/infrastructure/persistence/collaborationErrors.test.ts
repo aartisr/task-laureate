@@ -21,6 +21,13 @@ describe('collaboration error mapping', () => {
     expect(error.message).toContain('signed in to the email');
   });
 
+  it('turns an account-bound invitation rejection into a recoverable, typed error', () => {
+    const error = collaborationError(400, { message: 'Invitation does not belong to this account' }, '/rpc/accept_share_invitation');
+    expect(error.reason).toBe('invitation-account-mismatch');
+    expect(error.message).toBe('This invitation was sent to a different account.');
+    expect(error.message).not.toContain('Task request failed');
+  });
+
   it('reports attachment-delete authorization separately from invitation errors', () => {
     const error = collaborationError(403, { message: 'permission denied for schema private' }, '/rpc/delete_task_attachment');
     expect(error.isConfigurationFailure).toBe(false);

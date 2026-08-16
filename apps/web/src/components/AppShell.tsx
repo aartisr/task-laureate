@@ -15,15 +15,28 @@ interface AppShellProps {
 }
 
 const workspaceNavigationPreferenceKey = 'task-laureate.workspace-navigation-expanded';
+const mobileBreakpointQuery = '(max-width: 48rem)';
 
 function readWorkspaceNavigationPreference() {
   if (typeof window === 'undefined') return false;
   return window.localStorage.getItem(workspaceNavigationPreferenceKey) === 'true';
 }
 
+function subscribeToMobileViewport(onStoreChange: () => void) {
+  if (typeof window === 'undefined') return () => undefined;
+  const mediaQuery = window.matchMedia(mobileBreakpointQuery);
+  mediaQuery.addEventListener('change', onStoreChange);
+  return () => mediaQuery.removeEventListener('change', onStoreChange);
+}
+
+function getMobileViewportSnapshot() {
+  return typeof window !== 'undefined' && window.matchMedia(mobileBreakpointQuery).matches;
+}
+
 export function AppShell({ children, navItems }: AppShellProps) {
   const { currentTheme } = useTheme();
   const isDarkTheme = currentTheme !== 'luxury-minimal';
+  const isMobileViewport = useSyncExternalStore(subscribeToMobileViewport, getMobileViewportSnapshot, () => false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isWorkspaceExpanded, setIsWorkspaceExpanded] = useState(readWorkspaceNavigationPreference);
   const currentPath = useRouterState({ select: (state) => state.location.pathname });
@@ -207,7 +220,7 @@ export function AppShell({ children, navItems }: AppShellProps) {
         {/* ===== UTILITY SECTION ===== */}
         <div className="sidebar-footer">
 
-          <QuickCapture />
+          {!isMobileViewport ? <QuickCapture /> : null}
 
           <div className="sidebar-footer__divider">
             <span>Support</span>
@@ -319,7 +332,27 @@ export function AppShell({ children, navItems }: AppShellProps) {
         {children ?? <Outlet />}
       </main>
       <nav className="mobile-bottom-nav" aria-label="Quick Navigation">
-        {mobilePrimaryTabs.map((item) => {
+        {mobilePrimaryTabs.slice(0, 2).map((item) => {
+          const hasRecovery = item.to === '/settings' && recoveryAvailable;
+          return (
+            <Link
+              key={item.to}
+              to={item.to}
+              activeOptions={getLinkActiveOptions(item.to)}
+              activeProps={{ className: 'active' }}
+              className="mobile-bottom-nav__link"
+              aria-label={hasRecovery ? 'Settings — recent changes available' : item.mobileLabel ?? item.label}
+            >
+              <span className="mobile-bottom-nav__icon" aria-hidden="true">
+                {item.icon ?? '•'}
+              </span>
+              <span className="mobile-bottom-nav__label">{item.mobileLabel ?? item.label}</span>
+              {hasRecovery ? <span className="mobile-bottom-nav__attention" aria-hidden="true" /> : null}
+            </Link>
+          );
+        })}
+        {isMobileViewport ? <QuickCapture triggerVariant="mobile" /> : null}
+        {mobilePrimaryTabs.slice(2).map((item) => {
           const hasRecovery = item.to === '/settings' && recoveryAvailable;
           return (
             <Link

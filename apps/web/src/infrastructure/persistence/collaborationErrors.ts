@@ -3,17 +3,27 @@ export interface SupabaseErrorPayload { message?: string; code?: string; hint?: 
 export class CollaborationPersistenceError extends Error {
   readonly status: number;
   readonly isConfigurationFailure: boolean;
-  constructor(message: string, status: number, isConfigurationFailure = false) {
+  readonly reason: 'invitation-account-mismatch' | undefined;
+  constructor(message: string, status: number, isConfigurationFailure = false, reason?: 'invitation-account-mismatch') {
     super(message);
     this.name = 'CollaborationPersistenceError';
     this.status = status;
     this.isConfigurationFailure = isConfigurationFailure;
+    this.reason = reason;
   }
 }
 
 /** Maps low-level PostgREST failures to a stable, non-sensitive user message. */
 export function collaborationError(status: number, payload: SupabaseErrorPayload, endpoint: string) {
   const detail = [payload.message, payload.hint, payload.details].filter(Boolean).join(' ').toLowerCase();
+  if (endpoint.includes('/rpc/accept_share_invitation') && /invitation does not belong to this account/.test(detail)) {
+    return new CollaborationPersistenceError(
+      'This invitation was sent to a different account.',
+      status,
+      false,
+      'invitation-account-mismatch',
+    );
+  }
   // PostgREST returns 404 when its schema cache has not yet learned about an RPC.
   // This can happen immediately after a migration even though the function exists;
   // it is not evidence that a particular migration was skipped.

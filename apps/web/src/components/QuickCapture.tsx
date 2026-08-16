@@ -8,11 +8,20 @@ import { appServices } from '../app/runtime/appServices';
 
 const outbox = createOutboxStore();
 
+type QuickCaptureProps = {
+  /**
+   * The compact trigger is intentionally designed for the primary mobile
+   * navigation slot. The composer, delivery guarantees, and dialog are shared
+   * with desktop so capture behaves identically on every device.
+   */
+  triggerVariant?: 'sidebar' | 'mobile';
+};
+
 function focusableElements(container: HTMLElement) {
   return Array.from(container.querySelectorAll<HTMLElement>('button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [href]'));
 }
 
-export function QuickCapture() {
+export function QuickCapture({ triggerVariant = 'sidebar' }: QuickCaptureProps) {
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState('');
   const [notice, setNotice] = useState<string | null>(null);
@@ -103,7 +112,26 @@ export function QuickCapture() {
     if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
   };
 
-  if (!open) return <button ref={triggerRef} type="button" className="quick-capture__trigger" onClick={() => { setNotice(null); setOpen(true); }}><span className="quick-capture__trigger-icon" aria-hidden="true">＋</span><span>Quick capture</span><kbd>⌘⇧K</kbd></button>;
+  if (!open) {
+    const openCapture = () => { setNotice(null); setOpen(true); };
+
+    if (triggerVariant === 'mobile') {
+      return (
+        <button
+          ref={triggerRef}
+          type="button"
+          className="mobile-bottom-nav__link mobile-bottom-nav__button mobile-bottom-nav__capture"
+          aria-label="Quick capture a task, idea, or reminder"
+          onClick={openCapture}
+        >
+          <span className="mobile-bottom-nav__capture-icon" aria-hidden="true">＋</span>
+          <span className="mobile-bottom-nav__label">Capture</span>
+        </button>
+      );
+    }
+
+    return <button ref={triggerRef} type="button" className="quick-capture__trigger" onClick={openCapture}><span className="quick-capture__trigger-icon" aria-hidden="true">＋</span><span>Quick capture</span><kbd>⌘⇧K</kbd></button>;
+  }
 
   const dialog = <div className="quick-capture" role="presentation">
     <button className="quick-capture__backdrop" aria-label="Close quick capture" type="button" onClick={close} />
