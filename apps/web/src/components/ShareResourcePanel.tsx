@@ -9,9 +9,14 @@ type CollaboratorLoadFailure = { message: string; blocksSharing: boolean };
 
 function collaboratorLoadFailure(error: unknown, resourceType: ShareResourceInput['resourceType']): CollaboratorLoadFailure {
   const detail = error instanceof Error ? error.message : '';
-  if (new RegExp(`only the ${resourceType} owner can view collaborator identities`, 'i').test(detail)) {
-    const label = resourceType === 'task' ? 'Task' : 'List';
-    const listAlternative = resourceType === 'task' ? ' If you own the enclosing List and intend to share all of its tasks, share the List instead.' : '';
+  // The database intentionally accepts casing/whitespace from an older
+  // installed client. Use the same normalization for the presentation layer;
+  // otherwise a legacy "Task" value is wrongly described as a List.
+  const normalizedResourceType = String(resourceType).trim().toLowerCase();
+  const isTask = normalizedResourceType === 'task';
+  const label = isTask ? 'Task' : 'List';
+  if (new RegExp(`only the ${isTask ? 'task' : 'list'} owner can view collaborator identities`, 'i').test(detail)) {
+    const listAlternative = isTask ? ' If you own the enclosing List and intend to share all of its tasks, share the List instead.' : '';
     return {
       message: `Your signed-in account does not own this ${label}. Only its owner can view collaborators or create, revoke, and manage ${label} invitations. Switch to the owner account.${listAlternative}`,
       blocksSharing: true,
@@ -20,7 +25,7 @@ function collaboratorLoadFailure(error: unknown, resourceType: ShareResourceInpu
   if (error instanceof CollaborationPersistenceError && error.isConfigurationFailure) {
     return { message: 'Couldn’t load collaborator emails yet. Sharing still works; apply Supabase migration 035, then reload the PostgREST schema cache to restore this roster.', blocksSharing: false };
   }
-  return { message: `Couldn’t load collaborator emails for this ${resourceType === 'task' ? 'Task' : 'List'} yet. You can still create a secure invitation.`, blocksSharing: false };
+  return { message: `Couldn’t load collaborator emails for this ${label} yet. You can still create a secure invitation.`, blocksSharing: false };
 }
 
 export function ShareResourcePanel({ repository, resource, resourceName, onClose }: { repository: CollaborationRepository; resource: ShareResourceInput; resourceName: string; onClose: () => void }) {

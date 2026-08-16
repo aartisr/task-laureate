@@ -53,4 +53,19 @@ describe('ShareResourcePanel', () => {
     expect(host.textContent).toContain('If you own the enclosing List and intend to share all of its tasks, share the List instead.');
     expect(Array.from(host.querySelectorAll('button')).find((button) => button.textContent === 'Task owner required')?.disabled).toBe(true);
   });
+
+  it('uses the database-compatible Task label for a legacy-cased resource type', async () => {
+    const repository = {
+      listOutgoingInvitations: vi.fn().mockResolvedValue([]),
+      listCollaborators: vi.fn().mockRejectedValue(new Error('Task request failed: Only the Task owner can view collaborator identities')),
+    } as unknown as CollaborationRepository;
+
+    await act(async () => {
+      root.render(<ShareResourcePanel repository={repository} resource={{ resourceType: 'Task' as never, resourceId: 'task-id' }} resourceName="Launch brief" onClose={vi.fn()} />);
+      await Promise.resolve();
+    });
+
+    expect(host.textContent).toContain('Your signed-in account does not own this Task.');
+    expect(host.textContent).not.toContain('does not own this List');
+  });
 });
