@@ -37,10 +37,10 @@ describe('ShareResourcePanel', () => {
     expect(Array.from(host.querySelectorAll('button')).find((button) => button.textContent === 'Create secure invite')).toBeDefined();
   });
 
-  it('does not block a secure invite when the roster RPC rejects a legacy resource value', async () => {
+  it('explains the actual recovery path when the signed-in account does not own the Task', async () => {
     const repository = {
       listOutgoingInvitations: vi.fn().mockResolvedValue([]),
-      listCollaborators: vi.fn().mockRejectedValue(new Error('Task request failed: Invalid resource type')),
+      listCollaborators: vi.fn().mockRejectedValue(new Error('Task request failed: Only the Task owner can view collaborator identities')),
     } as unknown as CollaborationRepository;
 
     await act(async () => {
@@ -48,7 +48,9 @@ describe('ShareResourcePanel', () => {
       await Promise.resolve();
     });
 
-    expect(host.textContent).toContain('You can still create a secure invitation.');
-    expect(Array.from(host.querySelectorAll('button')).find((button) => button.textContent === 'Create secure invite')).toBeDefined();
+    expect(host.textContent).toContain('Your signed-in account does not own this Task.');
+    expect(host.textContent).toContain('Only its owner can view collaborators or create, revoke, and manage Task invitations.');
+    expect(host.textContent).toContain('If you own the enclosing List and intend to share all of its tasks, share the List instead.');
+    expect(Array.from(host.querySelectorAll('button')).find((button) => button.textContent === 'Task owner required')?.disabled).toBe(true);
   });
 });
