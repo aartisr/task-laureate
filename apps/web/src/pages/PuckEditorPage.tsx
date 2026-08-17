@@ -1,11 +1,13 @@
 import { Puck } from '@puckeditor/core';
 import '@puckeditor/core/dist/index.css';
-import { Link, useNavigate } from '@tanstack/react-router';
+import { useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
 import { defaultPageContents, puckConfig } from '../core/puck/config';
 import { puckPageIds, type PuckPageId } from '../core/puck/types';
 import { contentToPuckData, puckDataToContent, resetPageContent, savePageContent } from '../infrastructure/puckContent';
 import { usePuckContent } from '../components/withPuckEditor';
+import { PuckStudioToolbar } from '../components/PuckStudioToolbar';
+import { AppIcon } from '../components/AppIcon';
 
 function isPuckPageId(value: string): value is PuckPageId {
   return (puckPageIds as readonly string[]).includes(value);
@@ -23,41 +25,36 @@ export function PuckEditorPage({ pageId }: { pageId: string }) {
     if (isPuckPageId(nextPageId)) navigate({ to: '/puck/$pageId', params: { pageId: nextPageId } });
   };
 
-  return (
-    <main className="page-surface" aria-label="Page editor">
-      <div className="panel-heading">
-        <div>
-          <p className="eyebrow">Content studio</p>
-          <h1>Edit application content</h1>
-          <p>Changes are stored in this browser until server-side publishing is enabled.</p>
-        </div>
-        <Link className="secondary-button" to={defaultPageContents[selectedPageId].path}>View page</Link>
+  const pages = puckPageIds.map((id) => ({ id, name: defaultPageContents[id].name, path: defaultPageContents[id].path }));
+  const restore = () => { resetPageContent(selectedPageId); setNotice(`Restored the ${content.name} default.`); };
+
+  return <main className="puck-studio" aria-label="Content studio">
+    <PuckStudioToolbar pages={pages} selectedPageId={selectedPageId} onSelectPage={selectPage} onRestore={restore} />
+    {notice ? <p className="puck-studio__notice" role="status"><AppIcon name="check" /> {notice}</p> : null}
+    <section className="puck-studio__canvas" aria-label={`Editing ${content.name}`}>
+      <div className="puck-studio__canvas-meta">
+        <span><AppIcon name="file" /> {content.name}</span>
+        <small>The Blocks library opens on the left. Use the panel button in the editor header to collapse or restore it on desktop.</small>
       </div>
-      <label className="field" htmlFor="puck-page-select">
-        <span>Page</span>
-        <select id="puck-page-select" value={selectedPageId} onChange={(event) => selectPage(event.target.value)}>
-          {puckPageIds.map((id) => <option key={id} value={id}>{defaultPageContents[id].name}</option>)}
-        </select>
-      </label>
-      {notice ? <p role="status">{notice}</p> : null}
       <Puck
         key={selectedPageId}
         config={puckConfig}
         data={contentToPuckData(content)}
-        headerTitle={`Editing: ${content.name}`}
+        ui={{ leftSideBarVisible: true, plugin: { current: 'blocks' } }}
+        headerTitle={`Editing ${content.name}`}
+        headerPath={content.path}
+        height="min(72rem, calc(100dvh - 18rem))"
+        viewports={[
+          { width: 360, height: 'auto', label: 'Phone', icon: <AppIcon name="task" /> },
+          { width: 768, height: 'auto', label: 'Tablet', icon: <AppIcon name="list" /> },
+          { width: 1280, height: 'auto', label: 'Laptop', icon: <AppIcon name="dashboard" /> },
+          { width: '100%', height: 'auto', label: 'Full canvas', icon: <AppIcon name="progress" /> },
+        ]}
         onPublish={(data) => {
           savePageContent(selectedPageId, puckDataToContent(selectedPageId, data));
-          setNotice('Saved locally.');
+          setNotice(`Saved ${content.name} locally.`);
         }}
-      >
-        <Puck.Preview />
-      </Puck>
-      <button className="secondary-button" type="button" onClick={() => {
-        resetPageContent(selectedPageId);
-        setNotice('Restored the default content.');
-      }}>
-        Restore defaults
-      </button>
-    </main>
-  );
+      />
+    </section>
+  </main>;
 }
