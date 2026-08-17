@@ -3,6 +3,10 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { TaskDetailLens } from './TaskDetailLens';
 
+vi.mock('./TaskReminderControl', () => ({
+  TaskReminderControl: ({ taskId }: { taskId: string }) => <div data-testid="task-reminder-control">Reminder controls for {taskId}</div>,
+}));
+
 describe('TaskDetailLens', () => {
   let host: HTMLDivElement;
   let root: Root;
@@ -45,5 +49,19 @@ describe('TaskDetailLens', () => {
     await act(async () => Array.from(host.querySelectorAll('button')).find((button) => button.textContent === 'Clear date')?.click());
     await act(async () => Array.from(host.querySelectorAll('button')).find((button) => button.textContent === 'Save changes')?.click());
     expect(update).toHaveBeenLastCalledWith(expect.objectContaining({ dueDate: null }));
+  });
+
+  it('renders reminder and status-request controls only when the parent grants owner access', async () => {
+    const task = { id: 'task-reminders', listId: 'list-1', title: 'Confirm launch date', notes: '', status: 'todo' as const, priority: 'medium' as const, dueDate: null, tags: [], order: 0, createdAt: '2026-08-03T00:00:00.000Z', updatedAt: '2026-08-03T00:00:00.000Z', completedAt: null, deletedAt: null };
+    const props = { task, onUpdate: vi.fn().mockResolvedValue(undefined), onComplete: vi.fn().mockResolvedValue(undefined) };
+
+    await act(async () => root.render(<TaskDetailLens {...props} />));
+    expect(host.querySelector('[data-testid="task-reminder-control"]')).toBeNull();
+
+    await act(async () => root.render(<TaskDetailLens {...props} canManageReminders />));
+    expect(host.querySelector('[data-testid="task-reminder-control"]')?.textContent).toContain('task-reminders');
+
+    await act(async () => root.render(<TaskDetailLens {...props} canManageReminders readOnly />));
+    expect(host.querySelector('[data-testid="task-reminder-control"]')).toBeNull();
   });
 });

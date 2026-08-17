@@ -66,6 +66,7 @@ export function resolveDesktopNavigation(navItems: readonly NavItem[]): DesktopN
     workspace: [
       { label: 'Lists', to: '/lists-overview', icon: '☷', description: 'Projects and lists' },
       find('/shared-with-me', { label: 'Shared with me', to: '/shared-with-me', icon: '↗', description: 'Work shared with you' }),
+      find('/shared-by-me', { label: 'Shared by me', to: '/shared-by-me', icon: '↗', description: 'Lists you share with others' }),
       find('/activity', { label: 'Activity', to: '/activity', icon: '◌', description: 'Recent changes' }),
       { label: 'Progress', to: '/progress', icon: '◔', description: 'Reflect on momentum' },
     ],

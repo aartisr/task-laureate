@@ -11,6 +11,13 @@ import { CalendarScheduleControl } from '../components/CalendarScheduleControl';
 import { isFeatureEnabled } from '../config/featureFlags';
 import { getCalendarTaskBlock } from '../infrastructure/calendar/calendarScheduling';
 import { createTaskPlanningService } from '../core/services/taskPlanning';
+import type { EffectiveRole } from '../core/domain/sharing';
+
+/** The owner is the only person who can assign collaborators or send a nudge.
+ * Editors may change the work itself, but cannot create outbound notifications. */
+export function canManageTaskReminders(collaborationEnabled: boolean, accessRole: EffectiveRole | undefined) {
+  return !collaborationEnabled || accessRole === 'owner';
+}
 
 export function TaskFocusPage({ listId, taskId }: { listId: string; taskId: string }) {
   const navigate = useNavigate();
@@ -33,6 +40,7 @@ export function TaskFocusPage({ listId, taskId }: { listId: string; taskId: stri
   if (listQuery.isLoading || tasksQuery.isLoading || (supportsCollaboration(appServices.repository) && accessQuery.isLoading)) return <main className="task-focus-page" aria-busy="true">Loading task…</main>;
   if (!task || !listQuery.data) return <main className="task-focus-page"><h1>Task not found</h1><button className="secondary-button" onClick={() => navigate({ to: '/lists/$listId', params: { listId } })}>Back to list</button></main>;
   const canEdit = canEditTask;
+  const canManageReminders = canManageTaskReminders(supportsCollaboration(appServices.repository), accessQuery.data);
 
   return <main className="page-stack task-focus-page">
     <button className="task-focus-page__back" onClick={() => navigate({ to: '/lists/$listId', params: { listId } })}>← Back to {listQuery.data.title}</button>
@@ -41,6 +49,7 @@ export function TaskFocusPage({ listId, taskId }: { listId: string; taskId: stri
       listTitle={listQuery.data.title}
       mode="focus"
       readOnly={listQuery.data.status === 'archived' || !canEdit}
+      canManageReminders={canManageReminders && listQuery.data.status !== 'archived'}
       onUpdate={async (input) => { await mutations.updateTask.mutateAsync({ taskId, input }); }}
       onComplete={async () => { if (task.status === 'done') await mutations.updateTask.mutateAsync({ taskId, input: { status: 'todo' } }); else await mutations.completeTask.mutateAsync({ taskId, isComplete: true }); }}
     />

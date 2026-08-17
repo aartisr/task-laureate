@@ -26,7 +26,7 @@ describe('desktop navigation', () => {
     const navigation = resolveDesktopNavigation([]);
 
     expect(navigation.primary.map((item) => item.to)).toEqual(['/', '/now', '/tasks', '/search']);
-    expect(navigation.workspace.map((item) => item.to)).toEqual(['/lists-overview', '/shared-with-me', '/activity', '/progress']);
+    expect(navigation.workspace.map((item) => item.to)).toEqual(['/lists-overview', '/shared-with-me', '/shared-by-me', '/activity', '/progress']);
   });
 
   it('allows feature metadata without changing the core journey', () => {

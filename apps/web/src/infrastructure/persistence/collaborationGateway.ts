@@ -1,5 +1,5 @@
 import type { CollaborationRepository, CreateShareInvitationInput, ShareResourceInput } from '../../core/contracts/repository';
-import type { CollaboratorRole, EffectiveRole, ShareInvitation, ShareResourceType, SharedResource } from '../../core/domain/sharing';
+import type { CollaboratorRole, EffectiveRole, ShareInvitation, SharedByMeList, ShareResourceType, SharedResource } from '../../core/domain/sharing';
 import { normalizeInvitationEmail } from '../../core/domain/sharing';
 import type { SupabasePersistenceConfig } from './config';
 import { collaborationError } from './collaborationErrors';
@@ -11,6 +11,7 @@ type InvitationRow = {
 };
 type CollaboratorRow = { user_id: string; email: string; role: CollaboratorRole; granted_by: string; created_at: string; updated_at: string };
 type SharedResourceRow = { resource_type: ShareResourceType; resource_id: string; title: string; description: string; role: CollaboratorRole; shared_by: string; updated_at: string };
+type SharedByMeListRow = { list_id: string; title: string; description: string; updated_at: string; collaborator_count: number; pending_invitation_count: number };
 const REQUEST_TIMEOUT_MS = 15_000;
 
 function bytesToHex(bytes: Uint8Array) { return [...bytes].map((byte) => byte.toString(16).padStart(2, '0')).join(''); }
@@ -61,6 +62,17 @@ export function createSupabaseCollaborationGateway(config: SupabasePersistenceCo
     async listSharedResources() {
       const rows = await (await authorized('/rpc/list_shared_resources', { method: 'POST', body: JSON.stringify({}) })).json() as SharedResourceRow[];
       return rows.map((row): SharedResource => ({ resourceType: row.resource_type, resourceId: row.resource_id, title: row.title, description: row.description, role: row.role, sharedBy: row.shared_by, updatedAt: row.updated_at }));
+    },
+    async listListsSharedByMe() {
+      const rows = await (await authorized('/rpc/list_lists_shared_by_me', { method: 'POST', body: JSON.stringify({}) })).json() as SharedByMeListRow[];
+      return rows.map((row): SharedByMeList => ({
+        listId: row.list_id,
+        title: row.title,
+        description: row.description,
+        updatedAt: row.updated_at,
+        collaboratorCount: Number(row.collaborator_count),
+        pendingInvitationCount: Number(row.pending_invitation_count),
+      }));
     },
     async getResourceAccess({ resourceType, resourceId }: ShareResourceInput): Promise<EffectiveRole> {
       const role = await (await authorized('/rpc/get_collaboration_resource_access', { method: 'POST', body: JSON.stringify({ p_resource_type: resourceType, p_resource_id: resourceId }) })).json() as EffectiveRole | null;

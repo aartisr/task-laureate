@@ -382,6 +382,7 @@ const pageCatalog: Array<Pick<PageContent, 'id' | 'name' | 'path'>> = [
   { id: 'list-detail', name: 'List details', path: '/lists/$listId' },
   { id: 'task-focus', name: 'Task focus', path: '/lists/$listId/tasks/$taskId' },
   { id: 'shared-with-me', name: 'Shared with me', path: '/shared-with-me' },
+  { id: 'shared-by-me', name: 'Shared by me', path: '/shared-by-me' },
   { id: 'accept-share', name: 'Accept share', path: '/share/accept' },
   { id: 'sign-in', name: 'Sign in', path: '/sign-in' },
   { id: 'auth-callback', name: 'Authentication callback', path: '/auth/callback' },

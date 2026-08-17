@@ -54,6 +54,16 @@ export interface SharedResource {
   updatedAt: string;
 }
 
+/** An owner-facing List summary for the outgoing collaboration workspace. */
+export interface SharedByMeList {
+  listId: string;
+  title: string;
+  description: string;
+  updatedAt: string;
+  collaboratorCount: number;
+  pendingInvitationCount: number;
+}
+
 export interface AccessContext {
   userId: string | null;
   ownerId: string;

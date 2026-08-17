@@ -36,6 +36,24 @@ describe('Supabase collaboration gateway', () => {
     expect(JSON.parse(String(requests[0].init?.body))).toEqual({ p_invitation_id: 'invite-id' });
   });
 
+  it('loads outgoing sharing as compact owner-facing List summaries', async () => {
+    const requests: Array<{ url: string; init?: RequestInit }> = [];
+    const gateway = createSupabaseCollaborationGateway(config, async (url, init) => {
+      requests.push({ url: String(url), init });
+      return new Response(JSON.stringify([{
+        list_id: 'list-id', title: 'Launch plan', description: 'Shared work', updated_at: '2026-08-17T00:00:00Z',
+        collaborator_count: 2, pending_invitation_count: 1,
+      }]), { status: 200 });
+    });
+
+    await expect(gateway.listListsSharedByMe()).resolves.toEqual([{
+      listId: 'list-id', title: 'Launch plan', description: 'Shared work', updatedAt: '2026-08-17T00:00:00Z',
+      collaboratorCount: 2, pendingInvitationCount: 1,
+    }]);
+    expect(requests[0].url).toContain('/rpc/list_lists_shared_by_me');
+    expect(JSON.parse(String(requests[0].init?.body))).toEqual({});
+  });
+
   it('loads collaborator emails through the owner-only roster RPC, never a public user lookup', async () => {
     const requests: Array<{ url: string; init?: RequestInit }> = [];
     const gateway = createSupabaseCollaborationGateway(config, async (url, init) => {

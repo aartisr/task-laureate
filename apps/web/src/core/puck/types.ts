@@ -73,7 +73,7 @@ export interface PageContent {
  */
 export const puckPageIds = [
   'dashboard', 'lists', 'tasks', 'completed', 'progress', 'search', 'activity',
-  'settings', 'support', 'list-detail', 'task-focus', 'shared-with-me',
+  'settings', 'support', 'list-detail', 'task-focus', 'shared-with-me', 'shared-by-me',
   'accept-share', 'sign-in', 'auth-callback', 'sample-workspace',
 ] as const;
 

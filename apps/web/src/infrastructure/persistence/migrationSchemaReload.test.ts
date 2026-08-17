@@ -62,4 +62,17 @@ describe('PostgREST schema-cache migration contract', () => {
     expect(roster.match(/\n    return;\n/g)).toHaveLength(2);
     expect(roster).toContain("notify pgrst, 'reload schema';");
   });
+
+  it('provides an indexed, owner-only outgoing List sharing index', () => {
+    const outgoingSharingMigration = migration('043_add_lists_shared_by_me.sql');
+    const outgoingSharing = readFileSync(outgoingSharingMigration, 'utf8');
+
+    expect(existsSync(outgoingSharingMigration)).toBe(true);
+    expect(outgoingSharing).toContain('create index if not exists share_invitations_active_list_owner_idx');
+    expect(outgoingSharing).toContain('create or replace function public.list_lists_shared_by_me()');
+    expect(outgoingSharing).toContain('where list.owner_id = (select auth.uid())');
+    expect(outgoingSharing).toContain("invitation.status = 'pending'");
+    expect(outgoingSharing).toContain("grant execute on function public.list_lists_shared_by_me() to authenticated;");
+    expect(outgoingSharing).toContain("notify pgrst, 'reload schema';");
+  });
 });
