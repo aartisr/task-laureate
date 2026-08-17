@@ -377,17 +377,19 @@ export function ListDetailPage({ listId }: ListDetailPageProps) {
         </header>
 
         {/* Create Task Section */}
-        {list.status !== 'archived' && canEditTasks && <section className="mb-8 bg-white rounded-lg shadow-md p-6" aria-label="Create new task">
+        {list.status !== 'archived' && canEditTasks && <section className="list-detail__task-entry" aria-label="Create new task">
           {isCreatingTask || pendingTask ? (
             <TaskComposer listId={listId} initialInput={pendingTask?.input} restoredDraft={Boolean(pendingTask)} onCreate={handleCreateTask} onCancel={() => { clearPendingSaveIntent(); setIsCreatingTask(false); }} titleInputRef={taskInputRef} />
           ) : (
             <button
               type="button"
               onClick={() => { clearPendingSaveIntent(); setIsCreatingTask(true); }}
-              className="w-full text-left px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="list-detail__task-entry-button"
               aria-label="Click to add a new task"
             >
-              <span className="text-2xl" aria-hidden="true">+</span> Add a task <span className="text-sm">— include a due date, priority, or notes when useful</span>
+              <span className="list-detail__task-entry-icon" aria-hidden="true">+</span>
+              <span className="list-detail__task-entry-copy"><strong>Add a task</strong><span>Include a due date, priority, or notes when useful.</span></span>
+              <span className="list-detail__task-entry-arrow" aria-hidden="true">→</span>
             </button>
           )}
         </section>}

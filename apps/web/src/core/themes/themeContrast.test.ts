@@ -13,6 +13,14 @@ function contrast(foreground: string, background: string) {
   return (light + 0.05) / (dark + 0.05);
 }
 
+function mixSrgb(first: string, second: string, firstWeight: number) {
+  const firstChannels = first.slice(1).match(/../g)?.map((value) => Number.parseInt(value, 16));
+  const secondChannels = second.slice(1).match(/../g)?.map((value) => Number.parseInt(value, 16));
+  if (!firstChannels || !secondChannels) throw new Error('Expected six-digit hex colors');
+  const secondWeight = 1 - firstWeight;
+  return `#${firstChannels.map((channel, index) => Math.round(channel * firstWeight + secondChannels[index] * secondWeight).toString(16).padStart(2, '0')).join('')}`;
+}
+
 describe('theme color contrast', () => {
   it.each(Object.values(THEMES))('%s keeps all text readable on every surface', (theme) => {
     const surfaces = Object.values(theme.colors.bg).filter((color) => color.startsWith('#'));
@@ -28,6 +36,17 @@ describe('theme color contrast', () => {
     for (const [name, color] of Object.entries(theme.colors.action)) {
       if (name === 'disabled') continue;
       expect(contrast(theme.colors.text.onAction, color), `${theme.label}: on-action text on ${name}`).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
+  it.each(Object.values(THEMES))('%s keeps primary button text readable across its premium gradient', (theme) => {
+    const gradientEnd = mixSrgb(theme.colors.action.primary, theme.colors.accent.secondary, 0.72);
+    expect(contrast(theme.colors.text.onAction, gradientEnd), `${theme.label}: on-action text on primary-button gradient`).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it.each(Object.values(THEMES))('%s keeps status-backed controls readable', (theme) => {
+    for (const [name, color] of Object.entries(theme.colors.status)) {
+      expect(contrast(theme.colors.text.onAction, color), `${theme.label}: on-action text on ${name} status`).toBeGreaterThanOrEqual(4.5);
     }
   });
 
