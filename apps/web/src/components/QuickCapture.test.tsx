@@ -30,5 +30,7 @@ describe('QuickCapture mobile trigger', () => {
     await act(async () => trigger?.click());
     expect(document.querySelector('[role="dialog"]')?.getAttribute('aria-labelledby')).toBe('quick-capture-title');
     expect(document.querySelector('textarea')?.getAttribute('placeholder')).toBe('Write the thought exactly as it arrives…');
+    expect(document.querySelector('.quick-capture__scroll')).not.toBeNull();
+    expect(document.querySelector('.quick-capture__actions .primary-button')?.textContent).toContain('Save to Inbox');
   });
 });
