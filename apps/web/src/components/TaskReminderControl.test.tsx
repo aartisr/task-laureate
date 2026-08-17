@@ -44,10 +44,11 @@ describe('TaskReminderControl', () => {
   });
 
   it('renders a retry path instead of hiding setup failures', async () => {
-    getSetup.mockRejectedValue(new Error('RPC unavailable'));
+    getSetup.mockRejectedValue(new Error('Loading eligible collaborators failed: Only the Task owner can view assignee candidates.'));
     await act(async () => root.render(<TaskReminderControl taskId="task-3" />));
 
     expect(host.textContent).toContain('We could not load the people who can work on this task.');
+    expect(host.textContent).toContain('Loading eligible collaborators failed: Only the Task owner can view assignee candidates.');
     expect(Array.from(host.querySelectorAll('button')).some((button) => button.textContent === 'Retry')).toBe(true);
   });
 });
