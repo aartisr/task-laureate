@@ -28,15 +28,18 @@ const rootRoute = createRootRouteWithContext<{
 
 function RootLayout() {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
+  // Keep the brand atmosphere for spacious overview moments. Dense task work
+  // stays visually quiet so task controls and text retain full attention.
+  const showBrandAtmosphere = pathname === '/' || pathname === '/lists-overview' || pathname === '/shared-with-me' || pathname === '/shared-by-me' || pathname === '/auth/callback' || pathname === '/sign-in' || pathname === '/share/accept' || pathname === '/sample';
   useEffect(() => {
     if (pathname === '/') trackGrowthEvent('landing_viewed', { surface: 'workspace' });
     if (pathname === '/sample') trackGrowthEvent('demo_started', { surface: 'sample_workspace' });
   }, [pathname]);
   // OAuth callbacks are deliberately free of navigation chrome so the person
   // sees one unambiguous completion state while the session is exchanged.
-  if (pathname === '/auth/callback' || pathname === '/sign-in' || pathname === '/share/accept' || pathname === '/sample') return <><BackgroundWatermark /><Outlet /></>;
+  if (pathname === '/auth/callback' || pathname === '/sign-in' || pathname === '/share/accept' || pathname === '/sample') return <>{showBrandAtmosphere ? <BackgroundWatermark /> : null}<Outlet /></>;
   return <>
-    <BackgroundWatermark />
+    {showBrandAtmosphere ? <BackgroundWatermark /> : null}
     <AppShell navItems={appServices.registry.getNavItems()}>
       <Outlet />
     </AppShell>

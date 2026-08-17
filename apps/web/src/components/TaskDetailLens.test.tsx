@@ -64,4 +64,15 @@ describe('TaskDetailLens', () => {
     await act(async () => root.render(<TaskDetailLens {...props} canManageReminders readOnly />));
     expect(host.querySelector('[data-testid="task-reminder-control"]')).toBeNull();
   });
+
+  it('shows task relocation only when the parent provides the permitted move action', async () => {
+    const task = { id: 'task-move', listId: 'list-1', title: 'Handoff brief', notes: '', status: 'todo' as const, priority: 'medium' as const, dueDate: null, tags: [], order: 0, createdAt: '2026-08-03T00:00:00.000Z', updatedAt: '2026-08-03T00:00:00.000Z', completedAt: null, deletedAt: null };
+    const props = { task, onUpdate: vi.fn().mockResolvedValue(undefined), onComplete: vi.fn().mockResolvedValue(undefined) };
+
+    await act(async () => root.render(<TaskDetailLens {...props} />));
+    expect(Array.from(host.querySelectorAll('button')).some((button) => button.textContent?.includes('Move task'))).toBe(false);
+
+    await act(async () => root.render(<TaskDetailLens {...props} onMove={vi.fn().mockResolvedValue(undefined)} />));
+    expect(Array.from(host.querySelectorAll('button')).some((button) => button.textContent?.includes('Move task'))).toBe(true);
+  });
 });

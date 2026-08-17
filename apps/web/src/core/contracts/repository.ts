@@ -174,6 +174,8 @@ export interface TodoRepository {
   getTask(taskId: string): Promise<TodoItem | null>;
   createTask(input: TodoTaskInput): Promise<TodoItem>;
   updateTask(taskId: string, input: TodoTaskUpdateInput): Promise<TodoItem>;
+  /** Relocates one task without recreating it or losing its task-level details. */
+  moveTask(taskId: string, destinationListId: string): Promise<TodoItem>;
   completeTask(taskId: string, isComplete: boolean): Promise<TodoItem>;
   deleteTask(taskId: string): Promise<TodoItem>;
   restoreTask(taskId: string): Promise<TodoItem>;

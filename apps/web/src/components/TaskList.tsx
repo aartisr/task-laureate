@@ -21,6 +21,7 @@ export interface TaskListProps {
   onTaskComplete: (id: string) => Promise<void>;
   onTaskDelete: (id: string) => Promise<void>;
   onTaskRestore: (id: string) => Promise<void>;
+  onTaskMove?: (id: string, destinationListId: string) => Promise<void>;
   /** Archived lists retain their history but must not look editable. */
   readOnly?: boolean;
   /** Explains why controls are unavailable without coupling this component to access policy. */
@@ -60,7 +61,7 @@ function groupForTask(task: TodoItem, today: string): TaskGroup {
 
 const groupOrder: TaskGroup[] = ['Overdue', 'Due today', 'Upcoming', 'No due date', 'Completed'];
 
-export function TaskList({ listId, tasks, isLoading, onTaskUpdate, onTaskComplete, onTaskDelete, onTaskRestore, readOnly = false, readOnlyMessage = 'Restore the list to edit or add work.', canManageReminders = false }: TaskListProps) {
+export function TaskList({ listId, tasks, isLoading, onTaskUpdate, onTaskComplete, onTaskDelete, onTaskRestore, onTaskMove, readOnly = false, readOnlyMessage = 'Restore the list to edit or add work.', canManageReminders = false }: TaskListProps) {
   const navigate = useNavigate();
   const [sortBy, setSortBy] = useState<SortOption>('focus');
   const [filterBy, setFilterBy] = useState<FilterOption>('active');
@@ -115,7 +116,7 @@ export function TaskList({ listId, tasks, isLoading, onTaskUpdate, onTaskComplet
     announceToScreenReader(`Saved personal view ${name.trim()}`);
   };
   const completionPercent = stats.total ? Math.round((stats.completed / stats.total) * 100) : 0;
-  const renderInlineDetail = (task: TodoItem) => <TaskDetailLens mode="inline" task={task} canManageReminders={canManageReminders} onClose={() => setSelectedId(null)} onOpenFocus={() => navigate({ to: '/lists/$listId/tasks/$taskId', params: { listId, taskId: task.id } })} onUpdate={(input) => onTaskUpdate(task.id, input)} onComplete={() => onTaskComplete(task.id)} />;
+  const renderInlineDetail = (task: TodoItem) => <TaskDetailLens mode="inline" task={task} canManageReminders={canManageReminders} onClose={() => setSelectedId(null)} onOpenFocus={() => navigate({ to: '/lists/$listId/tasks/$taskId', params: { listId, taskId: task.id } })} onUpdate={(input) => onTaskUpdate(task.id, input)} onComplete={() => onTaskComplete(task.id)} onMove={onTaskMove ? (destinationListId) => onTaskMove(task.id, destinationListId) : undefined} />;
 
   if (isLoading) return <section className="task-list task-list--loading" aria-busy="true" aria-live="polite"><p>Loading tasks…</p></section>;
 

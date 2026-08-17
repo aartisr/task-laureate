@@ -171,7 +171,7 @@ export function ListsPage() {
       {/* List grid */}
       {lists.length === 0 ? (
         <div className="empty-state">
-          <span className="empty-state__icon">📋</span>
+          <img className="empty-state__brand-mark" src="/icons/task-laureate-mark.svg" alt="" aria-hidden="true" />
           <p>No lists match your filters.</p>
           <button type="button" className="primary-button" onClick={() => { requestListCreation(); void navigate({ to: '/' }); }}>Create a list</button>
         </div>
@@ -241,9 +241,9 @@ function ListCard({ list, onDelete, onArchive, onRestore, onReuse, onShare, canM
         {canManage ? <><button type="button" className="list-card__share" onClick={onShare} aria-label={`Share List: ${list.title}`}><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M19 8v6M22 11h-6" /></svg>Share</button><button type="button" aria-expanded={manageOpen} className="secondary-button list-card__manage" onClick={() => setManageOpen((open) => !open)}>Manage</button></> : null}
       </div>
       {canManage && manageOpen && <div className="list-card__menu" aria-label={`Manage ${list.title}`}>
-        {list.status === 'completed' && <><p className="list-card__menu-copy">This run is complete. Its history is preserved.</p><button type="button" disabled={isSaving} onClick={() => void run(onReuse)}>↻ Start a fresh run</button></>}
-        {list.status === 'archived' ? <button type="button" disabled={isSaving} onClick={() => void run(onRestore)}>↩ Restore to {list.archivedFromStatus === 'completed' ? 'completed' : 'in progress'}</button> : <button type="button" disabled={isSaving} onClick={() => void run(onArchive)}>⌂ {archiveRecommendation(list) ? 'Archive recommended' : 'Archive from daily view'}</button>}
-        {deleteArmed ? <div className="list-card__danger"><span>Move to deleted items? You can undo this.</span><button type="button" disabled={isSaving} onClick={() => void run(onDelete)}>Yes, delete</button><button type="button" onClick={() => setDeleteArmed(false)}>Cancel</button></div> : <button type="button" className="list-card__delete" onClick={() => setDeleteArmed(true)}>Delete list…</button>}
+        {list.status === 'completed' && <><p className="list-card__menu-copy">This run is complete. Its history is preserved.</p><button type="button" className="list-card__menu-action list-card__menu-action--archive" disabled={isSaving} onClick={() => void run(onReuse)}>↻ Start a fresh run</button></>}
+        {list.status === 'archived' ? <button type="button" className="list-card__menu-action list-card__menu-action--archive" disabled={isSaving} onClick={() => void run(onRestore)}>↩ Restore to {list.archivedFromStatus === 'completed' ? 'completed' : 'in progress'}</button> : <button type="button" className="list-card__menu-action list-card__menu-action--archive" disabled={isSaving} onClick={() => void run(onArchive)}>⌂ {archiveRecommendation(list) ? 'Archive recommended' : 'Archive from daily view'}</button>}
+        {deleteArmed ? <div className="list-card__danger"><span>Move to deleted items? You can undo this.</span><div className="list-card__danger-actions"><button type="button" className="list-card__menu-action list-card__menu-action--danger" disabled={isSaving} onClick={() => void run(onDelete)}>Yes, delete</button><button type="button" className="list-card__menu-action list-card__menu-action--cancel" onClick={() => setDeleteArmed(false)}>Cancel</button></div></div> : <button type="button" className="list-card__menu-action list-card__menu-action--delete" onClick={() => setDeleteArmed(true)}>Delete list…</button>}
       </div>}
     </article>
   );

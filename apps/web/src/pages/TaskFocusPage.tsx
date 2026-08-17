@@ -52,6 +52,7 @@ export function TaskFocusPage({ listId, taskId }: { listId: string; taskId: stri
       canManageReminders={canManageReminders && listQuery.data.status !== 'archived'}
       onUpdate={async (input) => { await mutations.updateTask.mutateAsync({ taskId, input }); }}
       onComplete={async () => { if (task.status === 'done') await mutations.updateTask.mutateAsync({ taskId, input: { status: 'todo' } }); else await mutations.completeTask.mutateAsync({ taskId, isComplete: true }); }}
+      onMove={async (destinationListId) => { await mutations.moveTask.mutateAsync({ taskId, destinationListId }); navigate({ to: '/lists/$listId', params: { listId: destinationListId } }); }}
     />
     {canEdit ? <TaskExecutionControls task={task} /> : null}
     {canEdit && calendarEnabled ? <CalendarScheduleControl task={task} scheduledStartAt={planningQuery.data?.scheduledStartAt} estimateMinutes={planningQuery.data?.estimateMinutes} existingBlock={calendarBlockQuery.data} onScheduled={async () => { await Promise.all([calendarBlockQuery.refetch(), planningQuery.refetch()]); }} /> : null}

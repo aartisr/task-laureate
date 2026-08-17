@@ -370,6 +370,21 @@ export function createMemoryTodoRepository(seed: WorkspaceData, options: { onCha
       return clone(task);
     },
 
+    async moveTask(taskId, destinationListId) {
+      const task = tasks.get(taskId);
+      if (!task) throw new Error(`Task not found: ${taskId}`);
+      const sourceListId = task.listId;
+      requireVisibleList(sourceListId);
+      requireVisibleList(destinationListId);
+      if (sourceListId === destinationListId) return clone(task);
+      task.listId = destinationListId;
+      task.order = Math.max(0, ...[...tasks.values()].filter((item) => item.listId === destinationListId && item.id !== taskId).map((item) => item.order)) + 1;
+      task.updatedAt = nowIso();
+      recalculateList(sourceListId);
+      recalculateList(destinationListId);
+      return clone(task);
+    },
+
     async completeTask(taskId, isComplete) {
       const task = tasks.get(taskId);
       if (!task) {

@@ -6,6 +6,7 @@ import { RichNoteEditor, RichNoteReader } from './RichNote';
 import { TaskReminderControl } from './TaskReminderControl';
 import { TaskAttachments } from './TaskAttachments';
 import { TaskDependencies } from './TaskDependencies';
+import { TaskMoveControl } from './TaskMoveControl';
 import type { TaskDependencySummary } from '../core/domain/dependencies';
 
 export interface TaskDetailLensProps {
@@ -18,9 +19,10 @@ export interface TaskDetailLensProps {
   onOpenFocus?: () => void;
   onUpdate: (input: Partial<TodoItem>) => Promise<void>;
   onComplete: () => Promise<void>;
+  onMove?: (destinationListId: string) => Promise<void>;
 }
 
-export function TaskDetailLens({ task, listTitle, mode = 'panel', readOnly = false, canManageReminders = false, onClose, onOpenFocus, onUpdate, onComplete }: TaskDetailLensProps) {
+export function TaskDetailLens({ task, listTitle, mode = 'panel', readOnly = false, canManageReminders = false, onClose, onOpenFocus, onUpdate, onComplete, onMove }: TaskDetailLensProps) {
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState(task.title);
   const [notes, setNotes] = useState(task.notes);
@@ -88,6 +90,7 @@ export function TaskDetailLens({ task, listTitle, mode = 'panel', readOnly = fal
         </section>
         <div className="task-detail-lens__title-row"><button type="button" className={`task-detail-lens__complete ${completed ? 'is-complete' : ''}`} onClick={() => void onComplete()} disabled={readOnly || (!completed && completionBlocked)} aria-pressed={completed} aria-label={completed ? 'Mark task incomplete' : completionBlocked ? `Cannot complete: ${dependencySummary.unresolvedPrerequisiteCount} prerequisite tasks remain` : 'Mark task complete'}>{completed ? '✓' : ''}</button><h2>{task.title}</h2></div>
         <div className="task-detail-lens__properties"><span className={`priority-badge priority--${task.priority}`}>{task.priority}</span>{task.dueDate ? <span>Due {formatDateOnly(task.dueDate, undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span> : null}{task.tags.map((tag) => <span key={tag}>#{tag}</span>)}</div>
+        {!readOnly && onMove ? <TaskMoveControl task={task} currentListTitle={listTitle} onMove={onMove} /> : null}
         {!readOnly && !completed && (task.status === 'todo' || task.status === 'doing') ? <div className="task-detail-lens__work-state" role="group" aria-label="Task work state"><span>{task.status === 'doing' ? 'Work is in progress' : 'Work has not started'}</span><button type="button" className={task.status === 'doing' ? 'secondary-button' : 'primary-button'} onClick={() => void changeWorkState(task.status === 'doing' ? 'todo' : 'doing')} disabled={saving}>{saving ? 'Updating…' : task.status === 'doing' ? 'Move to to do' : 'Start work'}</button></div> : null}
         <section className="task-detail-lens__note" aria-label="Task note"><div className="task-detail-lens__note-heading"><div><h3>Note</h3>{hasNotes ? <p>{noteMeta}</p> : null}</div>{!readOnly ? <button type="button" className="secondary-button" onClick={() => setEditing(true)}>Edit details</button> : null}</div>{hasNotes ? <RichNoteReader value={notes} /> : <p className="task-detail-lens__empty">No note yet. Choose <strong>Edit task</strong> above to add durable context.</p>}</section>
       </>}

@@ -423,6 +423,9 @@ export function ListDetailPage({ listId }: ListDetailPageProps) {
             onTaskRestore={async (id) => {
               await taskMutations.restoreTask.mutateAsync(id);
             }}
+            onTaskMove={async (id, destinationListId) => {
+              await taskMutations.moveTask.mutateAsync({ taskId: id, destinationListId });
+            }}
             readOnly={list.status === 'archived' || !canEditTasks}
             canManageReminders={canManageList && list.status !== 'archived'}
             readOnlyMessage={list.status === 'archived' ? 'Restore the list to edit or add work.' : accessPending ? 'Checking your access…' : accessUnavailable ? 'We could not verify your access. Refresh to retry.' : 'You have read-only access to this shared list. Only its owner can make changes.'}

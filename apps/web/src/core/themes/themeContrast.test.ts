@@ -50,6 +50,15 @@ describe('theme color contrast', () => {
     }
   });
 
+  it.each(Object.values(THEMES))('%s keeps list-management menu actions readable', (theme) => {
+    const archiveSurface = mixSrgb(theme.colors.action.primary, theme.colors.bg.secondary, 0.12);
+    const deleteSurface = mixSrgb(theme.colors.status.error, theme.colors.bg.secondary, 0.12);
+
+    expect(contrast(theme.colors.text.primary, archiveSurface), `${theme.label}: archive action in list menu`).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(theme.colors.text.primary, deleteSurface), `${theme.label}: delete action in list menu`).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(theme.colors.text.onAction, theme.colors.status.error), `${theme.label}: delete confirmation in list menu`).toBeGreaterThanOrEqual(4.5);
+  });
+
   it.each(Object.values(THEMES))('%s keeps action colors readable as text on every surface', (theme) => {
     const surfaces = Object.values(theme.colors.bg).filter((color) => color.startsWith('#'));
     for (const [name, color] of Object.entries(theme.colors.action)) {

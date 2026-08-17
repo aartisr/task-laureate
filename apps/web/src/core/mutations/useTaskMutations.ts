@@ -177,6 +177,30 @@ export function useTaskMutations(context: TaskMutationContext) {
     },
   });
 
+  const moveTaskMutation = useMutation({
+    mutationFn: async ({ taskId, destinationListId }: { taskId: string; destinationListId: string }) => {
+      const currentTask = await repository.getTask(taskId);
+      if (!currentTask) throw new Error('Task not found');
+      if (currentTask.listId === destinationListId) return currentTask;
+      const moved = await repository.moveTask(taskId, destinationListId);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.list(currentTask.listId) }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.list(destinationListId) }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.tasks(currentTask.listId) }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.tasks(destinationListId) }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.lists }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.dashboard }),
+      ]);
+      undoJournal.record({
+        label: `Moved “${currentTask.title}”`,
+        detail: 'Return it to its previous list',
+        undo: async () => { await repository.moveTask(taskId, currentTask.listId); await refresh(currentTask.listId); await refresh(destinationListId); },
+        redo: async () => { await repository.moveTask(taskId, destinationListId); await refresh(currentTask.listId); await refresh(destinationListId); },
+      });
+      return moved;
+    },
+  });
+
   /**
    * Complete or uncomplete a task
    */
@@ -320,6 +344,7 @@ export function useTaskMutations(context: TaskMutationContext) {
   return {
     createTask: createTaskMutation,
     updateTask: updateTaskMutation,
+    moveTask: moveTaskMutation,
     completeTask: completeTaskMutation,
     deleteTask: deleteTaskMutation,
     restoreTask: restoreTaskMutation,

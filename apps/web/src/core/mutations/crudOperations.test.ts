@@ -207,6 +207,17 @@ describe('List and Task CRUD Operations', () => {
       expect(new Date(updated.updatedAt).getTime()).toBeGreaterThan(new Date(task.updatedAt).getTime());
     });
 
+    it('should move a task without losing its work details', async () => {
+      const destination = await repository.createList({ title: 'Next up' });
+      const task = await repository.createTask({ listId: list.id, title: 'Move me', notes: 'Keep this context', priority: 'high', dueDate: '2030-01-01', tags: ['handoff'] });
+
+      const moved = await repository.moveTask(task.id, destination.id);
+
+      expect(moved).toMatchObject({ id: task.id, listId: destination.id, title: 'Move me', notes: 'Keep this context', priority: 'high', dueDate: '2030-01-01', tags: ['handoff'] });
+      expect(await repository.listTasks(list.id)).toEqual([]);
+      expect((await repository.listTasks(destination.id)).map((item) => item.id)).toEqual([task.id]);
+    });
+
     it('should complete a task', async () => {
       const task = await repository.createTask({
         listId: list.id,
