@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import type { SearchInput, TodoRepository } from '../core/contracts/repository';
 import type { SearchResult } from '../core/contracts/domain';
+import { AppIcon } from './AppIcon';
 
 export interface SearchBarProps {
   repository: TodoRepository;
@@ -31,8 +32,8 @@ export function SearchBar({ repository, value, onChange, showResults = true, aut
   const clear = () => { setQuery(''); setResults([]); setIsOpen(false); };
 
   return <div className="search-bar">
-    <label className="search-bar__input"><span className="sr-only">Search tasks and lists</span><span aria-hidden="true">⌕</span><input autoFocus={autoFocus} type="search" placeholder="Search tasks, lists, and notes…" value={query} onChange={(event) => { const next = event.target.value; setQuery(next); if (showResults) void handleSearch(next); }} onFocus={() => query && setIsOpen(true)} onKeyDown={(event) => { if (event.key === 'Escape') clear(); }} />{isSearching ? <i aria-label="Searching" /> : null}{query ? <button type="button" onClick={clear} aria-label="Clear search">×</button> : null}</label>
-    {showResults && isOpen ? <div className="search-bar__results" role="listbox" aria-label="Search results">{results.length ? results.map((result) => <button key={`${result.kind}-${result.id}`} type="button" role="option" onClick={() => select(result)}><span aria-hidden="true">{result.kind === 'list' ? '▦' : '✓'}</span><span><strong>{result.title}</strong>{result.description ? <small>{result.description}</small> : null}</span><em>{result.kind}</em></button>) : <p>No results for “{query}”.</p>}</div> : null}
+    <label className="search-bar__input"><span className="sr-only">Search tasks and lists</span><span aria-hidden="true"><AppIcon name="search" /></span><input autoFocus={autoFocus} type="search" placeholder="Search tasks, lists, and notes…" value={query} onChange={(event) => { const next = event.target.value; setQuery(next); if (showResults) void handleSearch(next); }} onFocus={() => query && setIsOpen(true)} onKeyDown={(event) => { if (event.key === 'Escape') clear(); }} />{isSearching ? <i aria-label="Searching" /> : null}{query ? <button type="button" onClick={clear} aria-label="Clear search"><AppIcon name="close" /></button> : null}</label>
+    {showResults && isOpen ? <div className="search-bar__results" role="listbox" aria-label="Search results">{results.length ? results.map((result) => <button key={`${result.kind}-${result.id}`} type="button" role="option" onClick={() => select(result)}><span aria-hidden="true"><AppIcon name={result.kind === 'list' ? 'list' : 'task'} /></span><span><strong>{result.title}</strong>{result.description ? <small>{result.description}</small> : null}</span><em>{result.kind}</em></button>) : <p>No results for “{query}”.</p>}</div> : null}
     {!query ? <p className="search-bar__tip">Search across your workspace. Press <kbd>Esc</kbd> to clear.</p> : null}
   </div>;
 }

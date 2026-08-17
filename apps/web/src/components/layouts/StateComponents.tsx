@@ -1,4 +1,5 @@
-import { ReactNode } from 'react';
+import { type ReactNode } from 'react';
+import { AppIcon } from '../AppIcon';
 
 export interface LoadingStateProps {
   /** Custom loading message (default: "Loading...") */
@@ -47,8 +48,8 @@ export function LoadingState({
 // ─────────────────────────────────────────
 
 export interface EmptyStateProps {
-  /** Large icon/emoji to display (default: "📭") */
-  icon?: string | ReactNode;
+  /** A compact, decorative visual for the state. */
+  icon?: ReactNode;
   /** Main heading */
   title: string;
   /** Optional description text */
@@ -82,7 +83,7 @@ export interface EmptyStateProps {
  * ```
  */
 export function EmptyState({
-  icon = '📭',
+  icon = <AppIcon name="file" />,
   title,
   description,
   action,
@@ -150,7 +151,7 @@ export function ErrorState({ message, details, action }: ErrorStateProps) {
       role="alert"
     >
       <div className="ui-state__icon" aria-hidden="true">
-        ⚠️
+        <AppIcon name="warning" />
       </div>
       <h2>
         {message}

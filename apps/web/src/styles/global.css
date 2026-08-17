@@ -4430,6 +4430,14 @@ textarea {
 @media (max-width: 48rem) { .mobile-topbar__actions .notification-center__label { display: none; }.mobile-navigation__items .notification-center { margin: 0 0 var(--spacing-3); }.mobile-navigation__items .notification-center__trigger { width: 100%; justify-content: flex-start; }.mobile-navigation__items .notification-center__popover { position: static; width: 100%; margin-top: var(--spacing-2); box-shadow: none; } }
 @media (prefers-reduced-motion: reduce) { .notification-center__trigger.is-attention .notification-center__icon { animation: none; } }
 
+/* Shared inline SVG treatment: compact, baseline-aligned, and colour-safe in every theme. */
+.app-icon { display: inline-block; flex: 0 0 auto; vertical-align: -.14em; }
+.primary-button .app-icon, .secondary-button .app-icon, .list-card__menu-action .app-icon { margin-right: .18rem; }
+.list-card__share .app-icon { inline-size: 1rem; block-size: 1rem; }
+.notification-center__heading > button { display: grid; place-items: center; font-size: 1rem; }
+.notification-center__heading > button .app-icon { inline-size: 1.15rem; block-size: 1.15rem; }
+.task-move-control__destinations b { display: inline-flex; align-items: center; gap: .2rem; }
+
 /* Responsive safety net: every route shares the same shell, so content must be
    allowed to shrink before a long title, chip, or control can create overflow. */
 .app-shell, .workspace, .workspace > *, .workspace :is(section, article, header, footer, form, fieldset, div) { min-inline-size: 0; }
@@ -4780,6 +4788,10 @@ body,
   }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .ai-assist-badge.is-working .app-icon { animation: none; }
+}
+
 /* Task planning keeps the decision hierarchy calm: estimate the work, save a
    small adjustment, then use the more consequential actions deliberately. */
 .task-execution-controls {
@@ -4849,6 +4861,17 @@ body,
   border-radius: var(--radius-lg);
   background: color-mix(in srgb, var(--color-action-primary) 5%, var(--color-bg-primary));
 }
+
+.ai-assist-badge { display: inline-flex; align-items: center; gap: .35rem; color: var(--color-action-primary); font-size: .72rem; font-weight: var(--font-weight-bold); letter-spacing: .01em; }
+.ai-assist-badge .app-icon { inline-size: 1rem; block-size: 1rem; }
+.ai-assist-badge.is-working .app-icon { animation: ai-assist-pulse 1.25s ease-in-out infinite; }
+.task-execution-controls__ai-copy { display: grid; gap: .45rem; min-inline-size: 0; }
+.task-execution-controls__ai-copy > p, .task-execution-controls__ai-disclosure { max-inline-size: 62ch; margin: 0; color: var(--color-text-tertiary); font-size: .75rem; line-height: 1.5; }
+.task-execution-controls__ai-trigger { display: inline-flex; align-items: center; justify-content: center; }
+.task-execution-controls__ai-trigger .ai-assist-badge { color: inherit; font-size: inherit; }
+.task-execution-controls__proposal-provenance { margin-bottom: .45rem; }
+.task-execution-controls__ai-disclosure { margin-bottom: .7rem; }
+@keyframes ai-assist-pulse { 50% { opacity: .48; transform: scale(.88) rotate(8deg); } }
 
 .task-execution-controls__ai-preview label {
   display: flex;

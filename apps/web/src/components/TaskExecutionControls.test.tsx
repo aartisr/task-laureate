@@ -3,12 +3,12 @@ import { createRoot, type Root } from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const mocks = vi.hoisted(() => ({ mutations: { updateTask: { mutateAsync: vi.fn() }, deleteTask: { mutateAsync: vi.fn() } }, planning: { save: vi.fn(), acceptSteps: vi.fn() }, repository: { recordTaskEvent: vi.fn() } }));
+const mocks = vi.hoisted(() => ({ mutations: { updateTask: { mutateAsync: vi.fn() }, deleteTask: { mutateAsync: vi.fn() } }, planning: { save: vi.fn(), acceptSteps: vi.fn() }, repository: { recordTaskEvent: vi.fn() }, aiEnabled: false, requestAiDecomposition: vi.fn() }));
 
 vi.mock('../app/runtime/appServices', () => ({ appServices: { repository: mocks.repository, queryClient: new QueryClient() } }));
 vi.mock('../core/mutations/useTodoMutations', () => ({ useTodoMutations: () => mocks.mutations }));
 vi.mock('../core/services/taskPlanning', () => ({ createTaskPlanningService: () => mocks.planning }));
-vi.mock('../infrastructure/antiBacklog/aiDecomposition', () => ({ aiDecompositionPreviewEnabled: () => false, requestAiDecomposition: vi.fn() }));
+vi.mock('../infrastructure/antiBacklog/aiDecomposition', () => ({ aiDecompositionPreviewEnabled: () => mocks.aiEnabled, requestAiDecomposition: mocks.requestAiDecomposition }));
 
 import { TaskExecutionControls } from './TaskExecutionControls';
 
@@ -17,7 +17,7 @@ const click = (host: HTMLElement, text: string) => Array.from(host.querySelector
 
 describe('TaskExecutionControls UI workflow', () => {
   let host: HTMLDivElement; let root: Root;
-  beforeEach(() => { (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true; vi.clearAllMocks(); host = document.createElement('div'); document.body.append(host); root = createRoot(host); });
+  beforeEach(() => { (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true; vi.clearAllMocks(); mocks.aiEnabled = false; host = document.createElement('div'); document.body.append(host); root = createRoot(host); });
   afterEach(async () => { await act(async () => root.unmount()); host.remove(); });
   const render = async () => { await act(async () => root.render(<QueryClientProvider client={new QueryClient()}><TaskExecutionControls task={task} /></QueryClientProvider>)); };
 
@@ -45,5 +45,18 @@ describe('TaskExecutionControls UI workflow', () => {
     expect(mocks.repository.recordTaskEvent).toHaveBeenNthCalledWith(1, expect.objectContaining({ type: 'snoozed', taskId: 'task-1' }));
     expect(mocks.repository.recordTaskEvent).toHaveBeenNthCalledWith(2, expect.objectContaining({ type: 'parked', taskId: 'task-1' }));
     expect(mocks.repository.recordTaskEvent).toHaveBeenNthCalledWith(3, expect.objectContaining({ type: 'archived', taskId: 'task-1' }));
+  });
+
+  it('makes AI assistance explicit at consent, invocation, and review—not elsewhere', async () => {
+    mocks.aiEnabled = true;
+    mocks.requestAiDecomposition.mockResolvedValue({ kind: 'proposal', cache: 'miss', proposal: { taskTitle: task.title, summary: 'A reviewable breakdown.', firstAction: 'Open the brief.', source: 'ai', steps: [{ title: 'Open the brief', estimateMinutes: 5, energyLevel: 'quick' }] } });
+    await render();
+    expect(host.textContent).toContain('Optional AI preview');
+    expect(host.textContent).toContain('Uses Gemini only after you opt in');
+    const consent = host.querySelector('.task-execution-controls__ai-preview input[type="checkbox"]') as HTMLInputElement;
+    await act(async () => consent.click());
+    await act(async () => click(host, 'Try AI breakdown'));
+    expect(host.textContent).toContain('AI-assisted · review required');
+    expect(host.textContent).toContain('Review, edit, select, or discard them before anything changes.');
   });
 });

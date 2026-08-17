@@ -8,21 +8,22 @@ import type { TodoItem, TodoItemStatus, Priority, TodoList } from '../core/contr
 import { formatDateOnly, isDueDateBeforeToday } from '../core/domain/dateOnly';
 import { useTodoMutations } from '../core/mutations/useTodoMutations';
 import { usePageSEO, PAGE_SEO } from '../hooks/usePageSEO';
+import { AppIcon, type AppIconName } from '../components/AppIcon';
 
 const PRIORITY_ORDER: Priority[] = ['urgent', 'high', 'medium', 'low'];
-const PRIORITY_META: Record<Priority, { label: string; cls: string; icon: string }> = {
-  urgent: { label: 'Urgent', cls: 'priority--urgent', icon: '🔴' },
-  high:   { label: 'High',   cls: 'priority--high',   icon: '🟠' },
-  medium: { label: 'Medium', cls: 'priority--medium',  icon: '🟡' },
-  low:    { label: 'Low',    cls: 'priority--low',     icon: '🟢' },
+const PRIORITY_META: Record<Priority, { label: string; cls: string; icon: AppIconName }> = {
+  urgent: { label: 'Urgent', cls: 'priority--urgent', icon: 'spark' },
+  high:   { label: 'High',   cls: 'priority--high',   icon: 'activity' },
+  medium: { label: 'Medium', cls: 'priority--medium',  icon: 'task' },
+  low:    { label: 'Low',    cls: 'priority--low',     icon: 'progress' },
 };
 
-const STATUS_META: Record<TodoItemStatus, { label: string; cls: string; icon: string }> = {
-  todo:    { label: 'To do',    cls: 'status--todo',    icon: '⬜' },
-  doing:   { label: 'In progress', cls: 'status--doing', icon: '🔵' },
-  done:    { label: 'Done',     cls: 'status--done',    icon: '✅' },
-  blocked: { label: 'Blocked',  cls: 'status--blocked', icon: '🚫' },
-  deleted: { label: 'Deleted',  cls: 'status--deleted', icon: '🗑️' },
+const STATUS_META: Record<TodoItemStatus, { label: string; cls: string; icon: AppIconName }> = {
+  todo:    { label: 'To do',    cls: 'status--todo',    icon: 'task' },
+  doing:   { label: 'In progress', cls: 'status--doing', icon: 'activity' },
+  done:    { label: 'Done',     cls: 'status--done',    icon: 'check' },
+  blocked: { label: 'Blocked',  cls: 'status--blocked', icon: 'block' },
+  deleted: { label: 'Deleted',  cls: 'status--deleted', icon: 'trash' },
 };
 
 type TaskWithListTitle = TodoItem & { listTitle: string };
@@ -69,10 +70,10 @@ export function TasksPage() {
   const [search, setSearch] = useState('');
   const deferredSearch = useDeferredValue(search);
   const { groups, counts } = useMemo(() => {
-    type Group = { key: string; label: string; icon: string; tasks: TaskWithListTitle[] };
+    type Group = { key: string; label: string; icon: AppIconName; tasks: TaskWithListTitle[] };
     const normalizedSearch = deferredSearch.trim().toLocaleLowerCase();
     const groupsByKey = new Map<string, Group>();
-    const listMetadata = new Map(lists.map((list) => [list.id, { label: list.title, icon: '📋' }]));
+    const listMetadata = new Map(lists.map((list) => [list.id, { label: list.title, icon: 'list' as const }]));
     const priorityRank = new Map(PRIORITY_ORDER.map((priority, index) => [priority, index]));
     const counts = { todo: 0, doing: 0, blocked: 0 };
 
@@ -86,7 +87,7 @@ export function TasksPage() {
 
       const key = groupBy === 'list' ? task.listId : groupBy === 'priority' ? task.priority : task.status;
       const metadata = groupBy === 'list'
-        ? listMetadata.get(task.listId) ?? { label: task.listTitle, icon: '📋' }
+        ? listMetadata.get(task.listId) ?? { label: task.listTitle, icon: 'list' as const }
         : groupBy === 'priority'
           ? { label: PRIORITY_META[task.priority].label, icon: PRIORITY_META[task.priority].icon }
           : { label: STATUS_META[task.status].label, icon: STATUS_META[task.status].icon };
@@ -170,7 +171,7 @@ export function TasksPage() {
       {/* Groups */}
       {groups.length === 0 ? (
         <div className="empty-state">
-          <span className="empty-state__icon">✓</span>
+          <span className="empty-state__icon"><AppIcon name="task" /></span>
           <p>No tasks match this view.</p>
           {(statusFilter !== 'open' || priorityFilter !== 'all' || search || groupBy !== 'list') ? <button type="button" className="secondary-button" onClick={() => { setStatusFilter('open'); setPriorityFilter('all'); setGroupBy('list'); setSearch(''); }}>Show open tasks</button> : null}
         </div>
@@ -179,7 +180,7 @@ export function TasksPage() {
           {groups.map((group) => (
             <div key={group.key} className="task-group">
               <div className="task-group__header">
-                <span>{group.icon}</span>
+                <span aria-hidden="true"><AppIcon name={group.icon} /></span>
                 <h3>{group.label}</h3>
                 <span className="task-group__count">{group.tasks.length}</span>
               </div>
@@ -221,19 +222,19 @@ function TaskRow({
         onClick={onToggle}
         aria-label={isDone ? 'Mark incomplete' : 'Mark complete'}
       >
-        {isDone ? '✓' : ''}
+        {isDone ? <AppIcon name="check" /> : ''}
       </button>
       <div className="task-row__body">
         <span className="task-row__title">{task.title}</span>
         <div className="task-row__chips">
           <Link to="/lists/$listId" params={{ listId: task.listId }} className="task-row__list-link">
-            📋 {task.listTitle}
+            <AppIcon name="list" /> {task.listTitle}
           </Link>
-          <span className={`priority-badge ${pm.cls}`}>{pm.icon} {pm.label}</span>
-          <span className={`status-badge ${sm.cls}`}>{sm.label}</span>
+          <span className={`priority-badge ${pm.cls}`}><AppIcon name={pm.icon} /> {pm.label}</span>
+          <span className={`status-badge ${sm.cls}`}><AppIcon name={sm.icon} /> {sm.label}</span>
           {task.dueDate && (
             <span className={`due-badge ${isOverdue ? 'due-badge--overdue' : ''}`}>
-              📅 {formatDateOnly(task.dueDate, 'en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+              <AppIcon name="calendar" /> {formatDateOnly(task.dueDate, 'en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
               {isOverdue && ' · Overdue'}
             </span>
           )}

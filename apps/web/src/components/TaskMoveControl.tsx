@@ -3,6 +3,7 @@ import type { TodoItem, TodoList } from '../core/contracts/domain';
 import { supportsCollaboration } from '../core/contracts/repository';
 import { appServices } from '../app/runtime/appServices';
 import { announceToScreenReader } from '../lib/a11y';
+import { AppIcon } from './AppIcon';
 
 interface TaskMoveControlProps {
   task: TodoItem;
@@ -68,13 +69,13 @@ export function TaskMoveControl({ task, currentListTitle, onMove }: TaskMoveCont
   return <section className={`task-move-control${open ? ' is-open' : ''}`} aria-label="Move task">
     <div className="task-move-control__heading">
       <div><p>Placement</p><strong>{currentListTitle ? `In ${currentListTitle}` : 'Current list'}</strong></div>
-      <button type="button" className="secondary-button" onClick={() => setOpen((value) => !value)} aria-expanded={open}>↗ Move task</button>
+      <button type="button" className="secondary-button" onClick={() => setOpen((value) => !value)} aria-expanded={open}><AppIcon name="move" /> Move task</button>
     </div>
     {open ? <div className="task-move-control__picker">
-      <div className="task-move-control__journey"><span>{currentListTitle ?? 'Current list'}</span><i aria-hidden="true">→</i><strong>Choose a destination</strong></div>
+      <div className="task-move-control__journey"><span>{currentListTitle ?? 'Current list'}</span><i aria-hidden="true"><AppIcon name="arrow-right" /></i><strong>Choose a destination</strong></div>
       <label><span className="sr-only">Find a destination list</span><input ref={input} value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search lists…" /></label>
       <div className="task-move-control__destinations" role="list" aria-busy={loading}>
-        {destinations.map((list) => <div key={list.id} role="listitem"><button type="button" disabled={savingId !== null} onClick={() => void move(list)}><span><strong>{list.title}</strong><small>{list.taskCount} task{list.taskCount === 1 ? '' : 's'} · {list.description || 'Ready for work'}</small></span><b>{savingId === list.id ? 'Moving…' : 'Move →'}</b></button></div>)}
+        {destinations.map((list) => <div key={list.id} role="listitem"><button type="button" disabled={savingId !== null} onClick={() => void move(list)}><span><strong>{list.title}</strong><small>{list.taskCount} task{list.taskCount === 1 ? '' : 's'} · {list.description || 'Ready for work'}</small></span><b>{savingId === list.id ? 'Moving…' : <>Move <AppIcon name="arrow-right" /></>}</b></button></div>)}
         {loading ? <p>Finding editable lists…</p> : !error && !destinations.length ? <p>No editable active lists match that search.</p> : null}
       </div>
       {error ? <p className="task-move-control__error" role="alert">{error}</p> : null}

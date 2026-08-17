@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState } from 'react';
 import { Link } from '@tanstack/react-router';
 import { authProvider } from '../config/persistence.config';
 import { getNotificationEvents, markNotificationRead, type NotificationEvent } from '../infrastructure/notifications/inbox';
+import { AppIcon } from './AppIcon';
 
 /** A low-interruption, always-reachable notice center for authenticated work. */
 export function NotificationCenter({ onNavigate }: { onNavigate?: () => void }) {
@@ -43,12 +44,12 @@ export function NotificationCenter({ onNavigate }: { onNavigate?: () => void }) 
 
   return <div className="notification-center" ref={container}>
     <button type="button" className={`notification-center__trigger ${hasUnread ? 'is-attention' : 'is-quiet'}`} aria-label={label} aria-expanded={open} aria-controls={id} onClick={() => setOpen((current) => !current)}>
-      <span className="notification-center__icon" aria-hidden="true">🔔</span><span className="notification-center__label">{hasUnread ? 'Needs attention' : 'Alerts'}</span>
+      <span className="notification-center__icon" aria-hidden="true"><AppIcon name="bell" /></span><span className="notification-center__label">{hasUnread ? 'Needs attention' : 'Alerts'}</span>
       {hasUnread ? <span className="notification-center__count" aria-hidden="true">{unread.length > 9 ? '9+' : unread.length}</span> : null}
     </button>
     <span className="sr-only" aria-live="polite">{unread.length ? `You have ${unread.length} unread notifications.` : ''}</span>
     {open ? <div id={id} className="notification-center__popover" role="dialog" aria-label="Notifications">
-      <div className="notification-center__heading"><div><p>ATTENTION</p><h2>{unread.length ? `${unread.length} need${unread.length === 1 ? 's' : ''} your attention` : 'You are all caught up'}</h2></div><button type="button" aria-label="Close notifications" onClick={() => setOpen(false)}>×</button></div>
+      <div className="notification-center__heading"><div><p>ATTENTION</p><h2>{unread.length ? `${unread.length} need${unread.length === 1 ? 's' : ''} your attention` : 'You are all caught up'}</h2></div><button type="button" aria-label="Close notifications" onClick={() => setOpen(false)}><AppIcon name="close" /></button></div>
       {message ? <p className="notification-center__message" role="status">{message}</p> : null}
       {!message && events.length === 0 ? <p className="notification-center__empty">No reminders right now.</p> : null}
       <div className="notification-center__items">{events.map((event) => <article key={event.id} className={event.read_at ? 'is-read' : ''}><strong>{event.title}</strong><p>{event.body}</p>{!event.read_at ? <button type="button" onClick={() => void acknowledge(event)}>Mark read</button> : null}</article>)}</div>

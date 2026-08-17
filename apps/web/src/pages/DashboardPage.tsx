@@ -9,6 +9,7 @@ import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 import { announceToScreenReader } from '../lib/a11y';
 import { appServices } from '../app/runtime/appServices';
 import { usePageSEO, PAGE_SEO } from '../hooks/usePageSEO';
+import { AppIcon } from '../components/AppIcon';
 import { ListComposer } from '../components/ListComposer';
 import { ShareResourcePanel } from '../components/ShareResourcePanel';
 import { supportsCollaboration, type TodoListInput } from '../core/contracts/repository';
@@ -126,7 +127,7 @@ export function DashboardPage() {
       spacing="spacious"
       footer={footer}
     >
-      <section className="dashboard-primary-action panel" aria-label={isEmptyWorkspace ? 'Start your first list' : 'Start your work'}><div className="dashboard-primary-action__content"><p className="eyebrow">Start here</p><h2>{isEmptyWorkspace ? 'Start with one simple list.' : 'What deserves your attention now?'}</h2><p>{isEmptyWorkspace ? 'Name one area of work first. You can add tasks when you are ready.' : 'Choose one feasible next action before looking at the whole workspace.'}</p></div>{isEmptyWorkspace ? <button type="button" className="primary-button dashboard-primary-action__cta" onClick={() => { clearPendingSaveIntent(); openComposer(); }}>Create a list <span aria-hidden="true">→</span></button> : <Link to="/now" className="primary-button dashboard-primary-action__cta">Open Now <span aria-hidden="true">→</span></Link>}</section>
+      <section className="dashboard-primary-action panel" aria-label={isEmptyWorkspace ? 'Start your first list' : 'Start your work'}><div className="dashboard-primary-action__content"><p className="eyebrow">Start here</p><h2>{isEmptyWorkspace ? 'Start with one simple list.' : 'What deserves your attention now?'}</h2><p>{isEmptyWorkspace ? 'Name one area of work first. You can add tasks when you are ready.' : 'Choose one feasible next action before looking at the whole workspace.'}</p></div>{isEmptyWorkspace ? <button type="button" className="primary-button dashboard-primary-action__cta" onClick={() => { clearPendingSaveIntent(); openComposer(); }}>Create a list <AppIcon name="arrow-right" /></button> : <Link to="/now" className="primary-button dashboard-primary-action__cta">Open Now <AppIcon name="arrow-right" /></Link>}</section>
 
       <details className="dashboard-details"><summary>Workspace snapshot</summary><Grid columns={4} gap="normal">
         <Card variant="elevated" ariaLabel="Lists summary" onClick={() => navigate({ to: '/lists-overview' })}>
@@ -135,7 +136,7 @@ export function DashboardPage() {
               Lists
             </h3>
             <span className="text-2xl" aria-hidden="true">
-              📋
+              <AppIcon name="list" />
             </span>
           </div>
           <p
@@ -153,7 +154,7 @@ export function DashboardPage() {
               Tasks
             </h3>
             <span className="text-2xl" aria-hidden="true">
-              ✓
+              <AppIcon name="task" />
             </span>
           </div>
           <p
@@ -171,7 +172,7 @@ export function DashboardPage() {
               Completed
             </h3>
             <span className="text-2xl" aria-hidden="true">
-              🎉
+              <AppIcon name="check" />
             </span>
           </div>
           <p
@@ -189,7 +190,7 @@ export function DashboardPage() {
               Progress
             </h3>
             <span className="text-2xl" aria-hidden="true">
-              📈
+              <AppIcon name="progress" />
             </span>
           </div>
           <p
@@ -221,7 +222,7 @@ export function DashboardPage() {
         <Grid columns={2} gap="normal">
           <Card onClick={() => { clearPendingSaveIntent(); openComposer(); }} ariaLabel="Create a new list">
             <div className="text-4xl mb-4" aria-hidden="true">
-              ➕
+              <AppIcon name="plus" />
             </div>
             <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2">Create New List</h3>
             <p className="text-sm text-[var(--color-text-secondary)]">Start a new project or category</p>
@@ -230,7 +231,7 @@ export function DashboardPage() {
 
           <Card onClick={() => navigate({ to: '/search' })} ariaLabel="Search for tasks and lists">
             <div className="text-4xl mb-4" aria-hidden="true">
-              🔍
+              <AppIcon name="search" />
             </div>
             <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2">Search</h3>
             <p className="text-sm text-[var(--color-text-secondary)]">Find tasks across all lists</p>
@@ -280,7 +281,7 @@ export function DashboardPage() {
                     <button type="button" className="list-card__share" onClick={() => {
                       if (supportsCollaboration(repository)) { setShareNotice(null); setSharingList(list); }
                       else setShareNotice('Sharing will be available once this workspace connects to secure collaboration storage. Sign in and apply the collaboration migrations, then try again.');
-                    }} aria-label={`Share List: ${list.title}`}><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M19 8v6M22 11h-6" /></svg>Share</button>
+                    }} aria-label={`Share List: ${list.title}`}><AppIcon name="share" />Share</button>
                   </div>
                 </Card>
               );

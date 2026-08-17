@@ -9,6 +9,7 @@ import { authProvider } from '../config/persistence.config';
 import { recoveryNeedsAttention, undoJournal } from '../core/mutations/undoJournal';
 import { QuickCapture } from './QuickCapture';
 import { requestListCreation } from '../hooks/useListCreationCommand';
+import { AppIcon, appIconFromLegacy } from './AppIcon';
 
 interface AppShellProps {
   children?: ReactNode;
@@ -98,9 +99,14 @@ function MobileBottomNavLink({ item }: { item: ResolvedMobileTab }) {
     className="mobile-bottom-nav__link"
     aria-label={item.mobileLabel}
   >
-    <span className="mobile-bottom-nav__icon" aria-hidden="true">{item.icon ?? '•'}</span>
+    <span className="mobile-bottom-nav__icon" aria-hidden="true"><NavigationIcon icon={item.icon} /></span>
     <span className="mobile-bottom-nav__label">{item.mobileLabel}</span>
   </Link>;
+}
+
+function NavigationIcon({ icon }: { icon?: string }) {
+  const name = appIconFromLegacy(icon);
+  return name ? <AppIcon name={name} /> : <span>{icon ?? '•'}</span>;
 }
 
 export function AppShell({ children, navItems }: AppShellProps) {
@@ -207,7 +213,7 @@ export function AppShell({ children, navItems }: AppShellProps) {
             onClick={() => setIsMobileMenuOpen((open) => !open)}
           >
             <span className="mobile-menu-toggle__icon" aria-hidden="true">
-              ☰
+              <AppIcon name="menu" />
             </span>
             Menu
           </button>
@@ -220,7 +226,7 @@ export function AppShell({ children, navItems }: AppShellProps) {
         </Link>
         <nav className="sidebar-nav" aria-label="Primary Navigation">
           <button type="button" className="sidebar-link sidebar-link--create" aria-label="Create a new List" onClick={beginListCreation}>
-            <span className="sidebar-link__create-icon" aria-hidden="true">＋</span> New List
+            <span className="sidebar-link__create-icon" aria-hidden="true"><AppIcon name="plus" /></span> New List
           </button>
           <p className="sidebar-nav__label">Focus</p>
           {desktopNavigation.primary.map((item) => {
@@ -234,18 +240,18 @@ export function AppShell({ children, navItems }: AppShellProps) {
                 className="sidebar-link"
                 aria-label={hasRecovery ? 'Settings — recent changes available' : item.label}
               >
-                {item.icon} {item.label}
+                <NavigationIcon icon={item.icon} /> <span>{item.label}</span>
                 {hasRecovery ? <span className="sidebar-link__badge sidebar-link__badge--attention">Review</span> : null}
               </Link>
             );
           })}
           <div className="sidebar-nav__extensions">
             <button type="button" className="sidebar-nav__section-toggle" aria-expanded={workspaceNavigationExpanded} aria-controls="workspace-navigation-items" onClick={toggleWorkspaceNavigation}>
-              <span><span className="sidebar-nav__section-label">Workspace</span><small>{workspaceNavigationExpanded ? 'Hide less-used views' : `${desktopNavigation.workspace.length} views`}</small></span><span className="sidebar-nav__section-chevron" aria-hidden="true">⌄</span>
+              <span><span className="sidebar-nav__section-label">Workspace</span><small>{workspaceNavigationExpanded ? 'Hide less-used views' : `${desktopNavigation.workspace.length} views`}</small></span><span className="sidebar-nav__section-chevron" aria-hidden="true"><AppIcon name="chevron-down" /></span>
             </button>
             <div id="workspace-navigation-items" className="sidebar-nav__section-items" hidden={!workspaceNavigationExpanded}>
               {desktopNavigation.workspace.map((item) => (
-                <Link key={item.to} to={item.to} activeOptions={getLinkActiveOptions(item.to)} activeProps={{ className: 'active' }} className="sidebar-link" aria-label={item.label}>{item.icon} {item.label}</Link>
+                <Link key={item.to} to={item.to} activeOptions={getLinkActiveOptions(item.to)} activeProps={{ className: 'active' }} className="sidebar-link" aria-label={item.label}><NavigationIcon icon={item.icon} /> <span>{item.label}</span></Link>
               ))}
             </div>
           </div>
@@ -261,7 +267,7 @@ export function AppShell({ children, navItems }: AppShellProps) {
                   className="sidebar-link"
                   aria-label={item.label}
                 >
-                  {item.icon} {item.label}
+                  <NavigationIcon icon={item.icon} /> <span>{item.label}</span>
                 </Link>
               ))}
             </div>
@@ -286,7 +292,7 @@ export function AppShell({ children, navItems }: AppShellProps) {
             className="sidebar-link sidebar-link--support"
             aria-label="Help & Support"
           >
-            <span className="sidebar-link__icon">?</span>
+            <span className="sidebar-link__icon"><AppIcon name="help" /></span>
             <span className="sidebar-link__label">Help & Support</span>
             <span className="sidebar-link__badge">FAQs</span>
           </Link>
@@ -321,13 +327,13 @@ export function AppShell({ children, navItems }: AppShellProps) {
               aria-label="Close menu"
               onClick={() => setIsMobileMenuOpen(false)}
             >
-              ×
+              <AppIcon name="close" />
             </button>
           </div>
 
           <div className="mobile-navigation__items">
             <button type="button" className="mobile-navigation__link mobile-navigation__link--create" onClick={() => { beginListCreation(); setIsMobileMenuOpen(false); }}>
-              <span className="mobile-navigation__icon" aria-hidden="true">＋</span>
+              <span className="mobile-navigation__icon" aria-hidden="true"><AppIcon name="plus" /></span>
               <span className="mobile-navigation__text"><strong>New List</strong><small>Name it now; add tasks next.</small></span>
             </button>
             <AccountStatus provider={authProvider} onNavigate={() => setIsMobileMenuOpen(false)} />
@@ -345,7 +351,7 @@ export function AppShell({ children, navItems }: AppShellProps) {
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 <span className="mobile-navigation__icon" aria-hidden="true">
-                  {item.icon ?? '•'}
+                  <NavigationIcon icon={item.icon} />
                 </span>
                 <span className="mobile-navigation__text">
                   <strong>{item.label}</strong>
@@ -371,7 +377,7 @@ export function AppShell({ children, navItems }: AppShellProps) {
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     <span className="mobile-navigation__icon" aria-hidden="true">
-                      {item.icon ?? '•'}
+                      <NavigationIcon icon={item.icon} />
                     </span>
                     <span className="mobile-navigation__text">
                       <strong>{item.label}</strong>
@@ -399,7 +405,7 @@ export function AppShell({ children, navItems }: AppShellProps) {
           aria-label="Open more navigation options"
           onClick={() => setIsMobileMenuOpen((open) => !open)}
         >
-          <span className="mobile-bottom-nav__icon" aria-hidden="true">☰</span>
+          <span className="mobile-bottom-nav__icon" aria-hidden="true"><AppIcon name="menu" /></span>
           <span className="mobile-bottom-nav__label">More</span>
         </button>
       </nav>

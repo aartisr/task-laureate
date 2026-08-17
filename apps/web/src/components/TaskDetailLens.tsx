@@ -8,6 +8,7 @@ import { TaskAttachments } from './TaskAttachments';
 import { TaskDependencies } from './TaskDependencies';
 import { TaskMoveControl } from './TaskMoveControl';
 import type { TaskDependencySummary } from '../core/domain/dependencies';
+import { AppIcon } from './AppIcon';
 
 export interface TaskDetailLensProps {
   task: TodoItem;
@@ -72,7 +73,7 @@ export function TaskDetailLens({ task, listTitle, mode = 'panel', readOnly = fal
       <div className="task-detail-lens__header-actions">
         {!readOnly && !editing ? <button type="button" className="task-detail-lens__edit-trigger" onClick={() => setEditing(true)}>Edit task</button> : null}
         {onOpenFocus && mode !== 'focus' ? <button type="button" className="task-detail-lens__utility" onClick={onOpenFocus}>Open focus</button> : null}
-        {onClose ? <button type="button" className="task-detail-lens__close" onClick={onClose} aria-label="Close task details">×</button> : null}
+        {onClose ? <button type="button" className="task-detail-lens__close" onClick={onClose} aria-label="Close task details"><AppIcon name="close" /></button> : null}
       </div>
     </header>
     <div className="task-detail-lens__body">
@@ -88,7 +89,7 @@ export function TaskDetailLens({ task, listTitle, mode = 'panel', readOnly = fal
         <section className={`task-detail-lens__edit-guidance${readOnly ? ' is-read-only' : ''}`} aria-label={readOnly ? 'Task access' : 'Editing this task'}>
           <div><strong>{readOnly ? 'View-only access' : 'Edit this task here'}</strong><span>{readOnly ? 'You can review the details, but only an owner or editor can make changes.' : 'Use the Edit task button above to change the title, priority, or rich note without leaving this spot.'}</span></div>
         </section>
-        <div className="task-detail-lens__title-row"><button type="button" className={`task-detail-lens__complete ${completed ? 'is-complete' : ''}`} onClick={() => void onComplete()} disabled={readOnly || (!completed && completionBlocked)} aria-pressed={completed} aria-label={completed ? 'Mark task incomplete' : completionBlocked ? `Cannot complete: ${dependencySummary.unresolvedPrerequisiteCount} prerequisite tasks remain` : 'Mark task complete'}>{completed ? '✓' : ''}</button><h2>{task.title}</h2></div>
+        <div className="task-detail-lens__title-row"><button type="button" className={`task-detail-lens__complete ${completed ? 'is-complete' : ''}`} onClick={() => void onComplete()} disabled={readOnly || (!completed && completionBlocked)} aria-pressed={completed} aria-label={completed ? 'Mark task incomplete' : completionBlocked ? `Cannot complete: ${dependencySummary.unresolvedPrerequisiteCount} prerequisite tasks remain` : 'Mark task complete'}>{completed ? <AppIcon name="check" /> : ''}</button><h2>{task.title}</h2></div>
         <div className="task-detail-lens__properties"><span className={`priority-badge priority--${task.priority}`}>{task.priority}</span>{task.dueDate ? <span>Due {formatDateOnly(task.dueDate, undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span> : null}{task.tags.map((tag) => <span key={tag}>#{tag}</span>)}</div>
         {!readOnly && onMove ? <TaskMoveControl task={task} currentListTitle={listTitle} onMove={onMove} /> : null}
         {!readOnly && !completed && (task.status === 'todo' || task.status === 'doing') ? <div className="task-detail-lens__work-state" role="group" aria-label="Task work state"><span>{task.status === 'doing' ? 'Work is in progress' : 'Work has not started'}</span><button type="button" className={task.status === 'doing' ? 'secondary-button' : 'primary-button'} onClick={() => void changeWorkState(task.status === 'doing' ? 'todo' : 'doing')} disabled={saving}>{saving ? 'Updating…' : task.status === 'doing' ? 'Move to to do' : 'Start work'}</button></div> : null}
