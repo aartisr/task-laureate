@@ -20,7 +20,9 @@ Task-Laureate is a Vite/React SPA backed by Supabase Auth + Postgres RLS.
 
 Apply migrations in order from [supabase/migrations](../supabase/migrations):
 
-- `001` through `042` for a new environment.
+- `001` through `045` for a new environment. The numbered files are immutable
+  production history; see the [migration history guide](../supabase/migrations/README.md)
+  for the logical grouping and safe future-baseline process.
 
 Important:
 

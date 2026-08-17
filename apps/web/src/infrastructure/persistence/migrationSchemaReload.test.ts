@@ -75,4 +75,28 @@ describe('PostgREST schema-cache migration contract', () => {
     expect(outgoingSharing).toContain("grant execute on function public.list_lists_shared_by_me() to authenticated;");
     expect(outgoingSharing).toContain("notify pgrst, 'reload schema';");
   });
+
+  it('keeps the reminder-rule read policy independent of private helper execution grants', () => {
+    const reminderPolicyMigration = migration('044_fix_reminder_rule_owner_policy.sql');
+    const reminderPolicy = readFileSync(reminderPolicyMigration, 'utf8');
+
+    expect(existsSync(reminderPolicyMigration)).toBe(true);
+    expect(reminderPolicy).toContain('drop policy if exists "owners read reminder rules"');
+    expect(reminderPolicy).toContain('create policy "owners read reminder rules"');
+    expect(reminderPolicy).toContain('list.owner_id = (select auth.uid())');
+    expect(reminderPolicy).toContain('task.owner_id = (select auth.uid())');
+    expect(reminderPolicy).not.toContain('private.can_manage_task_access');
+    expect(reminderPolicy).toContain("notify pgrst, 'reload schema';");
+  });
+
+  it('qualifies the status-request recipient column outside the returned-field scope', () => {
+    const statusRequestRepairMigration = migration('045_fix_status_update_request_recipient_ambiguity.sql');
+    const statusRequestRepair = readFileSync(statusRequestRepairMigration, 'utf8');
+
+    expect(existsSync(statusRequestRepairMigration)).toBe(true);
+    expect(statusRequestRepair).toContain('#variable_conflict use_column');
+    expect(statusRequestRepair).toContain('returning public.task_status_update_requests.recipient_id as recipient_id');
+    expect(statusRequestRepair).toContain('grant execute on function public.request_task_status_update(uuid) to authenticated;');
+    expect(statusRequestRepair).toContain("notify pgrst, 'reload schema';");
+  });
 });

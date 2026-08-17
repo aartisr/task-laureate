@@ -155,10 +155,10 @@ operations. The AI provider sits behind a narrow registry/adapter boundary so a
 future paid or enterprise provider can be added without changing the core task
 experience.
 
-Apply migrations `001` through `029` in order for a new Supabase environment.
-Read the migration headers and [Production Operations](docs/OPERATIONS.md)
-before applying them; migration `006` includes a legacy snapshot retirement
-that must be reviewed before use.
+Apply migrations `001` through `045` in order for a new Supabase environment.
+Read the [migration history guide](supabase/migrations/README.md) and
+[Production Operations](docs/OPERATIONS.md) before applying them; migration
+`006` includes a legacy snapshot retirement that must be reviewed before use.
 
 ## Documentation
 
