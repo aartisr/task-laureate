@@ -58,5 +58,7 @@ describe('TaskExecutionControls UI workflow', () => {
     await act(async () => click(host, 'Try AI breakdown'));
     expect(host.textContent).toContain('AI-assisted · review required');
     expect(host.textContent).toContain('Review, edit, select, or discard them before anything changes.');
+    expect(host.querySelectorAll('.task-execution-controls__step-provenance')).toHaveLength(1);
+    expect(host.textContent).toContain('AI-assisted start');
   });
 });

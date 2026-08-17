@@ -4871,6 +4871,7 @@ body,
 .task-execution-controls__ai-trigger .ai-assist-badge { color: inherit; font-size: inherit; }
 .task-execution-controls__proposal-provenance { margin-bottom: .45rem; }
 .task-execution-controls__ai-disclosure { margin-bottom: .7rem; }
+.task-execution-controls__step-provenance { margin-top: .4rem; color: var(--color-text-tertiary); font-size: .67rem; }
 @keyframes ai-assist-pulse { 50% { opacity: .48; transform: scale(.88) rotate(8deg); } }
 
 .task-execution-controls__ai-preview label {
