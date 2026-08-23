@@ -17,6 +17,7 @@ kept below for when they become relevant.
 | Evaluate usability and experience modes | [Usability evaluation report](USABILITY_EVALUATION_REPORT.md) |
 | Track remaining usability work | [Remaining usability work](USABILITY_REMAINING_WORK.md) |
 | Audit back-button contrast | [Back-button contrast audit](BACK_BUTTON_CONTRAST_AUDIT.md) |
+| Build linkable demos and outreach | [Backlinks and artifact outreach](BACKLINK_AND_ARTIFACT_OUTREACH.md) |
 | See what remains before launch | [Remaining work and launch readiness](REMAINING_WORK_AND_READINESS.md) |
 | Edit application content visually | [Puck editor guide](PUCK_EDITOR_GUIDE.md) |
 | See what changed | [Changelog](CHANGELOG.md) |

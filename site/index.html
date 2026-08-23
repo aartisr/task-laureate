@@ -230,6 +230,13 @@
     .more-details { margin-top: 24px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-card); }
     .more-details > summary { cursor: pointer; padding: 18px 22px; color: var(--violet-light); font-weight: 700; }
     .more-details > summary + * { padding: 0 22px 22px; }
+    .artifact-preview { overflow: hidden; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-card); box-shadow: 0 24px 60px rgba(0,0,0,.22); }
+    .artifact-preview__chrome { display: flex; align-items: center; gap: 7px; padding: 12px 16px; border-bottom: 1px solid var(--border); background: rgba(0,0,0,.18); }
+    .artifact-preview__dot { width: 8px; height: 8px; border-radius: 50%; background: var(--violet); opacity: .8; }
+    .artifact-preview__url { margin-left: 8px; color: var(--text-dim); font: .72rem ui-monospace, monospace; }
+    .artifact-preview__body { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 32px; }
+    .artifact-preview__body h3 { margin: 5px 0 8px; font-size: 1.45rem; }
+    .artifact-preview__body p:last-child { max-width: 38rem; color: var(--text-muted); }
 
     /* ── Promise section ── */
     .promise {
@@ -282,6 +289,7 @@
       .hero { padding: 72px 0 56px; }
       .nav-links .btn-ghost { display: none; }
       .promise { padding: 32px 24px; }
+      .artifact-preview__body { align-items: flex-start; flex-direction: column; padding: 24px; }
       .step { flex-direction: column; gap: 12px; }
     }
   </style>
@@ -426,6 +434,17 @@
               <p>Sync, share, search, attach context, review progress, and undo a mistake. The workspace shows what is local, saving, synced, or needs attention.</p>
             </div>
           </div>
+        </div>
+      </section>
+
+      <!-- Interactive artifact: safe, non-persistent preview for visitors. -->
+      <section class="section artifact-section" aria-labelledby="artifact-heading">
+        <p class="section-eyebrow">Try the idea</p>
+        <h2 class="section-title" id="artifact-heading">Touch the workflow before you commit</h2>
+        <p class="section-sub">The live sample is intentionally safe: check off fictional tasks, watch progress change, and decide whether this way of working fits you. Nothing is saved.</p>
+        <div class="artifact-preview">
+          <div class="artifact-preview__chrome"><span class="artifact-preview__dot"></span><span class="artifact-preview__dot"></span><span class="artifact-preview__dot"></span><span class="artifact-preview__url">tasks.ai-aarti.com/sample</span></div>
+          <div class="artifact-preview__body"><div><p class="section-eyebrow">Interactive sample</p><h3>See a calmer next step.</h3><p>Complete fictional tasks in a private browser-only preview.</p></div><a href="https://tasks.ai-aarti.com/sample" class="btn btn-primary btn-lg" rel="noopener noreferrer" target="_blank">Open live sample →</a></div>
         </div>
       </section>
 
