@@ -44,7 +44,7 @@ remain in [OPERATIONS.md](OPERATIONS.md).
 | Offline resilience | Previously visited app shell and static assets remain available; a friendly reconnect screen appears before the first successful visit or when a route is unavailable |
 | Data safety | API responses and cross-origin data calls are never placed in the app-shell cache |
 | Push | The same worker owns web-push notifications, so notifications and offline support cannot compete for the root service-worker scope |
-| Updates | The worker is fetched without HTTP caching. A new version activates after existing app tabs close and users reopen the app, avoiding mid-session asset changes |
+| Updates | The worker is fetched without HTTP caching. A new version waits for an unobtrusive **New version available** prompt; users choose Reload when they are ready, avoiding mid-session asset changes |
 
 Offline access does not make the cloud service fully offline-first. A user needs
 a network connection for sign-in, syncing, and data that has not already been
@@ -170,7 +170,7 @@ clearing site data also signs them out and can remove pending local state.
 | Wrong or blank launcher icon | Confirm the icon URLs above respond with an image, then remove and reinstall the app after the new deployment reaches the device. |
 | iPhone does not show an automatic install prompt | Expected behavior. Use Safari’s Share → Add to Home Screen flow. |
 | Offline launch shows reconnect page | The app has not been opened successfully while online, or that route/assets were not yet cached. Connect once, open the route, then retest. |
-| New release is not visible immediately | Fully close every open Task-Laureate window and reopen it. This allows the waiting worker to activate safely. |
+| New release is not visible immediately | Choose **Reload** on the in-app update prompt. If the prompt was dismissed or unavailable, fully close every open Task-Laureate window and reopen it. |
 | Push alerts stopped after PWA release | Confirm `VITE_VAPID_PUBLIC_KEY` is set, browser permissions remain granted, and the active worker is `/service-worker.js`, not the retired push-only worker. |
 
 ## Optional app-store distribution

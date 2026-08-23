@@ -12,6 +12,11 @@ kept below for when they become relevant.
 | Publish the project Wiki | [GitHub Wiki publishing](GITHUB_WIKI_PUBLISHING.md) |
 | Change or extend it | [Architecture guide](ARCHITECTURE_GUIDE.md) |
 | Build the anti-backlog product vision | [Anti-backlog implementation plan](ANTI_BACKLOG_IMPLEMENTATION_PLAN.md) |
+| Reduce usability complexity | [Usability audit and experience modes](USABILITY_AND_EXPERIENCE_MODES.md) |
+| Track usability implementation | [Usability and experience modes progress](USABILITY_MODES_PROGRESS.md) |
+| Evaluate usability and experience modes | [Usability evaluation report](USABILITY_EVALUATION_REPORT.md) |
+| Track remaining usability work | [Remaining usability work](USABILITY_REMAINING_WORK.md) |
+| Audit back-button contrast | [Back-button contrast audit](BACK_BUTTON_CONTRAST_AUDIT.md) |
 | See what remains before launch | [Remaining work and launch readiness](REMAINING_WORK_AND_READINESS.md) |
 | Edit application content visually | [Puck editor guide](PUCK_EDITOR_GUIDE.md) |
 | See what changed | [Changelog](CHANGELOG.md) |

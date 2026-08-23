@@ -10,12 +10,14 @@ const cacheAppShell = async () => {
   await cache.addAll(APP_SHELL);
 };
 
+self.addEventListener('message', (event) => {
+  if (event.data?.type === 'SKIP_WAITING') event.waitUntil((async () => { await self.skipWaiting(); })());
+});
+
 self.addEventListener('install', (event) => event.waitUntil((async () => {
   await cacheAppShell();
-  // A versioned shell is safe to activate immediately: every generated Vite
-  // asset is content-addressed, and this avoids Safari retaining v1's bad
-  // script-as-HTML cache entry until every app tab has been closed.
-  await self.skipWaiting();
+  // Updates wait for the app's unobtrusive reload prompt. This avoids replacing
+  // loaded JavaScript while someone is editing a task.
 })()));
 self.addEventListener('activate', (event) => event.waitUntil((async () => {
   await Promise.all((await caches.keys()).filter((name) => name.startsWith('task-laureate-') && name !== CACHE_NAME).map((name) => caches.delete(name)));

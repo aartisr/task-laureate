@@ -4,7 +4,13 @@ const workerUrl = '/service-worker.js';
 export function registerServiceWorker() {
   if (!import.meta.env.PROD || !('serviceWorker' in navigator)) return;
   window.addEventListener('load', () => {
-    void navigator.serviceWorker.register(workerUrl, { scope: '/' }).catch((error) => {
+    void navigator.serviceWorker.register(workerUrl, { scope: '/' }).then((registration) => {
+      const activateFirstInstall = () => {
+        if (!navigator.serviceWorker.controller && registration.waiting) registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+      };
+      activateFirstInstall();
+      registration.addEventListener('updatefound', () => registration.installing?.addEventListener('statechange', activateFirstInstall));
+    }).catch((error) => {
       // A PWA enhancement must never prevent the workspace from opening.
       console.warn('Task Laureate service worker registration failed.', error);
     });

@@ -25,6 +25,8 @@ export function ListDetailPage({ listId }: ListDetailPageProps) {
   const [isCreatingTask, setIsCreatingTask] = useState(false);
   const [editingTitle, setEditingTitle] = useState(false);
   const [newTitle, setNewTitle] = useState('');
+  const [editingDescription, setEditingDescription] = useState(false);
+  const [newDescription, setNewDescription] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showSharing, setShowSharing] = useState(false);
   const [shareNotice, setShareNotice] = useState<string | null>(null);
@@ -111,7 +113,7 @@ export function ListDetailPage({ listId }: ListDetailPageProps) {
           <p className="text-gray-500">List not found</p>
           <button
             onClick={() => navigate({ to: '/' })}
-            className="mt-4 text-blue-600 hover:text-blue-800 font-medium focus:outline-none focus:underline"
+            className="page-back-button mt-4"
             aria-label="Return to dashboard"
           >
             Back to Dashboard
@@ -151,6 +153,22 @@ export function ListDetailPage({ listId }: ListDetailPageProps) {
       console.error('Failed to update list:', error);
       announceToScreenReader('Failed to rename list. Please try again.', 'assertive');
       setNewTitle(list.title);
+    }
+  };
+
+  const handleUpdateListDescription = async () => {
+    if (newDescription.trim() === (list.description ?? '')) {
+      setEditingDescription(false);
+      return;
+    }
+    try {
+      await listMutations.updateList.mutateAsync({ listId, input: { description: newDescription.trim() || undefined } });
+      announceToScreenReader('List description updated.');
+      setEditingDescription(false);
+    } catch (error) {
+      console.error('Failed to update list description:', error);
+      announceToScreenReader('Failed to update list description. Please try again.', 'assertive');
+      setNewDescription(list.description ?? '');
     }
   };
 
@@ -203,7 +221,7 @@ export function ListDetailPage({ listId }: ListDetailPageProps) {
         <header className="mb-8">
           <button
             onClick={() => navigate({ to: '/' })}
-            className="text-blue-600 hover:text-blue-800 font-medium text-sm mb-4 focus:outline-none focus:underline"
+            className="page-back-button mb-4"
             aria-label="Return to dashboard"
           >
             ← Back to Dashboard
@@ -259,13 +277,11 @@ export function ListDetailPage({ listId }: ListDetailPageProps) {
                     }}
                     aria-label={`Edit list name: ${list.title}`}
                   >
-                    <span aria-hidden="true">✎</span> Edit name
+                    <span aria-hidden="true">✎</span> Edit list
                   </button>}
                 </div>
               )}
-              {list.description && (
-                <p className="text-gray-600 mt-2">{list.description}</p>
-              )}
+              {editingDescription ? <div className="mt-2 space-y-2"><label className="sr-only" htmlFor="edit-list-description">List description</label><textarea id="edit-list-description" value={newDescription} onChange={(event) => setNewDescription(event.target.value)} onKeyDown={(event) => { if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') { event.preventDefault(); void handleUpdateListDescription(); } if (event.key === 'Escape') { setEditingDescription(false); setNewDescription(list.description ?? ''); } }} rows={2} autoFocus aria-label="Edit list description" /><div className="flex gap-2"><button type="button" onClick={() => void handleUpdateListDescription()} className="primary-button">Save description</button><button type="button" onClick={() => { setEditingDescription(false); setNewDescription(list.description ?? ''); }} className="secondary-button">Cancel</button></div></div> : <button type="button" className="list-detail-description mt-2 text-left" onClick={() => { setEditingDescription(true); setNewDescription(list.description ?? ''); }} aria-label={list.description ? 'Edit list description' : 'Add list description'}>{list.description || 'Add a description to help you recognize this list.'}</button>}
             </div>
 
             {canManageList && <div className="list-detail-actions" aria-label="List actions">

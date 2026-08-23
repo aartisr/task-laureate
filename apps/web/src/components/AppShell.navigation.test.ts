@@ -2,21 +2,20 @@ import { describe, expect, it } from 'vitest';
 import { mobilePrimaryTabConfig, resolveDesktopNavigation, resolveMobilePrimaryTabs } from './AppShell';
 
 describe('mobile primary navigation', () => {
-  it('keeps the mobile bottom bar focused on Dashboard, Tasks, Capture, Search, and More', () => {
+  it('keeps the mobile bottom bar focused on Now, My lists, Search, Capture, and More', () => {
     // QuickCapture is deliberately rendered between the first two and final
     // tab; AppShell then appends More as the fifth bottom-bar action.
-    expect(mobilePrimaryTabConfig.map((item) => item.to)).toEqual(['/', '/tasks', '/search']);
-    expect(mobilePrimaryTabConfig.map((item) => item.displayLabel)).toEqual(['Dashboard', 'Tasks', 'Search']);
-    expect(mobilePrimaryTabConfig.some((item) => item.to === '/now')).toBe(false);
+    expect(mobilePrimaryTabConfig.map((item) => item.to)).toEqual(['/now', '/lists-overview', '/search']);
+    expect(mobilePrimaryTabConfig.map((item) => item.displayLabel)).toEqual(['Now', 'My lists', 'Search']);
   });
 
   it('allows a feature to enrich a tab without allowing it to reorder the mobile information architecture', () => {
     const tabs = resolveMobilePrimaryTabs([
       { label: 'Search workspace', to: '/search', icon: 'custom-search', description: 'Find any work' },
-      { label: 'Tasks', to: '/tasks', icon: '✓', description: 'All active work' },
+      { label: 'All tasks', to: '/tasks', icon: '✓', description: 'Every task across your lists' },
     ]);
 
-    expect(tabs.map((item) => item.to)).toEqual(['/', '/tasks', '/search']);
+    expect(tabs.map((item) => item.to)).toEqual(['/now', '/lists-overview', '/search']);
     expect(tabs[2]).toMatchObject({ label: 'Search', mobileLabel: 'Search', icon: 'custom-search', description: 'Find any work' });
   });
 });
@@ -26,7 +25,7 @@ describe('desktop navigation', () => {
     const navigation = resolveDesktopNavigation([]);
 
     expect(navigation.primary.map((item) => item.to)).toEqual(['/', '/now', '/tasks', '/search']);
-    expect(navigation.workspace.map((item) => item.to)).toEqual(['/lists-overview', '/shared-with-me', '/shared-by-me', '/activity', '/progress']);
+    expect(navigation.workspace.map((item) => item.to)).toEqual(['/lists-overview', '/completed', '/shared-with-me', '/shared-by-me', '/activity', '/progress']);
   });
 
   it('allows feature metadata without changing the core journey', () => {
@@ -38,5 +37,11 @@ describe('desktop navigation', () => {
     expect(navigation.primary.map((item) => item.to)).toEqual(['/', '/now', '/tasks', '/search']);
     expect(navigation.primary[1]).toMatchObject({ label: 'My moment', icon: 'custom-now' });
     expect(navigation.primary[3]).toMatchObject({ label: 'Find workspace', icon: 'custom-search' });
+  });
+
+  it('keeps essential work destinations available while Focus Mode hides secondary views', () => {
+    const navigation = resolveDesktopNavigation([]);
+    const focusWorkspace = navigation.workspace.filter((item) => item.to === '/lists-overview' || item.to === '/completed');
+    expect(focusWorkspace.map((item) => item.to)).toEqual(['/lists-overview', '/completed']);
   });
 });

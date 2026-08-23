@@ -8,7 +8,7 @@ import type { ReactNode, SVGProps } from 'react';
 export type AppIconName =
   | 'activity' | 'archive' | 'arrow-left' | 'arrow-right' | 'bell' | 'block'
   | 'check' | 'chevron-down' | 'close' | 'dashboard' | 'file' | 'help'
-  | 'calendar' | 'list' | 'menu' | 'move' | 'play' | 'plus' | 'progress' | 'search'
+  | 'calendar' | 'list' | 'menu' | 'more' | 'move' | 'play' | 'plus' | 'progress' | 'search'
   | 'settings' | 'share' | 'spark' | 'task' | 'trash' | 'undo' | 'warning';
 
 interface AppIconProps extends Omit<SVGProps<SVGSVGElement>, 'children' | 'name'> {
@@ -34,6 +34,7 @@ const paths: Record<AppIconName, ReactNode> = {
   help: <><circle cx="12" cy="12" r="9" /><path d="M9.5 9a2.7 2.7 0 1 1 4.3 2.2c-1.3 1-1.8 1.5-1.8 2.8" /><path d="M12 17h.01" /></>,
   list: <><path d="M8 6h12M8 12h12M8 18h12" /><path d="M4 6h.01M4 12h.01M4 18h.01" /></>,
   menu: <path d="M4 7h16M4 12h16M4 17h16" />,
+  more: <><circle cx="5" cy="12" r="1" fill="currentColor" /><circle cx="12" cy="12" r="1" fill="currentColor" /><circle cx="19" cy="12" r="1" fill="currentColor" /></>,
   move: <><path d="M8 7 4 11l4 4M4 11h11" /><path d="m16 5 4 4-4 4M20 9H9" /></>,
   play: <path d="m9 6 9 6-9 6z" />,
   plus: <path d="M12 5v14M5 12h14" />,

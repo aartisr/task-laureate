@@ -17,6 +17,23 @@ describe('TaskDetailLens', () => {
   });
   afterEach(async () => { await act(async () => root.unmount()); host.remove(); });
 
+  it('starts directly in edit mode when opened from the Open & edit list action', async () => {
+    const task = { id: 'task-inline-edit', listId: 'list-1', title: 'Clarify brief', notes: '', status: 'todo' as const, priority: 'medium' as const, dueDate: null, tags: [], order: 0, createdAt: '2026-08-03T00:00:00.000Z', updatedAt: '2026-08-03T00:00:00.000Z', completedAt: null, deletedAt: null };
+    await act(async () => root.render(<TaskDetailLens task={task} startEditing onUpdate={vi.fn().mockResolvedValue(undefined)} onComplete={vi.fn().mockResolvedValue(undefined)} />));
+    expect(host.querySelector('button')?.textContent).not.toBe('Edit task');
+    expect(Array.from(host.querySelectorAll('button')).some((button) => button.textContent === 'Save changes')).toBe(true);
+  });
+
+  it('supports keyboard save and cancel without requiring pointer travel', async () => {
+    const update = vi.fn().mockResolvedValue(undefined);
+    const task = { id: 'task-keyboard-edit', listId: 'list-1', title: 'Prepare agenda', notes: '', status: 'todo' as const, priority: 'medium' as const, dueDate: null, tags: [], order: 0, createdAt: '2026-08-03T00:00:00.000Z', updatedAt: '2026-08-03T00:00:00.000Z', completedAt: null, deletedAt: null };
+    await act(async () => root.render(<TaskDetailLens task={task} startEditing onUpdate={update} onComplete={vi.fn().mockResolvedValue(undefined)} />));
+    const canvas = host.querySelector('.task-detail-lens__edit-canvas') as HTMLElement;
+    await act(async () => canvas.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', ctrlKey: true, bubbles: true })));
+    expect(update).toHaveBeenCalledWith(expect.objectContaining({ title: 'Prepare agenda' }));
+    expect(host.querySelector('.task-detail-lens__edit-canvas')).toBeNull();
+  });
+
   it('saves a selected priority with the edited task document', async () => {
     const update = vi.fn().mockResolvedValue(undefined);
     await act(async () => root.render(<TaskDetailLens task={{ id: 'task-1', listId: 'list-1', title: 'Prepare launch', notes: '<p>Context</p>', status: 'todo', priority: 'medium', dueDate: null, tags: [], order: 0, createdAt: '2026-08-03T00:00:00.000Z', updatedAt: '2026-08-03T00:00:00.000Z', completedAt: null, deletedAt: null }} onUpdate={update} onComplete={vi.fn().mockResolvedValue(undefined)} />));

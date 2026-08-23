@@ -38,12 +38,12 @@ export function TaskFocusPage({ listId, taskId }: { listId: string; taskId: stri
   const calendarBlockQuery = useQuery({ queryKey: ['calendar-block', taskId], queryFn: () => getCalendarTaskBlock(taskId), enabled: calendarEnabled && !!task && canEditTask, retry: false });
 
   if (listQuery.isLoading || tasksQuery.isLoading || (supportsCollaboration(appServices.repository) && accessQuery.isLoading)) return <main className="task-focus-page" aria-busy="true">Loading task…</main>;
-  if (!task || !listQuery.data) return <main className="task-focus-page"><h1>Task not found</h1><button className="secondary-button" onClick={() => navigate({ to: '/lists/$listId', params: { listId } })}>Back to list</button></main>;
+  if (!task || !listQuery.data) return <main className="task-focus-page"><h1>Task not found</h1><button className="page-back-button" onClick={() => navigate({ to: '/lists/$listId', params: { listId } })}>Back to list</button></main>;
   const canEdit = canEditTask;
   const canManageReminders = canManageTaskReminders(supportsCollaboration(appServices.repository), accessQuery.data);
 
   return <main className="page-stack task-focus-page">
-    <button className="task-focus-page__back" onClick={() => navigate({ to: '/lists/$listId', params: { listId } })}>← Back to {listQuery.data.title}</button>
+    <button className="page-back-button" onClick={() => navigate({ to: '/lists/$listId', params: { listId } })}>← Back to {listQuery.data.title}</button>
     <TaskDetailLens
       task={task}
       listTitle={listQuery.data.title}

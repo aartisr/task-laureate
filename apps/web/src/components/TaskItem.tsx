@@ -12,10 +12,11 @@ export interface TaskItemProps {
   onDelete: () => Promise<void>;
   onRestore: () => Promise<void>;
   onStart?: () => Promise<void>;
+  onDefer?: () => Promise<void>;
   dependencySummary?: TaskDependencySummary;
 }
 
-export function TaskItem({ task, selected = false, onOpen, onComplete, onDelete, onRestore, onStart, dependencySummary }: TaskItemProps) {
+export function TaskItem({ task, selected = false, onOpen, onComplete, onDelete, onRestore, onStart, onDefer, dependencySummary }: TaskItemProps) {
   const completed = task.status === 'done';
   const inProgress = task.status === 'doing';
   const deleted = task.deletedAt !== null;
@@ -32,6 +33,7 @@ export function TaskItem({ task, selected = false, onOpen, onComplete, onDelete,
         {task.notes ? <span className="task-item__note-meta">Note · {noteReadingMinutes(task.notes)} min read</span> : null}
       </button>
       <span className={`task-item__priority priority--${task.priority}`}>{task.priority}</span>
+      {onDefer ? <details className="task-item__quick-actions"><summary aria-label={`More actions for ${task.title}`}><AppIcon name="more" /></summary><div><button type="button" onClick={() => void onDefer()}>Tomorrow</button><button type="button" onClick={onOpen}>Details</button></div></details> : null}
       <button onClick={() => void onDelete()} className="task-item__icon-button task-item__icon-button--danger" aria-label={`Delete task: ${task.title}`}><AppIcon name="trash" /></button>
     </div>
     <div className="task-item__footer"><div className="task-item__dates">{task.status === 'todo' && onStart ? <button type="button" className="task-item__start" onClick={() => void onStart()} aria-label={`Start working on ${task.title}`}><AppIcon name="play" /> Start</button> : null}{inProgress ? <span className="task-item__work-state" aria-label="In progress"><i aria-hidden="true" />In progress</span> : null}{blockedCount ? <button type="button" className="task-item__dependency-pulse is-blocked" onClick={onOpen} aria-label={`Blocked by ${blockedCount} incomplete prerequisite ${blockedCount === 1 ? 'task' : 'tasks'}`}><AppIcon name="block" /> Blocked · {blockedCount}</button> : selected && dependentCount ? <button type="button" className="task-item__dependency-pulse is-unblocking" onClick={onOpen} aria-label={`Completing this task unblocks ${dependentCount} ${dependentCount === 1 ? 'task' : 'tasks'}`}><AppIcon name="share" /> Unblocks · {dependentCount}</button> : null}{task.dueDate ? <span className="task-item__due">Due {formatDateOnly(task.dueDate, undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span> : null}</div>{task.tags.length ? <div className="task-item__tags">{task.tags.map((tag) => <span key={tag} className="task-item__tag">#{tag}</span>)}</div> : null}</div>

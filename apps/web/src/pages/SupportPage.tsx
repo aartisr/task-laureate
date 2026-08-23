@@ -13,7 +13,13 @@ const SUPPORT_TOPICS = [
 const SHORTCUTS = [
   { keys: ['⌘/Ctrl', '⇧', 'K'], label: 'Quick Capture', category: 'Capture' },
   { keys: ['⌘/Ctrl', 'N'], label: 'Create a list', category: 'Create' },
+  { keys: ['⌘/Ctrl', 'T'], label: 'Create a task', category: 'Create' },
   { keys: ['⌘/Ctrl', 'F'], label: 'Open search', category: 'Navigate' },
+  { keys: ['⌘/Ctrl', 'Z'], label: 'Undo last change', category: 'Edit' },
+  { keys: ['⌘/Ctrl', '⇧', 'Z'], label: 'Redo last change', category: 'Edit' },
+  { keys: ['⌘/Ctrl', ','], label: 'Open settings', category: 'Navigate' },
+  { keys: ['⌘/Ctrl', 'B'], label: 'Toggle sidebar', category: 'Navigate' },
+  { keys: ['⌘/Ctrl', 'H'], label: 'Go to Dashboard', category: 'Navigate' },
   { keys: ['Esc'], label: 'Close a dialog or cancel', category: 'Navigate' },
 ];
 

@@ -14,6 +14,7 @@ import { AntiBacklogPrivacyControls } from '../components/AntiBacklogPrivacyCont
 import { CalendarConnectionPanel } from '../components/CalendarConnectionPanel';
 import { isFeatureEnabled } from '../config/featureFlags';
 import { SyncCenter } from '../components/SyncCenter';
+import { WorkspaceExperienceControl } from '../components/WorkspaceExperienceControl';
 
 /** Keeps everyday preferences visible and infrequent administration available on demand. */
 export function SettingsPage() {
@@ -45,6 +46,15 @@ export function SettingsPage() {
               {THEME_OPTIONS.map((theme) => <ThemePreviewCard key={theme.name} themeName={theme.name} />)}
             </div>
           </details>
+        </section>
+
+        <section className="settings-section" aria-labelledby="experience-heading">
+          <div className="settings-section__heading">
+            <p className="settings-section__eyebrow">How much you see</p>
+            <h2 id="experience-heading">Workspace experience</h2>
+            <p>Choose a calm starting view or keep every planning tool close. Your tasks and permissions stay the same.</p>
+          </div>
+          <WorkspaceExperienceControl />
         </section>
 
         <details className="settings-disclosure">

@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react';
+import { Link } from '@tanstack/react-router';
 import { remoteSync } from '../infrastructure/antiBacklog/mutationOutbox';
 
 /**
@@ -7,7 +8,7 @@ import { remoteSync } from '../infrastructure/antiBacklog/mutationOutbox';
  */
 export function RemoteSyncStatus() {
   const sync = useSyncExternalStore(remoteSync.subscribe, remoteSync.getSnapshot, remoteSync.getSnapshot);
-  if (sync.attentionCount) return null; // The resolution center owns this state.
+  if (sync.attentionCount) return <div className="remote-sync-status remote-sync-status--attention" role="alert"><span aria-hidden="true">!</span><span>{sync.attentionCount} saved change{sync.attentionCount === 1 ? '' : 's'} need review.</span><Link to="/settings">Review and recover</Link></div>;
   if (!sync.isOnline || sync.pendingCount) {
     const label = !sync.isOnline
       ? `${sync.pendingCount ? `${sync.pendingCount} change${sync.pendingCount === 1 ? '' : 's'} saved on this device` : 'You are offline'} · will sync automatically`

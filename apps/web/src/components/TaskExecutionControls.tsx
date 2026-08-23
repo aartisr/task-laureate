@@ -28,7 +28,7 @@ export function TaskExecutionControls({ task }: { task: TodoItem }) {
       <button className="secondary-button task-execution-controls__ai-trigger" type="button" disabled={isDecomposing || !aiConsent} onClick={() => void tryAiBreakdown()}>
         <AiAssistBadge working={isDecomposing}>{isDecomposing ? 'Creating preview…' : 'Try AI breakdown'}</AiAssistBadge>
       </button>
-    </div> : null}
+    </div> : <p className="task-execution-controls__ai-disclosure">AI preview is not enabled for this workspace. The editable template breakdown below is available without AI.</p>}
     <details className="task-execution-controls__details">
       <summary>Planning details</summary>
       <div className="task-execution-controls__planning-form">

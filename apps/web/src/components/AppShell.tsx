@@ -10,6 +10,8 @@ import { recoveryNeedsAttention, undoJournal } from '../core/mutations/undoJourn
 import { QuickCapture } from './QuickCapture';
 import { requestListCreation } from '../hooks/useListCreationCommand';
 import { AppIcon, appIconFromLegacy } from './AppIcon';
+import { WorkspaceExperienceControl } from './WorkspaceExperienceControl';
+import { useWorkspaceExperience } from '../core/preferences/workspaceExperience';
 
 interface AppShellProps {
   children?: ReactNode;
@@ -29,8 +31,8 @@ const mobileBreakpointQuery = '(max-width: 48rem)';
  * behind More, where it remains available without competing for attention.
  */
 export const mobilePrimaryTabConfig: readonly MobileTabDefinition[] = [
-  { to: '/', fallbackLabel: 'Dashboard', displayLabel: 'Dashboard', icon: '⌂' },
-  { to: '/tasks', fallbackLabel: 'Tasks', displayLabel: 'Tasks', icon: '✓' },
+  { to: '/now', fallbackLabel: 'Now', displayLabel: 'Now', icon: '⚡' },
+  { to: '/lists-overview', fallbackLabel: 'My lists', displayLabel: 'My lists', icon: '☷' },
   { to: '/search', fallbackLabel: 'Search', displayLabel: 'Search', icon: '🔍' },
 ];
 
@@ -61,11 +63,12 @@ export function resolveDesktopNavigation(navItems: readonly NavItem[]): DesktopN
     primary: [
       { label: 'Dashboard', to: '/', icon: '⌂', description: 'Your workspace overview' },
       find('/now', { label: 'Now', to: '/now', icon: '⚡', description: 'Choose one feasible action' }),
-      { label: 'Tasks', to: '/tasks', icon: '✓', description: 'All active work' },
+      { label: 'All tasks', to: '/tasks', icon: '✓', description: 'Every task across your lists' },
       find('/search', { label: 'Search', to: '/search', icon: '⌕', description: 'Find anything' }),
     ],
     workspace: [
-      { label: 'Lists', to: '/lists-overview', icon: '☷', description: 'Projects and lists' },
+      { label: 'My lists', to: '/lists-overview', icon: '☷', description: 'Your projects and lists' },
+      { label: 'Completed', to: '/completed', icon: '✓', description: 'Work you have finished' },
       find('/shared-with-me', { label: 'Shared with me', to: '/shared-with-me', icon: '↗', description: 'Work shared with you' }),
       find('/shared-by-me', { label: 'Shared by me', to: '/shared-by-me', icon: '↗', description: 'Lists you share with others' }),
       find('/activity', { label: 'Activity', to: '/activity', icon: '◌', description: 'Recent changes' }),
@@ -111,6 +114,7 @@ function NavigationIcon({ icon }: { icon?: string }) {
 
 export function AppShell({ children, navItems }: AppShellProps) {
   const { currentTheme } = useTheme();
+  const experience = useWorkspaceExperience();
   const navigate = useNavigate();
   const isDarkTheme = currentTheme !== 'luxury-minimal';
   const isMobileViewport = useSyncExternalStore(subscribeToMobileViewport, getMobileViewportSnapshot, () => false);
@@ -123,16 +127,22 @@ export function AppShell({ children, navItems }: AppShellProps) {
 
   const mobileNavItems = useMemo(() => [
     { label: 'Now', to: '/now', icon: '⚡', description: 'Choose one feasible action' },
-    { label: 'Tasks', to: '/tasks', icon: '✓', description: 'All active work' },
+    { label: 'All tasks', to: '/tasks', icon: '✓', description: 'Every task across your lists' },
     { label: 'Search', to: '/search', icon: '⌕', description: 'Find anything' },
     { label: 'Progress', to: '/progress', icon: '◔', description: 'Reflect on momentum' },
     { label: 'Dashboard', to: '/', icon: '⌂', description: 'Workspace overview' },
-    { label: 'Lists', to: '/lists-overview', icon: '☷', description: 'Projects and lists' },
+    { label: 'My lists', to: '/lists-overview', icon: '☷', description: 'Your projects and lists' },
+    { label: 'Completed', to: '/completed', icon: '✓', description: 'Work you have finished' },
     ...navItems,
     { label: 'Help & Support', to: '/support', icon: '?', description: 'Help center' },
   ].filter((item, index, items) => items.findIndex((candidate) => candidate.to === item.to) === index), [navItems]);
 
-  const desktopNavigation = useMemo(() => resolveDesktopNavigation(navItems), [navItems]);
+  const desktopNavigation = useMemo(() => {
+    const navigation = resolveDesktopNavigation(navItems);
+    return experience === 'focus'
+      ? { ...navigation, workspace: navigation.workspace.filter((item) => item.to === '/lists-overview' || item.to === '/completed') }
+      : navigation;
+  }, [experience, navItems]);
 
   const currentSection = useMemo(
     () =>
@@ -225,7 +235,7 @@ export function AppShell({ children, navItems }: AppShellProps) {
           <span>Task Laureate</span>
         </Link>
         <nav className="sidebar-nav" aria-label="Primary Navigation">
-          <button type="button" className="sidebar-link sidebar-link--create" aria-label="Create a new List" onClick={beginListCreation}>
+          <button type="button" className="sidebar-link sidebar-link--create" aria-label="Create a new List" title="Create a new List (⌘N / Ctrl+N)" onClick={beginListCreation}>
             <span className="sidebar-link__create-icon" aria-hidden="true"><AppIcon name="plus" /></span> New List
           </button>
           <p className="sidebar-nav__label">Focus</p>
@@ -247,7 +257,7 @@ export function AppShell({ children, navItems }: AppShellProps) {
           })}
           <div className="sidebar-nav__extensions">
             <button type="button" className="sidebar-nav__section-toggle" aria-expanded={workspaceNavigationExpanded} aria-controls="workspace-navigation-items" onClick={toggleWorkspaceNavigation}>
-              <span><span className="sidebar-nav__section-label">Workspace</span><small>{workspaceNavigationExpanded ? 'Hide less-used views' : `${desktopNavigation.workspace.length} views`}</small></span><span className="sidebar-nav__section-chevron" aria-hidden="true"><AppIcon name="chevron-down" /></span>
+              <span><span className="sidebar-nav__section-label">More</span><small>{workspaceNavigationExpanded ? 'Hide other views' : `${desktopNavigation.workspace.length} views`}</small></span><span className="sidebar-nav__section-chevron" aria-hidden="true"><AppIcon name="chevron-down" /></span>
             </button>
             <div id="workspace-navigation-items" className="sidebar-nav__section-items" hidden={!workspaceNavigationExpanded}>
               {desktopNavigation.workspace.map((item) => (
@@ -297,6 +307,7 @@ export function AppShell({ children, navItems }: AppShellProps) {
             <span className="sidebar-link__badge">FAQs</span>
           </Link>
           <AccountStatus provider={authProvider} />
+          <WorkspaceExperienceControl />
           <NotificationCenter />
 
         </div>
@@ -338,6 +349,7 @@ export function AppShell({ children, navItems }: AppShellProps) {
             </button>
             <AccountStatus provider={authProvider} onNavigate={() => setIsMobileMenuOpen(false)} />
             <NotificationCenter onNavigate={() => setIsMobileMenuOpen(false)} />
+            <WorkspaceExperienceControl />
             {mobilePrimaryTabs.map((item) => {
               const hasRecovery = item.to === '/settings' && recoveryAvailable;
               return (

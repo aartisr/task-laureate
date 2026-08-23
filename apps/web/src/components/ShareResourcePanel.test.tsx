@@ -34,7 +34,7 @@ describe('ShareResourcePanel', () => {
 
     expect(host.textContent).toContain('Share “Launch brief”');
     expect(host.textContent).toContain('Couldn’t load collaborator emails yet.');
-    expect(Array.from(host.querySelectorAll('button')).find((button) => button.textContent === 'Create secure invite')).toBeDefined();
+    expect(Array.from(host.querySelectorAll('button')).find((button) => button.textContent === 'Invite as editor')).toBeDefined();
   });
 
   it('explains the actual recovery path when the signed-in account does not own the Task', async () => {

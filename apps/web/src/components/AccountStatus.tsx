@@ -128,8 +128,9 @@ export function AccountStatus({ provider, onNavigate }: AccountStatusProps) {
           <span><strong>{identity}</strong><small>{session?.user.provider ? `Signed in with ${session.user.provider}` : 'Signed-in account'}</small></span>
         </div>
         <Link to="/settings" className="account-status__menu-item" role="menuitem" onClick={() => { setMenuOpen(false); onNavigate?.(); }}>
-          Account &amp; sync settings
+          Account &amp; sync settings{persistence.phase === 'error' ? ' · Review sync' : ''}
         </Link>
+        {persistence.phase === 'error' ? <p className="account-status__message" role="status">Your changes remain on this device. Open Sync Center to retry or export them.</p> : null}
         <button className="account-status__menu-item account-status__sign-out" type="button" role="menuitem" onClick={() => void signOut()} disabled={signingOut}>
           {signingOut ? 'Signing out…' : 'Sign out'}
         </button>

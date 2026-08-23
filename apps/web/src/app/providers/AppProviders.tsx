@@ -17,6 +17,7 @@ import { getAnalyticsConfig } from '../../infrastructure/analytics/analyticsConf
 import { getConsentDecision } from '../../core/privacy/analyticsConsent';
 import { MutationConflictCenter } from '../../components/MutationConflictCenter';
 import { RemoteSyncStatus } from '../../components/RemoteSyncStatus';
+import { PwaUpdatePrompt } from '../../components/PwaUpdatePrompt';
 import { PwaInstallExperience } from '../../components/PwaInstallExperience';
 import { GlobalExceptionReporter } from '../../components/GlobalExceptionReporter';
 import { ExceptionReportDialog } from '../../components/ExceptionReportDialog';
@@ -119,6 +120,7 @@ export function AppProviders() {
         <ThemeProvider>
           {persistenceStatus.phase === 'error' && <div className="persistence-alert" role="alert">{persistenceStatus.detail}</div>}
           <RemoteSyncStatus />
+          <PwaUpdatePrompt />
           <MutationConflictCenter />
           <GlobalExceptionReporter />
           <RouterProvider key={workspaceEpoch} router={router} />

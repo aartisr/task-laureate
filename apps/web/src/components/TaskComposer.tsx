@@ -30,7 +30,6 @@ export function TaskComposer({
   const [priority, setPriority] = useState<Priority>(initialInput?.priority ?? 'medium');
   const [dueDate, setDueDate] = useState(initialInput?.dueDate ?? '');
   const [notes, setNotes] = useState(initialInput?.notes ?? '');
-  const [showNotes, setShowNotes] = useState(Boolean(initialInput?.notes));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
@@ -62,6 +61,17 @@ export function TaskComposer({
       required
     />
     <div className="task-composer__controls">
+      <label className="task-composer__date" htmlFor="task-composer-date">Due date
+        <input id="task-composer-date" type="date" value={dueDate} onChange={(event) => setDueDate(event.target.value)} />
+      </label>
+      <div className="task-composer__quick-dates" aria-label="Quick due date choices">
+        <button type="button" onClick={() => setDueDate(localDate(0))}>Today</button>
+        <button type="button" onClick={() => setDueDate(localDate(1))}>Tomorrow</button>
+        {dueDate ? <button type="button" onClick={() => setDueDate('')}>Clear date</button> : null}
+      </div>
+    </div>
+    <details className="task-composer__details">
+      <summary>Add details <span>Optional</span></summary>
       <fieldset className="task-composer__priority">
         <legend>Priority</legend>
         <div role="group" aria-label="Task priority">
@@ -74,21 +84,10 @@ export function TaskComposer({
           ><span aria-hidden="true">{option.symbol}</span> {option.label}</button>)}
         </div>
       </fieldset>
-      <label className="task-composer__date" htmlFor="task-composer-date">Due date
-        <input id="task-composer-date" type="date" value={dueDate} onChange={(event) => setDueDate(event.target.value)} />
+      <label className="task-composer__notes" htmlFor="task-composer-notes">Notes
+        <textarea id="task-composer-notes" value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Add context, links, or the next step…" maxLength={MAX_NOTE_LENGTH} rows={3} />
       </label>
-      <div className="task-composer__quick-dates" aria-label="Quick due date choices">
-        <button type="button" onClick={() => setDueDate(localDate(0))}>Today</button>
-        <button type="button" onClick={() => setDueDate(localDate(1))}>Tomorrow</button>
-        {dueDate ? <button type="button" onClick={() => setDueDate('')}>Clear date</button> : null}
-      </div>
-    </div>
-    <button className="task-composer__notes-toggle" type="button" aria-expanded={showNotes} onClick={() => setShowNotes(!showNotes)}>
-      {showNotes ? 'Hide notes' : 'Add notes'}
-    </button>
-    {showNotes ? <label className="task-composer__notes" htmlFor="task-composer-notes">Notes
-      <textarea id="task-composer-notes" value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Add context, links, or the next step…" maxLength={MAX_NOTE_LENGTH} rows={3} />
-    </label> : null}
+    </details>
     {error ? <p className="task-composer__error" role="alert">{error}</p> : null}
     <div className="task-composer__actions">
       <button className="primary-button" type="submit" disabled={!title.trim() || saving}>{saving ? 'Adding task…' : 'Add task'}</button>

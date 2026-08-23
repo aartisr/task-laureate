@@ -43,6 +43,7 @@ describe('PWA production asset contract', () => {
     expect(worker).toContain("!url.pathname.startsWith('/api/')");
     expect(worker).toContain("const CACHE_NAME = 'task-laureate-shell-v3'");
     expect(worker).toContain('await self.skipWaiting()');
+    expect(worker).toContain("event.data?.type === 'SKIP_WAITING'");
     expect(worker).toContain('hasExpectedAssetType(request, response)');
     expect(existsSync(publicFile('/push-worker.js'))).toBe(false);
   });
