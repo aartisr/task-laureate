@@ -24,6 +24,6 @@
     "submit:indexnow": "node scripts/submit-indexnow.mjs"
   },
   "devDependencies": {
-    "supabase": "^2.110.0"
+    "supabase": "^2.115.0"
   }
 }
