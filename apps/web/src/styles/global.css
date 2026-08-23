@@ -4350,6 +4350,8 @@ select:focus {
 .task-list__empty { display: grid; justify-items: center; gap: .35rem; min-block-size: 14rem; place-content: center; border: 1px dashed var(--color-border-default); border-radius: var(--radius-xl); background: var(--color-bg-tertiary); color: var(--color-text-secondary); text-align: center; }.task-list__empty span { color: var(--color-action-primary); font-size: 1.75rem; }.task-list__empty h3, .task-list__empty p { margin: 0; }.task-list__empty h3 { color: var(--color-text-primary); font-size: 1rem; }
 .task-item__notes, .task-item--selected .task-item__note-meta, .task-detail-lens__summary { color: var(--color-text-primary) !important; }
 .task-detail-lens__edit-guidance span, .task-detail-lens__note p, .list-detail-description { color: var(--color-text-primary) !important; }
+.task-detail-lens__complete { display: inline-flex; align-items: center; gap: .35rem; min-block-size: 2.5rem; padding: .42rem .7rem; border: 1.5px solid var(--color-border-default); border-radius: 999px; background: var(--color-bg-primary); color: var(--color-text-primary); cursor: pointer; font: inherit; font-size: .78rem; font-weight: var(--font-weight-bold); }
+.task-detail-lens__complete:hover:not(:disabled) { border-color: var(--color-status-success); background: color-mix(in srgb, var(--color-status-success) 12%, var(--color-bg-primary)); }.task-detail-lens__complete.is-complete { border-color: var(--color-status-success); background: var(--color-status-success); color: var(--color-text-on-action); }.task-detail-lens__complete:disabled { cursor: not-allowed; opacity: .6; }
 .list-detail-description { display: block; inline-size: fit-content; max-inline-size: 100%; border: 1px solid transparent; border-radius: var(--radius-sm); background: transparent; cursor: text; font: inherit; line-height: 1.5; padding: .2rem .35rem; }
 .list-detail-description:hover { border-color: var(--color-border-default); background: var(--color-bg-secondary); }
 .list-detail-description:focus-visible { outline: 3px solid color-mix(in srgb, var(--color-action-primary) 48%, transparent); outline-offset: 2px; }
@@ -4515,6 +4517,8 @@ textarea {
 /* Every solid interactive control uses the theme's guaranteed action foreground.
    This intentionally wins over older literal-white declarations in component CSS. */
 .task-list__filters button.is-active span, .task-item__complete, .task-item__icon-button--danger:hover, .task-item__delete-confirm, .activity-timeline__danger, .notification-center__count { color: var(--color-text-on-action); }
+.task-item__complete { color: var(--color-text-primary); }
+.task-item__complete.is-completed { color: var(--color-text-on-action); }
 
 /* Theme compatibility bridge. A few mature route components still carry
    legacy utility colours. Map them to semantic tokens instead of allowing a

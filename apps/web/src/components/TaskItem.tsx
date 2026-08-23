@@ -3,6 +3,7 @@ import { formatDateOnly } from '../core/domain/dateOnly';
 import type { TodoItem } from '../core/contracts/domain';
 import type { TaskDependencySummary } from '../core/domain/dependencies';
 import { AppIcon } from './AppIcon';
+import { useEffect, useState } from 'react';
 
 export interface TaskItemProps {
   task: TodoItem;
@@ -17,7 +18,11 @@ export interface TaskItemProps {
 }
 
 export function TaskItem({ task, selected = false, onOpen, onComplete, onDelete, onRestore, onStart, onDefer, dependencySummary }: TaskItemProps) {
-  const completed = task.status === 'done';
+  const serverCompleted = task.status === 'done';
+  const [optimisticCompleted, setOptimisticCompleted] = useState<boolean | null>(null);
+  const [completionPending, setCompletionPending] = useState(false);
+  useEffect(() => { if (optimisticCompleted !== null && optimisticCompleted === serverCompleted) setOptimisticCompleted(null); }, [optimisticCompleted, serverCompleted]);
+  const completed = optimisticCompleted ?? serverCompleted;
   const inProgress = task.status === 'doing';
   const deleted = task.deletedAt !== null;
   if (deleted) return <article className="task-item task-item--deleted"><div className="task-item__row"><div className="task-item__content"><p className="task-item__title">{task.title}</p><p className="task-item__deleted-label">Deleted</p></div><button onClick={() => void onRestore()} className="secondary-button">Restore</button></div></article>;
@@ -26,7 +31,8 @@ export function TaskItem({ task, selected = false, onOpen, onComplete, onDelete,
   const dependentCount = dependencySummary?.dependentCount ?? 0;
   return <article className={`task-item ${selected ? 'task-item--selected' : ''} ${completed ? 'task-item--completed' : ''} ${inProgress ? 'task-item--in-progress' : ''}`} aria-label={`Task: ${task.title}`}>
     <div className="task-item__row">
-      <button onClick={() => void onComplete()} aria-checked={completed} aria-label={`Mark task ${completed ? 'incomplete' : 'complete'}: ${task.title}`} role="checkbox" className={`task-item__complete ${completed ? 'is-completed' : ''}`}>{completed ? <AppIcon name="check" /> : ''}</button>
+      <button onClick={() => { if (completionPending) return; const next = !completed; setOptimisticCompleted(next); setCompletionPending(true); void onComplete().catch(() => setOptimisticCompleted(null)).finally(() => setCompletionPending(false)); }} aria-checked={completed} aria-label={`${completed ? 'Reopen task' : 'Complete task'}: ${task.title}`} title={completed ? 'Reopen task' : 'Complete task'} role="checkbox" className={`task-item__complete ${completed ? 'is-completed' : ''}`} disabled={completionPending}>{completed ? <AppIcon name="check" /> : ''}<span>{completionPending ? (completed ? 'Saving…' : 'Completing…') : completed ? 'Done' : 'Complete'}</span></button>
+      {completionPending ? <span className="task-item__completion-feedback" role="status">{completed ? 'Task completed. Moving it to Done.' : 'Reopening task…'}</span> : null}
       <button type="button" onClick={onOpen} className="task-item__open" aria-expanded={selected}>
         <span className="task-item__title-line"><span className="task-item__title">{task.title}</span><span className="task-item__edit-cta">Open &amp; edit <AppIcon name="arrow-right" /></span></span>
         {preview ? <span className="task-item__notes">{preview}</span> : null}
