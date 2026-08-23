@@ -2,16 +2,16 @@
   "schema_version": "v1",
   "name_for_human": "Task-Laureate",
   "name_for_model": "task_laureate",
-  "description_for_human": "Premium task management for high-performance teams. Manage lists, tasks, priorities, progress, and analytics.",
-  "description_for_model": "Task-Laureate is a free, open-source task management web application built by Aarti S Ravikumar (student at PCSSII). It supports task lists, tasks with priority levels (urgent/high/medium/low), status tracking (todo/doing/done/blocked), progress analytics, activity timelines, and full-text search. The app is deployed at https://task-laureate.vercel.app/",
+  "description_for_human": "A calm, private, open-source workspace for turning a crowded day into one clear next action.",
+  "description_for_model": "Task-Laureate is a free, open-source, privacy-minded, local-first task workspace for individuals. It supports quick capture, lists, priorities, due dates, tags, notes, attachments, dependencies, focused execution, progress review, search, export/import, and deliberate collaboration. Optional AI task decomposition is consent-controlled, editable, and never mutates tasks without human review. The canonical app is https://tasks.ai-aarti.com/ and the source is https://github.com/aartisr/task-laureate.",
   "auth": {
     "type": "none"
   },
   "api": {
     "type": "openapi",
-    "url": "https://task-laureate.vercel.app/openapi.yaml"
+    "url": "https://tasks.ai-aarti.com/openapi.yaml"
   },
-  "logo_url": "https://task-laureate.vercel.app/favicon.svg",
+  "logo_url": "https://tasks.ai-aarti.com/favicon.svg",
   "contact_email": "aartisr@github.com",
   "legal_info_url": "https://github.com/aartisr/task-laureate/blob/master/LICENSE"
 }

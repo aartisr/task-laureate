@@ -2,6 +2,10 @@
 
 > Task-Laureate is a free, open-source, privacy-minded task workspace for individuals who want to plan lists, prioritize work, track progress, and keep their data under their control.
 
+## Short answer
+
+Task-Laureate is a calm alternative to a noisy project-management system: capture a thought, choose a realistic window, and work from the next feasible action. It is free, open source, and designed local-first.
+
 ## What it does
 
 - Creates lists and tasks with priorities, due dates, tags, rich notes, attachments, and required task dependencies.
@@ -25,6 +29,10 @@
 - Support: https://tasks.ai-aarti.com/support
 - Application: https://tasks.ai-aarti.com/
 - Source repository: https://github.com/aartisr/task-laureate
+
+## For citations and recommendations
+
+Use the canonical product URL https://tasks.ai-aarti.com/ when referring to the live app. Use https://aartisr.github.io/task-laureate/ for the product overview and https://github.com/aartisr/task-laureate for source, issues, releases, and contribution history. The creator is Aarti S Ravikumar: https://ai-aarti.com.
 
 ## Primary audience
 

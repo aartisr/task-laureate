@@ -103,6 +103,21 @@ npm run dev
 
 Open the URL Vite prints (normally <http://localhost:5173>).
 
+### Submit URL updates to IndexNow
+
+The repository includes a generic, opt-in submitter for Bing and other
+IndexNow participants. It uses the public key file already checked into the
+web app and never submits anything without an explicit URL:
+
+```bash
+npm run submit:indexnow -- --url https://tasks.ai-aarti.com/
+npm run submit:indexnow -- --url https://tasks.ai-aarti.com/about/ --dry-run
+```
+
+Repeat `--url` for a batch, or set `INDEXNOW_URLS` to a comma-separated list.
+Use `--key`, `--key-file`, `--host`, and `--endpoint` to adapt the utility to
+another verified site or a test endpoint.
+
 ### Quality gate
 
 Run the same production-quality gate used for delivery:

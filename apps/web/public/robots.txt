@@ -4,6 +4,10 @@
 User-agent: *
 Allow: /
 
+# Bing's crawler inherits the same public crawl policy.
+User-agent: Bingbot
+Allow: /
+
 # Sitemaps
 Sitemap: https://tasks.ai-aarti.com/sitemap.xml
 

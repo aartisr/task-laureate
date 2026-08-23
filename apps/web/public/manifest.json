@@ -2,7 +2,7 @@
   "name": "Task-Laureate",
   "short_name": "Task-Laureate",
   "id": "/",
-  "description": "Premium task orchestration for high-performance teams. Calm, fast, beautiful.",
+  "description": "A free, open-source, local-first task workspace for one clear next action.",
   "start_url": "/now",
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui"],
@@ -13,7 +13,7 @@
   "lang": "en",
   "dir": "ltr",
   "categories": ["productivity", "utilities", "business"],
-  "keywords": ["tasks", "productivity", "todo", "project management", "team collaboration"],
+  "keywords": ["tasks", "productivity", "todo", "next action", "local-first", "open source"],
   "icons": [
     {
       "src": "/icons/task-laureate-192.png",
