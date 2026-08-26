@@ -19,8 +19,8 @@ export interface DatabaseConfig {
     // Connection pooling for serverless (PgBouncer or Vercel Postgres)
     // @see https://vercel.com/docs/storage/postgres/features/connection-pooling
     connectionLimit?: number;
-    idleTimeout?: number;
-    maxLifetime?: number;
+    idleTimeout?: string | number;
+    maxLifetime?: string | number;
     statement_timeout?: string; // e.g., "30s"
     connect_timeout?: string; // e.g., "10s"
   };

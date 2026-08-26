@@ -144,6 +144,22 @@ export interface ScalableTaskFeedRepository {
   listTaskFeed(input?: TaskFeedInput): Promise<TaskFeedPage>;
 }
 
+/** A single bounded snapshot for analytical surfaces; avoids one task request per list. */
+export interface WorkspaceReport {
+  lists: TodoList[];
+  tasks: TaskFeedItem[];
+  taskLimit: number;
+  isTruncated: boolean;
+}
+
+export interface ReportingRepository {
+  getWorkspaceReport(input?: { taskLimit?: number }): Promise<WorkspaceReport>;
+}
+
+export function supportsReporting(repository: TodoRepository): repository is TodoRepository & ReportingRepository {
+  return 'getWorkspaceReport' in repository && typeof (repository as { getWorkspaceReport?: unknown }).getWorkspaceReport === 'function';
+}
+
 export function supportsScalableTaskFeed(repository: TodoRepository): repository is TodoRepository & ScalableTaskFeedRepository {
   return 'listTaskFeed' in repository;
 }

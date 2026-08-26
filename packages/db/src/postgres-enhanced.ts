@@ -28,7 +28,7 @@ import {
   ConnectionError,
   QueryError,
   withRetry,
-  withTimeout,
+  withErrorTimeout as withTimeout,
   CircuitBreaker,
   Logger,
   TimeoutError,
@@ -722,6 +722,10 @@ export class PostgresRepository implements IRepository {
   // ============================================================================
   // TEMPLATE OPERATIONS
   // ============================================================================
+
+  private mapListTemplate(template: any): ListTemplate {
+    return { id: template.id, title: template.title, description: template.description, listDefaults: template.listDefaults ?? {}, taskDefaults: template.taskDefaults ?? [], createdAt: template.createdAt, updatedAt: template.updatedAt };
+  }
 
   async listTemplates(): Promise<ListTemplate[]> {
     return this.withCircuitBreaker(async () => {

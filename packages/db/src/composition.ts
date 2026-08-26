@@ -241,7 +241,7 @@ export function withFallback<Args extends any[], R>(
       return await fn(...args);
     } catch (error) {
       const err = error instanceof Error ? error : new Error(String(error));
-      return typeof fallback === 'function' ? fallback(err) : fallback;
+      return typeof fallback === 'function' ? (fallback as (error: Error) => R)(err) : fallback;
     }
   };
 }
@@ -295,7 +295,7 @@ export function chainAsync<T>(
       try {
         let result = await promiseFn();
         if (options?.transform) {
-          result = options.transform(result);
+          result = options.transform(result) as Awaited<T>;
         }
         results.push(result);
       } catch (error) {

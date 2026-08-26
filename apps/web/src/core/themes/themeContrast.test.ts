@@ -39,6 +39,13 @@ describe('theme color contrast', () => {
     }
   });
 
+  it.each(Object.values(THEMES))('%s keeps quiet action controls readable in every state', (theme) => {
+    const quiet = theme.colors.control.quiet;
+
+    expect(contrast(quiet.foreground, quiet.background), `${theme.label}: quiet action default`).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(quiet.foreground, quiet.hoverBackground), `${theme.label}: quiet action hover`).toBeGreaterThanOrEqual(4.5);
+  });
+
   it.each(Object.values(THEMES))('%s keeps primary button text readable across its premium gradient', (theme) => {
     const gradientEnd = mixSrgb(theme.colors.action.primary, theme.colors.accent.secondary, 0.72);
     expect(contrast(theme.colors.text.onAction, gradientEnd), `${theme.label}: on-action text on primary-button gradient`).toBeGreaterThanOrEqual(4.5);

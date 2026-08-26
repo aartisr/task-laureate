@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
 import { appServices } from '../app/runtime/appServices';
-import { listQueryOptions, listTasksQueryOptions } from '../core/contracts/queryKeys';
+import { listQueryOptions, listTasksQueryOptions, queryKeys } from '../core/contracts/queryKeys';
 import { useTaskMutations } from '../core/mutations/useTaskMutations';
 import { TaskDetailLens } from '../components/TaskDetailLens';
 import { usePageSEO, PAGE_SEO } from '../hooks/usePageSEO';
@@ -24,7 +24,7 @@ export function TaskFocusPage({ listId, taskId }: { listId: string; taskId: stri
   const listQuery = useQuery(listQueryOptions(appServices.repository, listId));
   const tasksQuery = useQuery(listTasksQueryOptions(appServices.repository, listId));
   const accessQuery = useQuery({
-    queryKey: ['collaboration', 'resource-access', 'task', taskId],
+    queryKey: queryKeys.collaboration.resourceAccess('task', taskId),
     queryFn: () => supportsCollaboration(appServices.repository) ? appServices.repository.getResourceAccess({ resourceType: 'task', resourceId: taskId }) : Promise.resolve('owner' as const),
     enabled: supportsCollaboration(appServices.repository),
     staleTime: 30_000,
@@ -34,8 +34,8 @@ export function TaskFocusPage({ listId, taskId }: { listId: string; taskId: stri
   usePageSEO(PAGE_SEO.listDetail(task?.title ?? 'Task'));
   const calendarEnabled = isFeatureEnabled('calendarIntegration');
   const canEditTask = !supportsCollaboration(appServices.repository) || (accessQuery.data === 'owner' || accessQuery.data === 'editor');
-  const planningQuery = useQuery({ queryKey: ['task-planning', taskId], queryFn: () => createTaskPlanningService(appServices.repository).get(taskId), enabled: calendarEnabled && !!task && canEditTask });
-  const calendarBlockQuery = useQuery({ queryKey: ['calendar-block', taskId], queryFn: () => getCalendarTaskBlock(taskId), enabled: calendarEnabled && !!task && canEditTask, retry: false });
+  const planningQuery = useQuery({ queryKey: queryKeys.taskPlanning(taskId), queryFn: () => createTaskPlanningService(appServices.repository).get(taskId), enabled: calendarEnabled && !!task && canEditTask });
+  const calendarBlockQuery = useQuery({ queryKey: queryKeys.calendarBlock(taskId), queryFn: () => getCalendarTaskBlock(taskId), enabled: calendarEnabled && !!task && canEditTask, retry: false });
 
   if (listQuery.isLoading || tasksQuery.isLoading || (supportsCollaboration(appServices.repository) && accessQuery.isLoading)) return <main className="task-focus-page" aria-busy="true">Loading task…</main>;
   if (!task || !listQuery.data) return <main className="task-focus-page"><h1>Task not found</h1><button className="page-back-button" onClick={() => navigate({ to: '/lists/$listId', params: { listId } })}>Back to list</button></main>;

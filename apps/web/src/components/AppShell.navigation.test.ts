@@ -25,7 +25,9 @@ describe('desktop navigation', () => {
     const navigation = resolveDesktopNavigation([]);
 
     expect(navigation.primary.map((item) => item.to)).toEqual(['/', '/now', '/tasks', '/search']);
-    expect(navigation.workspace.map((item) => item.to)).toEqual(['/lists-overview', '/completed', '/shared-with-me', '/shared-by-me', '/activity', '/progress']);
+    expect(navigation.organize.map((item) => item.to)).toEqual(['/lists-overview']);
+    expect(navigation.review.map((item) => item.to)).toEqual(['/completed', '/activity', '/progress']);
+    expect(navigation.collaborate).toEqual([]);
   });
 
   it('allows feature metadata without changing the core journey', () => {
@@ -41,7 +43,12 @@ describe('desktop navigation', () => {
 
   it('keeps essential work destinations available while Focus Mode hides secondary views', () => {
     const navigation = resolveDesktopNavigation([]);
-    const focusWorkspace = navigation.workspace.filter((item) => item.to === '/lists-overview' || item.to === '/completed');
-    expect(focusWorkspace.map((item) => item.to)).toEqual(['/lists-overview', '/completed']);
+    const focusWorkspace = navigation.organize.filter((item) => item.to === '/lists-overview');
+    expect(focusWorkspace.map((item) => item.to)).toEqual(['/lists-overview']);
+    expect(navigation.review).toEqual([
+      expect.objectContaining({ to: '/completed' }),
+      expect.objectContaining({ to: '/activity' }),
+      expect.objectContaining({ to: '/progress' }),
+    ]);
   });
 });

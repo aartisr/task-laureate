@@ -31,6 +31,18 @@ export interface ThemeColors {
     active: string;
     disabled: string;
   };
+  /**
+   * Neutral controls (links, filters, and low-emphasis actions) need an
+   * explicit foreground/surface pairing just as much as primary actions do.
+   */
+  control: {
+    quiet: {
+      background: string;
+      foreground: string;
+      border: string;
+      hoverBackground: string;
+    };
+  };
   // Status
   status: {
     success: string;
@@ -111,6 +123,14 @@ export const darkProTheme: Theme = {
       active: '#a78bfa',     // AA as action text on every dark surface
       disabled: '#6b7280',   // Gray
     },
+    control: {
+      quiet: {
+        background: '#1a1a1a',
+        foreground: '#f5f5f5',
+        border: '#4b5563',
+        hoverBackground: '#262626',
+      },
+    },
     status: {
       success: '#34d399',    // Bright emerald
       warning: '#fbbf24',    // Bright amber
@@ -182,6 +202,14 @@ export const luxuryMinimalTheme: Theme = {
       active: '#0f172a',     // Almost black
       disabled: '#d1d5db',   // Light gray
     },
+    control: {
+      quiet: {
+        background: '#fafafa',
+        foreground: '#111827',
+        border: '#9ca3af',
+        hoverBackground: '#f3f3f3',
+      },
+    },
     status: {
       success: '#047857',    // AA on all light surfaces
       warning: '#92400e',    // AA on all light surfaces
@@ -252,6 +280,14 @@ export const warmCommunityTheme: Theme = {
       hover: '#b93835',      // AA with white foreground
       active: '#9f2b2b',     // AA with white foreground
       disabled: '#ddd9d1',   // Light gray
+    },
+    control: {
+      quiet: {
+        background: '#fef5f0',
+        foreground: '#1a1410',
+        border: '#bbb0a0',
+        hoverBackground: '#fae8e0',
+      },
     },
     status: {
       success: '#166534',    // AA on all warm surfaces

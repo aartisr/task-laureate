@@ -67,7 +67,7 @@ export class DIContainer {
     lifetime: ServiceLifetime = { scope: 'transient' }
   ): this {
     this.services.set(key, {
-      resolver: (container) => new ctor(container),
+      resolver: (container: DIContainer) => new ctor(container),
       lifetime,
     });
     return this;

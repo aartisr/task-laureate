@@ -27,6 +27,12 @@ multi-user publishing is intentionally not enabled yet.
 
 ## Editing boundary
 
+Route components live exclusively in `apps/web/src/pages`, and the TanStack
+route tree in `apps/web/src/app/router.tsx` is their only production entry
+point. Puck does not own a parallel page implementation: `PuckEditorPage`,
+`core/puck/config.tsx`, and `infrastructure/puckContent.ts` are the complete
+editor integration boundary.
+
 Puck owns editorial content and layout blocks: headings, descriptions, calls to
 action, explanatory text, and presentational card content. Application modules
 own live data, permission decisions, queries, and mutations. This separation is

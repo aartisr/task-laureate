@@ -16,6 +16,9 @@ import { supportsCollaboration, type TodoListInput } from '../core/contracts/rep
 import type { TodoList } from '../core/contracts/domain';
 import { clearPendingSaveIntent, getPendingSaveIntent, requireSignInForSave } from '../core/auth/pendingSave';
 import { useListCreationCommand } from '../hooks/useListCreationCommand';
+import { sortListsForAttention } from '../core/domain/listOrdering';
+import { FavoriteListButton } from '../components/FavoriteListButton';
+import { ListShareButton } from '../components/ListShareButton';
 
 export function DashboardPage() {
   usePageSEO(PAGE_SEO.dashboard);
@@ -108,6 +111,10 @@ export function DashboardPage() {
   }
 
   const isEmptyWorkspace = stats.totalLists === 0 && stats.totalTasks === 0;
+  // The home screen is a launchpad, not a history report. A list that just
+  // completed receives a newer updatedAt and would otherwise displace work
+  // that still needs attention.
+  const activeRecentLists = sortListsForAttention(dashboard.lists.filter((list) => list.status === 'active'));
 
   const footer = (
     <details className="page-shortcuts">
@@ -241,12 +248,13 @@ export function DashboardPage() {
         <p className="text-sm text-[var(--color-text-secondary)]">Prefer to look around first? <Link to="/sample">Explore the private sample</Link>.</p>
       </details>
 
-      {/* Recent Lists Section */}
-      {dashboard.lists.length > 0 ? (
+      {/* The dashboard only surfaces work that can be acted on. Completion is
+          celebrated in its dedicated history surface, not mixed into the next-action queue. */}
+      {activeRecentLists.length > 0 ? (
         <div className="recent-lists-section">
-          <Section title="Recent Lists" description="Your most recent projects">
+          <Section title="Continue where you left off" description="Only lists with work remaining — your finished work is safely in Completed.">
             <Grid columns={3} gap="normal">
-            {dashboard.lists.slice(0, 3).map((list) => {
+            {activeRecentLists.slice(0, 3).map((list) => {
               const listCompletion =
                 list.taskCount > 0 ? Math.round((list.completedTaskCount / list.taskCount) * 100) : 0;
               return (
@@ -278,28 +286,36 @@ export function DashboardPage() {
                   )}
                   <div className="mt-5 flex flex-wrap items-center gap-2">
                     <button type="button" className="secondary-button" onClick={() => navigate({ to: `/lists/${list.id}` })}>Open List</button>
-                    <button type="button" className="list-card__share" onClick={() => {
+                    <FavoriteListButton listId={list.id} listTitle={list.title} />
+                    <ListShareButton listTitle={list.title} onClick={() => {
                       if (supportsCollaboration(repository)) { setShareNotice(null); setSharingList(list); }
                       else setShareNotice('Sharing will be available once this workspace connects to secure collaboration storage. Sign in and apply the collaboration migrations, then try again.');
-                    }} aria-label={`Share List: ${list.title}`}><AppIcon name="share" />Share</button>
+                    }} />
                   </div>
                 </Card>
               );
             })}
           </Grid>
-          {dashboard.lists.length > 6 && (
+          {activeRecentLists.length > 3 && (
             <div className="text-center mt-8">
               <button
                 onClick={() => navigate({ to: '/lists-overview' })}
                 className="text-[var(--color-action-primary)] hover:text-[var(--color-action-hover)] font-medium text-sm focus:outline-none focus:underline"
-                aria-label={`View all ${dashboard.lists.length} lists`}
+                aria-label={`View all ${activeRecentLists.length} lists in progress`}
               >
-                View all {dashboard.lists.length} lists →
+                See all in-progress lists →
               </button>
             </div>
           )}
         </Section>
         </div>
+      ) : stats.completedLists > 0 ? (
+        <section className="panel text-center" aria-label="All current lists are complete">
+          <p className="eyebrow">Clear runway</p>
+          <h2>Everything is complete.</h2>
+          <p className="text-[var(--color-text-secondary)] mt-2">Enjoy the win, review your completed work, or begin the next small thing.</p>
+          <div className="mt-5 flex flex-wrap justify-center gap-3"><button type="button" className="secondary-button" onClick={() => navigate({ to: '/completed' })}>See completed work</button><button type="button" className="primary-button" onClick={() => { clearPendingSaveIntent(); openComposer(); }}>Start a new list <AppIcon name="arrow-right" /></button></div>
+        </section>
       ) : null}
       {sharingList && supportsCollaboration(repository) ? <ShareResourcePanel repository={repository} resource={{ resourceType: 'list', resourceId: sharingList.id }} resourceName={sharingList.title} onClose={() => setSharingList(null)} /> : null}
       {shareNotice ? <div className="mt-6 rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm text-indigo-950" role="status"><div className="flex items-start justify-between gap-3"><span>{shareNotice}</span><button type="button" className="font-semibold underline" onClick={() => setShareNotice(null)}>Dismiss</button></div></div> : null}

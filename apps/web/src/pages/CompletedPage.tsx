@@ -6,7 +6,7 @@ import { useAllListTasks } from '../hooks/useAllListTasks';
 
 export function CompletedPage() {
   usePageSEO(PAGE_SEO.completed);
-  const { allTasks, loading, lists } = useAllListTasks();
+  const { allTasks, loading, lists, isTruncated } = useAllListTasks();
   const [groupBy, setGroupBy] = useState<'list' | 'date'>('date');
 
   if (loading) return <div className="page-surface">Loading…</div>;
@@ -60,6 +60,8 @@ export function CompletedPage() {
           <Link className="secondary-button" to="/">← Dashboard</Link>
         </div>
       </header>
+
+      {isTruncated ? <p className="page-notice" role="status">Showing the most recent 300 tasks in this report. Your Lists and task search still include everything.</p> : null}
 
       {/* Summary row */}
       <div className="summary-row">

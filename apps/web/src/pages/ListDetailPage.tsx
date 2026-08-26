@@ -14,6 +14,7 @@ import { appServices } from '../app/runtime/appServices';
 import { supportsCollaboration } from '../core/contracts/repository';
 import { usePageSEO, PAGE_SEO } from '../hooks/usePageSEO';
 import { clearPendingSaveIntent, getPendingSaveIntent, requireSignInForSave } from '../core/auth/pendingSave';
+import { FavoriteListButton } from '../components/FavoriteListButton';
 
 export interface ListDetailPageProps {
   listId: string;
@@ -63,7 +64,7 @@ export function ListDetailPage({ listId }: ListDetailPageProps) {
   // Resolve access directly from the database. A recipient list can never be
   // mistaken for an owner list because a cached aggregate happened to be stale.
   const accessQuery = useQuery({
-    queryKey: ['collaboration', 'resource-access', 'list', listId],
+    queryKey: queryKeys.collaboration.resourceAccess('list', listId),
     queryFn: () => supportsCollaboration(repository) ? repository.getResourceAccess({ resourceType: 'list', resourceId: listId }) : Promise.resolve('owner' as const),
     enabled: supportsCollaboration(repository),
     staleTime: 30_000,
@@ -284,7 +285,9 @@ export function ListDetailPage({ listId }: ListDetailPageProps) {
               {editingDescription ? <div className="mt-2 space-y-2"><label className="sr-only" htmlFor="edit-list-description">List description</label><textarea id="edit-list-description" value={newDescription} onChange={(event) => setNewDescription(event.target.value)} onKeyDown={(event) => { if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') { event.preventDefault(); void handleUpdateListDescription(); } if (event.key === 'Escape') { setEditingDescription(false); setNewDescription(list.description ?? ''); } }} rows={2} autoFocus aria-label="Edit list description" /><div className="flex gap-2"><button type="button" onClick={() => void handleUpdateListDescription()} className="primary-button">Save description</button><button type="button" onClick={() => { setEditingDescription(false); setNewDescription(list.description ?? ''); }} className="secondary-button">Cancel</button></div></div> : <button type="button" className="list-detail-description mt-2 text-left" onClick={() => { setEditingDescription(true); setNewDescription(list.description ?? ''); }} aria-label={list.description ? 'Edit list description' : 'Add list description'}>{list.description || 'Add a description to help you recognize this list.'}</button>}
             </div>
 
-            {canManageList && <div className="list-detail-actions" aria-label="List actions">
+            <div className="list-detail-actions" aria-label="List actions">
+              <FavoriteListButton listId={list.id} listTitle={list.title} className="list-detail-actions__favorite" />
+              {canManageList && <>
               <button
                 type="button"
                 onClick={() => {
@@ -345,7 +348,8 @@ export function ListDetailPage({ listId }: ListDetailPageProps) {
                 </button>
               )}
               </details>
-            </div>}
+              </>}
+            </div>
           </div>
 
           {sharedRole ? <ListAccessBanner role={sharedRole} /> : null}

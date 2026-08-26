@@ -1,5 +1,5 @@
 import type { ActivityEvent, DashboardSummary, ListTemplate, SearchResult, TodoItem, TodoList } from '../../core/contracts/domain';
-import type { AttachmentRepository, CollaborationRepository, CursorPage, CursorPageInput, DependencyRepository, IdempotentCreationRepository, ListPageInput, ScalableTaskFeedRepository, TaskFeedInput, TaskFeedPage, TodoListInput, TodoListUpdateInput, TodoRepository, TodoTaskInput, TodoTaskUpdateInput } from '../../core/contracts/repository';
+import type { AttachmentRepository, CollaborationRepository, CursorPage, CursorPageInput, DependencyRepository, IdempotentCreationRepository, ListPageInput, ReportingRepository, ScalableTaskFeedRepository, TaskFeedInput, TaskFeedPage, TodoListInput, TodoListUpdateInput, TodoRepository, TodoTaskInput, TodoTaskUpdateInput, WorkspaceReport } from '../../core/contracts/repository';
 import { classifyAttachment, type TaskAttachment } from '../../core/domain/attachments';
 import type { DependencyTaskRef, TaskDependency, TaskDependencySummary } from '../../core/domain/dependencies';
 import type { CaptureRepository, CaptureTaskRepository, TaskEventFeedRepository, TaskEventRepository, TaskPlanningRepository } from '../../core/contracts/antiBacklog';
@@ -7,6 +7,7 @@ import type { DecompositionStep, TaskPlanningMetadata } from '../../core/domain/
 import { createSupabaseCollaborationGateway } from './collaborationGateway';
 import type { SupabasePersistenceConfig } from './config';
 import { collaborationError } from './collaborationErrors';
+import { sortListsForAttention } from '../../core/domain/listOrdering';
 
 type FetchLike = typeof fetch;
 type ListRow = { id: string; title: string; description: string; status: TodoList['status']; created_at: string; updated_at: string; deleted_at: string | null };
@@ -20,6 +21,7 @@ type DependencyRow = { id: string; prerequisite_task_id: string; dependent_task_
 type DependencySummaryRow = { task_id: string; unresolved_prerequisite_count: number; dependent_count: number };
 type PlanningRow = { task_id: string; estimate_minutes: number | null; energy_level: TaskPlanningMetadata['energyLevel']; scheduled_start_at: string | null; parent_task_id: string | null; needs_clarity: boolean };
 type TaskEventRow = { id: string; task_id: string; event_type: string; occurred_at: string; payload: Record<string, unknown> | null };
+type WorkspaceReportRpc = { lists: Array<ListRow & { task_count: number; completed_task_count: number }>; tasks: TaskFeedRow[]; task_limit: number; is_truncated: boolean };
 const REQUEST_TIMEOUT_MS = 15_000;
 
 function listFromRow(row: ListRow, tasks: TaskRow[]): TodoList {
@@ -43,7 +45,7 @@ function rpcRecord<T>(value: T | T[]): T { return Array.isArray(value) ? first(v
  * Postgres; this adapter only maps the public domain contract to Data API calls.
  * It is composed with the collaboration gateway rather than duplicating invite code.
  */
-export function createSupabaseCollaborationTodoRepository(config: SupabasePersistenceConfig, request: FetchLike = fetch): TodoRepository & CollaborationRepository & ScalableTaskFeedRepository & AttachmentRepository & DependencyRepository & TaskPlanningRepository & TaskEventRepository & TaskEventFeedRepository & CaptureRepository & CaptureTaskRepository & IdempotentCreationRepository {
+export function createSupabaseCollaborationTodoRepository(config: SupabasePersistenceConfig, request: FetchLike = fetch): TodoRepository & CollaborationRepository & ScalableTaskFeedRepository & ReportingRepository & AttachmentRepository & DependencyRepository & TaskPlanningRepository & TaskEventRepository & TaskEventFeedRepository & CaptureRepository & CaptureTaskRepository & IdempotentCreationRepository {
   if (!config.url || !config.publishableKey) throw new Error('Collaboration persistence requires configured Supabase credentials.');
   const rest = `${config.url.replace(/\/$/, '')}/rest/v1`;
   const storage = `${config.url.replace(/\/$/, '')}/storage/v1`;
@@ -104,7 +106,7 @@ export function createSupabaseCollaborationTodoRepository(config: SupabasePersis
       const payload = await json<DashboardRpc>('/rpc/get_collaboration_dashboard', { method: 'POST', body: JSON.stringify({ p_recent_limit: 6 }) });
       return { summary: payload.summary as DashboardSummary, lists: payload.lists.map(listFromSummaryRow) };
     },
-    async listLists() { const { lists, tasks } = await listRows(); return lists.map((list) => listFromRow(list, tasks)); },
+    async listLists() { const { lists, tasks } = await listRows(); return sortListsForAttention(lists.map((list) => listFromRow(list, tasks))); },
     async listListsPage(input: ListPageInput = {}): Promise<CursorPage<TodoList>> {
       const limit = Math.max(1, Math.min(input.limit ?? 24, 100));
       const rows = await json<ListPageRow[]>('/rpc/list_collaboration_lists_page', { method: 'POST', body: JSON.stringify({ p_status: input.status ?? null, p_query: input.query?.trim() || null, p_cursor: input.cursor ? new Date(input.cursor).toISOString() : null, p_limit: limit }) });
@@ -127,6 +129,11 @@ export function createSupabaseCollaborationTodoRepository(config: SupabasePersis
       const rows = await json<TaskFeedRow[]>('/rpc/list_collaboration_task_feed', { method: 'POST', body: JSON.stringify({ p_status: input.status && input.status !== 'all' ? input.status : null, p_priority: input.priority && input.priority !== 'all' ? input.priority : null, p_query: input.query?.trim() || null, p_cursor: cursor, p_limit: Math.max(1, Math.min(input.limit ?? 50, 100)) }) });
       const nextCursor = rows.length === (input.limit ?? 50) ? rows.at(-1)?.next_cursor ?? null : null;
       return { items: rows.map((row) => ({ ...taskFromRow(row), listTitle: row.list_title })), nextCursor };
+    },
+    async getWorkspaceReport(input = {}): Promise<WorkspaceReport> {
+      const taskLimit = Math.max(1, Math.min(input.taskLimit ?? 300, 500));
+      const payload = await json<WorkspaceReportRpc>('/rpc/get_collaboration_workspace_report', { method: 'POST', body: JSON.stringify({ p_task_limit: taskLimit }) });
+      return { lists: payload.lists.map(listFromSummaryRow), tasks: payload.tasks.map((row) => ({ ...taskFromRow(row), listTitle: row.list_title })), taskLimit: payload.task_limit, isTruncated: payload.is_truncated };
     },
     async getTask(id) { const rows = await json<TaskRow[]>(`/collaboration_tasks?id=eq.${encodeURIComponent(id)}&select=id,list_id,title,note_document,status,priority,due_date,tags,order_key,created_at,updated_at,completed_at,deleted_at`); return rows[0] ? taskFromRow(rows[0]) : null; },
     async getTaskPlanning(taskId) {
@@ -228,7 +235,7 @@ export function createSupabaseCollaborationTodoRepository(config: SupabasePersis
     async listActivityPage(_input: CursorPageInput = {}): Promise<CursorPage<ActivityEvent>> { return { items: [], total: 0, nextCursor: null }; },
     async clearActivity() { /* Activity persistence is added with real-time audit events. */ },
     async listTemplates(): Promise<ListTemplate[]> { return []; },
-    async search({ query }) { const normalized = query.trim().toLowerCase(); const { lists, tasks } = await listRows(); const results: SearchResult[] = [ ...lists.filter((item) => `${item.title} ${item.description}`.toLowerCase().includes(normalized)).map((item) => ({ id: item.id, kind: 'list' as const, scope: 'List', title: item.title, description: item.description })), ...tasks.filter((item) => `${item.title} ${item.note_document}`.toLowerCase().includes(normalized)).map((item) => ({ id: item.id, kind: 'task' as const, scope: 'Task', title: item.title, description: item.note_document })) ]; return { query, results }; },
+    async search({ query }) { const normalized = query.trim().toLowerCase(); const { lists, tasks } = await listRows(); const listById = new Map(lists.map((list) => [list.id, list])); const results: SearchResult[] = [ ...sortListsForAttention(lists.map((list) => listFromRow(list, tasks)).filter((item) => `${item.title} ${item.description}`.toLowerCase().includes(normalized))).map((item) => ({ id: item.id, kind: 'list' as const, scope: 'List', title: item.title, description: item.description })), ...tasks.filter((item) => `${item.title} ${item.note_document}`.toLowerCase().includes(normalized)).sort((left, right) => { const leftList = listById.get(left.list_id); const rightList = listById.get(right.list_id); return (leftList?.status === 'active' ? 0 : 1) - (rightList?.status === 'active' ? 0 : 1) || right.updated_at.localeCompare(left.updated_at) || right.id.localeCompare(left.id); }).map((item) => ({ id: item.id, kind: 'task' as const, scope: 'Task', title: item.title, description: item.note_document })) ]; return { query, results }; },
     async exportWorkspace() { const [lists, tasks] = await Promise.all([this.listLists(), allTasks().then((rows) => rows.map(taskFromRow))]); return { lists, tasks, activity: [], templates: [] }; },
     async importWorkspace() { throw new Error('Import is temporarily unavailable while collaboration-safe bulk import is completed.'); },
   };

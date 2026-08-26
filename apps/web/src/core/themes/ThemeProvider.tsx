@@ -83,6 +83,12 @@ function applyTheme(themeName: ThemeName) {
   root.style.setProperty('--color-action-active', theme.colors.action.active);
   root.style.setProperty('--color-action-disabled', theme.colors.action.disabled);
 
+  // Neutral controls use their own tested foreground/surface pairing.
+  root.style.setProperty('--control-quiet-bg', theme.colors.control.quiet.background);
+  root.style.setProperty('--control-quiet-fg', theme.colors.control.quiet.foreground);
+  root.style.setProperty('--control-quiet-border', theme.colors.control.quiet.border);
+  root.style.setProperty('--control-quiet-hover-bg', theme.colors.control.quiet.hoverBackground);
+
   // Status colors
   root.style.setProperty('--color-status-success', theme.colors.status.success);
   root.style.setProperty('--color-status-warning', theme.colors.status.warning);

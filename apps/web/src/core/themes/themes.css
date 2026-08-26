@@ -33,6 +33,12 @@
   --color-action-active: #6d28d9;
   --color-action-disabled: #4a4a4a;
 
+  /* Neutral action controls: always use this tested foreground/surface pair. */
+  --control-quiet-bg: #1a1a1a;
+  --control-quiet-fg: #f5f5f5;
+  --control-quiet-border: #4b5563;
+  --control-quiet-hover-bg: #262626;
+
   /* Semantic - status indicators */
   --color-status-success: #10b981;
   --color-status-warning: #f59e0b;

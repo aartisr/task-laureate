@@ -1,0 +1,7 @@
+.progress-ring__track { fill: none; stroke: var(--color-border-light); stroke-width: 4; }
+.progress-ring__fill { fill: none; stroke: url(#grad) var(--color-action-primary); stroke-width: 4; stroke-linecap: round; transition: stroke-dasharray .5s ease; }
+.progress-ring__label { font-size: 9px; font-weight: 700; fill: var(--color-text-primary); dominant-baseline: middle; }
+.radial-progress__track { fill: none; stroke: var(--color-border-light); stroke-width: 8; }
+.radial-progress__fill { fill: none; stroke: var(--color-action-primary); stroke-width: 8; stroke-linecap: round; transition: stroke-dasharray .6s ease; }
+.radial-progress__value { font-size: 16px; font-weight: 800; fill: var(--color-text-primary); dominant-baseline: middle; }
+.radial-progress__sub { font-size: 10px; fill: var(--color-text-tertiary); dominant-baseline: middle; }

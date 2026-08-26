@@ -7,6 +7,8 @@ import { usePageSEO, PAGE_SEO } from '../hooks/usePageSEO';
 import { buildWeeklyReflection } from '../core/domain/reflection';
 import { supportsTaskEventFeed } from '../core/contracts/antiBacklog';
 import { useAllListTasks } from '../hooks/useAllListTasks';
+import { queryKeys } from '../core/contracts/queryKeys';
+import { ProgressRing } from '../components/ProgressRing';
 
 const PRIORITY_ORDER: Priority[] = ['urgent', 'high', 'medium', 'low'];
 const PRIORITY_META: Record<Priority, { label: string; icon: string; color: string }> = {
@@ -15,29 +17,6 @@ const PRIORITY_META: Record<Priority, { label: string; icon: string; color: stri
   medium: { label: 'Medium', icon: '🟡', color: 'var(--color-accent, #eab308)' },
   low:    { label: 'Low',    icon: '🟢', color: 'var(--color-success, #22c55e)' },
 };
-
-function RadialProgress({ pct, size = 80, label }: { pct: number; size?: number; label?: string }) {
-  const r = (size - 10) / 2;
-  const circ = 2 * Math.PI * r;
-  const fill = (pct / 100) * circ;
-  return (
-    <svg width={size} height={size} className="radial-progress" role="img" aria-label={`${pct}% complete`}>
-      <circle cx={size / 2} cy={size / 2} r={r} className="radial-progress__track" />
-      <circle
-        cx={size / 2}
-        cy={size / 2}
-        r={r}
-        className="radial-progress__fill"
-        strokeDasharray={`${fill} ${circ}`}
-        strokeDashoffset={circ / 4}
-      />
-      <text x="50%" y="46%" textAnchor="middle" className="radial-progress__value">{pct}%</text>
-      {label && (
-        <text x="50%" y="64%" textAnchor="middle" className="radial-progress__sub">{label}</text>
-      )}
-    </svg>
-  );
-}
 
 function HorizontalBar({ pct, color }: { pct: number; color?: string }) {
   return (
@@ -49,8 +28,8 @@ function HorizontalBar({ pct, color }: { pct: number; color?: string }) {
 
 export function ProgressPage() {
   usePageSEO(PAGE_SEO.progress);
-  const { allTasks, loading, lists } = useAllListTasks();
-  const eventFeed = useQuery({ queryKey: ['task-events', 'weekly'], queryFn: () => supportsTaskEventFeed(appServices.repository) ? appServices.repository.listTaskEvents({ since: new Date(Date.now() - 7 * 86_400_000).toISOString() }) : Promise.resolve([]), staleTime: 30_000 });
+  const { allTasks, loading, lists, isTruncated } = useAllListTasks();
+  const eventFeed = useQuery({ queryKey: queryKeys.taskEvents.weekly, queryFn: () => supportsTaskEventFeed(appServices.repository) ? appServices.repository.listTaskEvents({ since: new Date(Date.now() - 7 * 86_400_000).toISOString() }) : Promise.resolve([]), staleTime: 30_000 });
 
   if (loading) return <div className="page-surface">Loading progress…</div>;
 
@@ -105,10 +84,12 @@ export function ProgressPage() {
         </div>
       </header>
 
+      {isTruncated ? <p className="page-notice" role="status">Insights use the most recent 300 tasks. Your complete work remains available in Lists and search.</p> : null}
+
       {/* Top KPIs */}
       <div className="kpi-row">
         <div className="kpi-card kpi-card--primary">
-          <RadialProgress pct={overallPct} size={100} label="overall" />
+          <ProgressRing percent={overallPct} size={100} label="overall" className="radial-progress" inset={10} />
           <div className="kpi-card__text">
             <strong>Overall completion</strong>
             <p>{done} done out of {total} total tasks</p>

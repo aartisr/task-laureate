@@ -224,7 +224,7 @@ export interface IRepository {
 // ============================================================================
 
 export type RepositoryConfig = {
-  type: 'postgres' | 'mysql' | 'sqlite' | 'mongodb' | 'firebase';
+  type: 'memory' | 'postgres' | 'mysql' | 'sqlite' | 'mongodb' | 'firebase';
   databaseUrl?: string;
   apiKey?: string;
   projectId?: string;

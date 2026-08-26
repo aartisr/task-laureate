@@ -1,55 +1,22 @@
 import { useQuery } from '@tanstack/react-query';
-import { Link, useNavigate } from '@tanstack/react-router';
+import { useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
 import { appServices } from '../app/runtime/appServices';
 import { dashboardQueryOptions, queryKeys } from '../core/contracts/queryKeys';
 import { DEFAULT_PAGE_SIZE } from '../core/domain/cursorPage';
 import { useListMutations } from '../core/mutations/useListMutations';
 import { announceToScreenReader } from '../lib/a11y';
-import { isRecentlyCompleted, archiveRecommendation } from '../core/domain/listLifecycle';
+import { isRecentlyCompleted } from '../core/domain/listLifecycle';
 import type { TodoList, TodoListStatus } from '../core/contracts/domain';
 import { usePageSEO, PAGE_SEO } from '../hooks/usePageSEO';
 import { ShareResourcePanel } from '../components/ShareResourcePanel';
 import { supportsCollaboration } from '../core/contracts/repository';
 import { requestListCreation } from '../hooks/useListCreationCommand';
 import { AppIcon } from '../components/AppIcon';
+import { ListCard } from '../components/ListCard';
 
 type SortKey = 'title' | 'progress' | 'tasks' | 'created';
 type FilterStatus = 'all' | TodoListStatus;
-
-function ProgressRing({ percent, size = 40 }: { percent: number; size?: number }) {
-  const r = (size - 6) / 2;
-  const circ = 2 * Math.PI * r;
-  const fill = (percent / 100) * circ;
-  return (
-    <svg width={size} height={size} className="progress-ring" aria-hidden="true">
-      <circle cx={size / 2} cy={size / 2} r={r} className="progress-ring__track" />
-      <circle
-        cx={size / 2}
-        cy={size / 2}
-        r={r}
-        className="progress-ring__fill"
-        strokeDasharray={`${fill} ${circ}`}
-        strokeDashoffset={circ / 4}
-        style={{ '--pct': percent } as React.CSSProperties}
-      />
-      <text x="50%" y="54%" textAnchor="middle" className="progress-ring__label">
-        {percent}%
-      </text>
-    </svg>
-  );
-}
-
-function StatusBadge({ status }: { status: TodoListStatus }) {
-  const map: Record<TodoListStatus, { label: string; cls: string }> = {
-    active: { label: 'Active', cls: 'badge--active' },
-    completed: { label: 'Completed', cls: 'badge--completed' },
-    archived: { label: 'Archived', cls: 'badge--archived' },
-    deleted: { label: 'Deleted', cls: 'badge--deleted' },
-  };
-  const { label, cls } = map[status];
-  return <span className={`status-badge ${cls}`}>{label}</span>;
-}
 
 export function ListsPage() {
   usePageSEO(PAGE_SEO.listsOverview);
@@ -72,7 +39,7 @@ export function ListsPage() {
     queryFn: () => appServices.repository.listListsPage({ limit: 5, status: 'completed', sort: 'created' }),
   });
   const sharedListsQuery = useQuery({
-    queryKey: ['collaboration', 'shared-resources'],
+    queryKey: queryKeys.collaboration.sharedResources,
     queryFn: () => supportsCollaboration(appServices.repository) ? appServices.repository.listSharedResources() : Promise.resolve([]),
     enabled: supportsCollaboration(appServices.repository),
     staleTime: 30_000,
@@ -188,7 +155,7 @@ export function ListsPage() {
       )}
       {filter === 'active' && !search && (completedPage?.items ?? []).some((list) => isRecentlyCompleted(list)) && (
         <section className="completed-shelf" aria-label="Completed recently">
-          <div className="completed-shelf__heading"><div><p className="eyebrow">A record of progress</p><h2>Completed recently</h2><p>Your finished work stays close for 30 days. Reopen, reuse, or archive when it no longer needs attention.</p></div><button type="button" className="text-sm font-medium text-green-900 underline" onClick={() => { setFilter('completed'); resetPage(); }}>View all completed</button></div>
+          <div className="completed-shelf__heading"><div><p className="eyebrow">A record of progress</p><h2>Completed recently</h2><p>Your finished work stays close for 30 days. Reopen, reuse, or archive when it no longer needs attention.</p></div><button type="button" className="quiet-action-button completed-shelf__view-all" onClick={() => { setFilter('completed'); resetPage(); }}>View all completed</button></div>
           <div className="lists-grid">{completedPage!.items.filter((list) => isRecentlyCompleted(list)).map((list) => <ListCard key={list.id} list={list} onDelete={async () => { await listMutations.deleteList.mutateAsync(list.id); }} onArchive={async () => { await listMutations.archiveList.mutateAsync(list.id); }} onRestore={async () => { await listMutations.restoreList.mutateAsync(list.id); }} onReuse={() => reuseList(list)} canManage={canManage(list.id)} onShare={() => { if (supportsCollaboration(appServices.repository)) { setShareNotice(null); setSharingList(list); } else setShareNotice('Sharing will be available once this workspace connects to secure collaboration storage. Sign in and apply the collaboration migrations, then try again.'); }} />)}</div>
         </section>
       )}
@@ -202,50 +169,5 @@ export function ListsPage() {
       {sharingList && supportsCollaboration(appServices.repository) ? <ShareResourcePanel repository={appServices.repository} resource={{ resourceType: 'list', resourceId: sharingList.id }} resourceName={sharingList.title} onClose={() => setSharingList(null)} /> : null}
       {shareNotice ? <div className="mt-5 rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm text-indigo-950" role="status"><div className="flex items-start justify-between gap-3"><span>{shareNotice}</span><button type="button" className="font-semibold underline" onClick={() => setShareNotice(null)}>Dismiss</button></div></div> : null}
     </section>
-  );
-}
-
-function ListCard({ list, onDelete, onArchive, onRestore, onReuse, onShare, canManage }: { list: TodoList; onDelete: () => Promise<void>; onArchive: () => Promise<void>; onRestore: () => Promise<void>; onReuse: () => Promise<void>; onShare: () => void; canManage: boolean }) {
-  const remaining = list.taskCount - list.completedTaskCount;
-  const [manageOpen, setManageOpen] = useState(false);
-  const [deleteArmed, setDeleteArmed] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const run = async (action: () => Promise<void>) => {
-    setIsSaving(true);
-    try { await action(); setManageOpen(false); setDeleteArmed(false); }
-    catch { announceToScreenReader('That change could not be saved. Please try again.', 'assertive'); }
-    finally { setIsSaving(false); }
-  };
-  return (
-    <article className="list-card">
-      <div className="list-card__header">
-        <div className="list-card__meta">
-          <StatusBadge status={list.status} />
-          <span className="list-card__date">
-            {new Date(list.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-          </span>
-        </div>
-        <ProgressRing percent={list.completionPercent} size={52} />
-      </div>
-      <h3 className="list-card__title">{list.title}</h3>
-      {list.description && <p className="list-card__desc">{list.description}</p>}
-      <div className="list-card__bar">
-        <div className="list-card__bar-fill" style={{ '--bar-pct': `${list.completionPercent}%` } as React.CSSProperties} />
-      </div>
-      <div className="list-card__footer">
-        <span>{list.completedTaskCount}/{list.taskCount} tasks</span>
-        {remaining > 0 && <span className="list-card__remaining">{remaining} remaining</span>}
-        {list.completionPercent === 100 && <span className="list-card__done"><AppIcon name="check" /> Done</span>}
-      </div>
-      <div className="list-card__actions">
-        <Link to="/lists/$listId" params={{ listId: list.id }} className="primary-button list-card__open">Open list <AppIcon name="arrow-right" /></Link>
-        {canManage ? <><button type="button" className="list-card__share" onClick={onShare} aria-label={`Share List: ${list.title}`}><AppIcon name="share" />Share</button><button type="button" aria-expanded={manageOpen} className="secondary-button list-card__manage" onClick={() => setManageOpen((open) => !open)}>Manage</button></> : null}
-      </div>
-      {canManage && manageOpen && <div className="list-card__menu" aria-label={`Manage ${list.title}`}>
-        {list.status === 'completed' && <><p className="list-card__menu-copy">This run is complete. Its history is preserved.</p><button type="button" className="list-card__menu-action list-card__menu-action--archive" disabled={isSaving} onClick={() => void run(onReuse)}><AppIcon name="undo" /> Start a fresh run</button></>}
-        {list.status === 'archived' ? <button type="button" className="list-card__menu-action list-card__menu-action--archive" disabled={isSaving} onClick={() => void run(onRestore)}><AppIcon name="undo" /> Restore to {list.archivedFromStatus === 'completed' ? 'completed' : 'in progress'}</button> : <button type="button" className="list-card__menu-action list-card__menu-action--archive" disabled={isSaving} onClick={() => void run(onArchive)}><AppIcon name="archive" /> {archiveRecommendation(list) ? 'Archive recommended' : 'Archive from daily view'}</button>}
-        {deleteArmed ? <div className="list-card__danger"><span>Move to deleted items? You can undo this.</span><div className="list-card__danger-actions"><button type="button" className="list-card__menu-action list-card__menu-action--danger" disabled={isSaving} onClick={() => void run(onDelete)}><AppIcon name="trash" /> Yes, delete</button><button type="button" className="list-card__menu-action list-card__menu-action--cancel" onClick={() => setDeleteArmed(false)}>Cancel</button></div></div> : <button type="button" className="list-card__menu-action list-card__menu-action--delete" onClick={() => setDeleteArmed(true)}><AppIcon name="trash" /> Delete list…</button>}
-      </div>}
-    </article>
   );
 }

@@ -15,6 +15,10 @@ import { authProvider, persistenceConfig } from '../../config/persistence.config
 import { setPersistenceStatus } from '../../infrastructure/persistence/status';
 import { remoteSync } from '../../infrastructure/antiBacklog/mutationOutbox';
 import { createTodoRemoteMutationDelivery } from '../../core/mutations/remoteMutationDelivery';
+import { configureRemoteMutationQueue } from '../../core/mutations/remoteMutationQueue';
+import { shouldQueueRemoteMutation } from '../../infrastructure/antiBacklog/mutationOutbox';
+
+configureRemoteMutationQueue(remoteSync, shouldQueueRemoteMutation);
 
 export const appServices = {
   repository: createMemoryTodoRepository(createEmptyWorkspace(), { onChange: () => undefined }) as TodoRepository,

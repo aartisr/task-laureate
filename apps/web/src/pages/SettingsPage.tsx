@@ -50,9 +50,9 @@ export function SettingsPage() {
 
         <section className="settings-section" aria-labelledby="experience-heading">
           <div className="settings-section__heading">
-            <p className="settings-section__eyebrow">How much you see</p>
-            <h2 id="experience-heading">Workspace experience</h2>
-            <p>Choose a calm starting view or keep every planning tool close. Your tasks and permissions stay the same.</p>
+            <p className="settings-section__eyebrow">Navigation preference</p>
+            <h2 id="experience-heading">Focus &amp; workspace mode</h2>
+            <p>Choose a calm navigation for getting things done, or reveal planning and collaboration tools. Your tasks and permissions stay the same.</p>
           </div>
           <WorkspaceExperienceControl />
         </section>

@@ -1,0 +1,6 @@
+.list-share-button { display: inline-flex; align-items: center; gap: .38rem; min-block-size: 2.3rem; border: 1px solid transparent; border-radius: .55rem; background: transparent; color: var(--color-action-primary); cursor: pointer; font: inherit; font-size: .8125rem; font-weight: var(--font-weight-semibold); padding: .45rem .55rem; transition: background var(--transition-base), color var(--transition-base), border-color var(--transition-base); }
+.list-share-button .app-icon { inline-size: 1rem; block-size: 1rem; }
+.list-share-button:hover { border-color: color-mix(in srgb, var(--color-action-primary) 25%, var(--color-border-default)); background: color-mix(in srgb, var(--color-action-primary) 8%, var(--color-bg-secondary)); }
+.list-share-button:focus-visible { outline: 3px solid color-mix(in srgb, var(--color-action-primary) 35%, transparent); outline-offset: 2px; }
+.list-card__secondary-actions .list-share-button { margin-left: auto; }
+@media (max-width: 29rem) { .list-card__secondary-actions .list-share-button { display: none; } }

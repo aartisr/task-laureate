@@ -11,6 +11,25 @@ export const queryKeys = {
   search: (query: string) => ['search', query] as const,
   activity: ['activity'] as const,
   activityPage: (cursor: string | null, limit: number) => ['activity', 'page', cursor, limit] as const,
+  taskFeed: (input: { status?: string; priority?: string; query?: string; cursor?: string | null; limit?: number }) => ['tasks', 'feed', input] as const,
+  collaboration: {
+    sharedResources: ['collaboration', 'shared-resources'] as const,
+    sharedWithMe: ['collaboration', 'shared-with-me'] as const,
+    sharedByMe: ['collaboration', 'shared-by-me'] as const,
+    resourceAccess: (resourceType: 'list' | 'task', resourceId: string) => ['collaboration', 'resource-access', resourceType, resourceId] as const,
+  },
+  execution: {
+    root: ['execution'] as const,
+    tasks: ['execution', 'tasks'] as const,
+    planning: (taskIds: string) => ['execution', 'planning', taskIds] as const,
+  },
+  taskPlanning: (taskId: string) => ['task-planning', taskId] as const,
+  calendarBlock: (taskId: string) => ['calendar-block', taskId] as const,
+  taskEvents: {
+    root: ['task-events'] as const,
+    weekly: ['task-events', 'weekly'] as const,
+  },
+  workspaceReport: (taskLimit: number) => ['workspace-report', taskLimit] as const,
 } as const;
 
 export function dashboardQueryOptions(repository: TodoRepository) {

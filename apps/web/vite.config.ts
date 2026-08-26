@@ -33,6 +33,10 @@ const posthogResolved = resolvePosthogAlias();
 function manualChunks(moduleId: string) {
   if (moduleId.includes('/node_modules/@supabase/')) return 'supabase';
   if (posthogResolved === 'posthog-js' && moduleId.includes('/node_modules/posthog-js/')) return 'posthog';
+  // Keep the entry small and cacheable: the application shell changes more
+  // often than React and TanStack's routing/query runtimes.
+  if (moduleId.includes('/node_modules/react/') || moduleId.includes('/node_modules/react-dom/')) return 'react-runtime';
+  if (moduleId.includes('/node_modules/@tanstack/')) return 'tanstack-runtime';
   return undefined;
 }
 

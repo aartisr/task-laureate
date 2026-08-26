@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { appServices } from '../app/runtime/appServices';
+import { queryKeys } from '../core/contracts/queryKeys';
 import { supportsCollaboration } from '../core/contracts/repository';
 import { usePageSEO } from '../hooks/usePageSEO';
 import { AppIcon } from '../components/AppIcon';
@@ -20,7 +21,7 @@ export function SharedByMePage() {
   const repository = appServices.repository;
   const enabled = supportsCollaboration(repository);
   const { data = [], isLoading, error } = useQuery({
-    queryKey: ['collaboration', 'shared-by-me'],
+    queryKey: queryKeys.collaboration.sharedByMe,
     queryFn: () => enabled ? repository.listListsSharedByMe() : Promise.resolve([]),
     enabled,
     staleTime: 15_000,

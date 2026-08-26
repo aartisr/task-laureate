@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { appServices } from '../app/runtime/appServices';
+import { queryKeys } from '../core/contracts/queryKeys';
 import { supportsCollaboration } from '../core/contracts/repository';
 import { describeRole } from '../core/domain/sharing';
 import { usePageSEO } from '../hooks/usePageSEO';
@@ -11,7 +12,7 @@ export function SharedWithMePage() {
   const navigate = useNavigate();
   const repository = appServices.repository;
   const enabled = supportsCollaboration(repository);
-  const { data = [], isLoading, error } = useQuery({ queryKey: ['collaboration', 'shared-with-me'], queryFn: () => enabled ? repository.listSharedResources() : Promise.resolve([]), enabled, staleTime: 15_000 });
+  const { data = [], isLoading, error } = useQuery({ queryKey: queryKeys.collaboration.sharedWithMe, queryFn: () => enabled ? repository.listSharedResources() : Promise.resolve([]), enabled, staleTime: 15_000 });
 
   return <section className="shared-with-me-page" aria-labelledby="shared-with-me-title">
     <header className="shared-with-me-page__hero">

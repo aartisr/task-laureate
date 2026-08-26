@@ -1,0 +1,6 @@
+.favorite-list-button { display: inline-flex; align-items: center; justify-content: center; gap: .35rem; min-block-size: 2.45rem; border: 1px solid var(--color-border-default); border-radius: .72rem; background: transparent; color: var(--color-text-secondary); cursor: pointer; font: inherit; font-size: .78rem; font-weight: 700; padding: .45rem .62rem; transition: border-color .18s ease, background .18s ease, color .18s ease, transform .18s ease; }
+.favorite-list-button:hover { border-color: color-mix(in srgb, #eab308 55%, var(--color-border-default)); background: color-mix(in srgb, #eab308 10%, transparent); color: var(--color-text-primary); transform: translateY(-1px); }
+.favorite-list-button:focus-visible { outline: 3px solid color-mix(in srgb, #eab308 42%, transparent); outline-offset: 2px; }
+.favorite-list-button--active { border-color: color-mix(in srgb, #eab308 72%, var(--color-border-default)); background: color-mix(in srgb, #eab308 15%, transparent); color: color-mix(in srgb, #b45309 86%, var(--color-text-primary)); }
+.favorite-list-button--active .app-icon { fill: currentColor; }
+.list-detail-actions__favorite { min-block-size: 2.5rem; }

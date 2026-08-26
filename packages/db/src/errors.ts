@@ -92,7 +92,7 @@ export async function withRetry<T>(
 /**
  * Promise timeout wrapper
  */
-export function withTimeout<T>(
+export function withErrorTimeout<T>(
   promise: Promise<T>,
   timeoutMs: number,
   timeoutMessage: string = 'Operation timeout'

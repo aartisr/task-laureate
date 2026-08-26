@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
+import { useQueries } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
 import { Link, Outlet, useNavigate, useRouterState } from '@tanstack/react-router';
 import { useTheme } from '../core/themes/ThemeProvider';
@@ -10,8 +11,11 @@ import { recoveryNeedsAttention, undoJournal } from '../core/mutations/undoJourn
 import { QuickCapture } from './QuickCapture';
 import { requestListCreation } from '../hooks/useListCreationCommand';
 import { AppIcon, appIconFromLegacy } from './AppIcon';
-import { WorkspaceExperienceControl } from './WorkspaceExperienceControl';
 import { useWorkspaceExperience } from '../core/preferences/workspaceExperience';
+import { pruneListFavorites, useFavoriteListIds } from '../core/preferences/listFavorites';
+import { sortListsForAttention } from '../core/domain/listOrdering';
+import { queryKeys } from '../core/contracts/queryKeys';
+import { appServices } from '../app/runtime/appServices';
 
 interface AppShellProps {
   children?: ReactNode;
@@ -20,9 +24,9 @@ interface AppShellProps {
 
 type MobileTabDefinition = Readonly<{ to: string; fallbackLabel: string; displayLabel: string; icon: string }>;
 type ResolvedMobileTab = NavItem & { mobileLabel: string };
-type DesktopNavigation = Readonly<{ primary: NavItem[]; workspace: NavItem[]; utility: NavItem[] }>;
+type DesktopNavigation = Readonly<{ primary: NavItem[]; organize: NavItem[]; review: NavItem[]; collaborate: NavItem[]; utility: NavItem[] }>;
 
-const workspaceNavigationPreferenceKey = 'task-laureate.workspace-navigation-expanded';
+const reviewNavigationPreferenceKey = 'task-laureate.review-navigation-expanded';
 const mobileBreakpointQuery = '(max-width: 48rem)';
 
 /**
@@ -51,36 +55,40 @@ export function resolveMobilePrimaryTabs(navItems: readonly NavItem[]): Resolved
 }
 
 /**
- * Keeps desktop navigation in the same mental model as mobile: start at the
- * overview, choose what matters now, then organize or look back only when
- * needed. Feature navigation may enrich labels and icons, but cannot reorder
- * the core journey.
+ * The sidebar follows the user's work sequence: decide what to do, organize
+ * it, then reflect only when useful. It never becomes a catalogue of features.
  */
 export function resolveDesktopNavigation(navItems: readonly NavItem[]): DesktopNavigation {
   const find = (to: string, fallback: NavItem) => navItems.find((item) => item.to === to) ?? fallback;
 
   return {
     primary: [
-      { label: 'Dashboard', to: '/', icon: '⌂', description: 'Your workspace overview' },
+      { label: 'Home', to: '/', icon: '⌂', description: 'Your calm starting point' },
       find('/now', { label: 'Now', to: '/now', icon: '⚡', description: 'Choose one feasible action' }),
       { label: 'All tasks', to: '/tasks', icon: '✓', description: 'Every task across your lists' },
       find('/search', { label: 'Search', to: '/search', icon: '⌕', description: 'Find anything' }),
     ],
-    workspace: [
+    organize: [
       { label: 'My lists', to: '/lists-overview', icon: '☷', description: 'Your projects and lists' },
+    ],
+    review: [
       { label: 'Completed', to: '/completed', icon: '✓', description: 'Work you have finished' },
-      find('/shared-with-me', { label: 'Shared with me', to: '/shared-with-me', icon: '↗', description: 'Work shared with you' }),
-      find('/shared-by-me', { label: 'Shared by me', to: '/shared-by-me', icon: '↗', description: 'Lists you share with others' }),
       find('/activity', { label: 'Activity', to: '/activity', icon: '◌', description: 'Recent changes' }),
       { label: 'Progress', to: '/progress', icon: '◔', description: 'Reflect on momentum' },
     ],
+    collaborate: navItems.some((item) => item.to === '/shared-with-me' || item.to === '/shared-by-me')
+      ? [
+          find('/shared-with-me', { label: 'Shared with me', to: '/shared-with-me', icon: '↗', description: 'Work shared with you' }),
+          find('/shared-by-me', { label: 'Shared by me', to: '/shared-by-me', icon: '↗', description: 'Lists you share with others' }),
+        ]
+      : [],
     utility: [find('/settings', { label: 'Settings', to: '/settings', icon: '⚙', description: 'Preferences and privacy' })],
   };
 }
 
 function readWorkspaceNavigationPreference() {
   if (typeof window === 'undefined') return false;
-  return window.localStorage.getItem(workspaceNavigationPreferenceKey) === 'true';
+  return window.localStorage.getItem(reviewNavigationPreferenceKey) === 'true';
 }
 
 function subscribeToMobileViewport(onStoreChange: () => void) {
@@ -115,15 +123,30 @@ function NavigationIcon({ icon }: { icon?: string }) {
 export function AppShell({ children, navItems }: AppShellProps) {
   const { currentTheme } = useTheme();
   const experience = useWorkspaceExperience();
+  const favoriteListIds = useFavoriteListIds();
+  const favoriteListQueries = useQueries({
+    queries: favoriteListIds.map((listId) => ({ queryKey: queryKeys.list(listId), queryFn: () => appServices.repository.getList(listId), staleTime: 30_000 })),
+  });
+  const favoriteListResolution = favoriteListQueries.map((query) => `${query.status}:${query.data?.id ?? ''}:${query.data?.status ?? ''}`).join('|');
   const navigate = useNavigate();
   const isDarkTheme = currentTheme !== 'luxury-minimal';
   const isMobileViewport = useSyncExternalStore(subscribeToMobileViewport, getMobileViewportSnapshot, () => false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isWorkspaceExpanded, setIsWorkspaceExpanded] = useState(readWorkspaceNavigationPreference);
+  const [isReviewExpanded, setIsReviewExpanded] = useState(readWorkspaceNavigationPreference);
   const currentPath = useRouterState({ select: (state) => state.location.pathname });
   const recoveryAvailable = recoveryNeedsAttention(
     useSyncExternalStore(undoJournal.subscribe, undoJournal.getSnapshot, undoJournal.getSnapshot),
   );
+
+  useEffect(() => {
+    if (favoriteListQueries.some((query) => query.isLoading || query.isError)) return;
+    const visibleIds = new Set(favoriteListQueries.map((query) => query.data).filter((list) => list?.status === 'active' || list?.status === 'completed').map((list) => list!.id));
+    pruneListFavorites(visibleIds);
+  }, [favoriteListResolution, favoriteListIds]);
+
+  const favoriteLists = useMemo(() => {
+    return sortListsForAttention(favoriteListQueries.map((query) => query.data).filter((list): list is NonNullable<typeof list> => Boolean(list && (list.status === 'active' || list.status === 'completed'))));
+  }, [favoriteListResolution]);
 
   const mobileNavItems = useMemo(() => [
     { label: 'Now', to: '/now', icon: '⚡', description: 'Choose one feasible action' },
@@ -140,7 +163,7 @@ export function AppShell({ children, navItems }: AppShellProps) {
   const desktopNavigation = useMemo(() => {
     const navigation = resolveDesktopNavigation(navItems);
     return experience === 'focus'
-      ? { ...navigation, workspace: navigation.workspace.filter((item) => item.to === '/lists-overview' || item.to === '/completed') }
+      ? { ...navigation, review: [], collaborate: [] }
       : navigation;
   }, [experience, navItems]);
 
@@ -184,16 +207,16 @@ export function AppShell({ children, navItems }: AppShellProps) {
 
   const shellThemeClass = isDarkTheme ? 'app-shell--dark' : 'app-shell--light';
   const getLinkActiveOptions = (to: string) => (to === '/' ? { exact: true } : undefined);
-  const workspaceNavigationIsActive = desktopNavigation.workspace.some((item) => item.to === '/' ? currentPath === '/' : currentPath === item.to || currentPath.startsWith(`${item.to}/`));
+  const reviewNavigationIsActive = desktopNavigation.review.some((item) => item.to === '/' ? currentPath === '/' : currentPath === item.to || currentPath.startsWith(`${item.to}/`));
   useEffect(() => {
-    if (workspaceNavigationIsActive) setIsWorkspaceExpanded(true);
-  }, [workspaceNavigationIsActive]);
+    if (reviewNavigationIsActive) setIsReviewExpanded(true);
+  }, [reviewNavigationIsActive]);
 
-  const workspaceNavigationExpanded = isWorkspaceExpanded;
-  const toggleWorkspaceNavigation = () => {
-    const next = !workspaceNavigationExpanded;
-    setIsWorkspaceExpanded(next);
-    window.localStorage.setItem(workspaceNavigationPreferenceKey, String(next));
+  const reviewNavigationExpanded = isReviewExpanded;
+  const toggleReviewNavigation = () => {
+    const next = !reviewNavigationExpanded;
+    setIsReviewExpanded(next);
+    window.localStorage.setItem(reviewNavigationPreferenceKey, String(next));
   };
 
   // A button is intentional here. A route string containing a query parameter
@@ -238,7 +261,7 @@ export function AppShell({ children, navItems }: AppShellProps) {
           <button type="button" className="sidebar-link sidebar-link--create" aria-label="Create a new List" title="Create a new List (⌘N / Ctrl+N)" onClick={beginListCreation}>
             <span className="sidebar-link__create-icon" aria-hidden="true"><AppIcon name="plus" /></span> New List
           </button>
-          <p className="sidebar-nav__label">Focus</p>
+          <p className="sidebar-nav__label">Do next</p>
           {desktopNavigation.primary.map((item) => {
             const hasRecovery = item.to === '/settings' && recoveryAvailable;
             return (
@@ -255,16 +278,30 @@ export function AppShell({ children, navItems }: AppShellProps) {
               </Link>
             );
           })}
+          {favoriteLists.length > 0 && <div className="sidebar-nav__extensions sidebar-nav__extensions--favorites">
+            <p className="sidebar-nav__label">Favorites</p>
+            {favoriteLists.map((list) => <Link key={list.id} to="/lists/$listId" params={{ listId: list.id }} activeProps={{ className: 'active' }} className={`sidebar-link sidebar-link--favorite${list.status === 'completed' ? ' sidebar-link--favorite-completed' : ''}`} aria-label={`${list.title}${list.status === 'completed' ? ', completed' : ''}`}><NavigationIcon icon="★" /> <span>{list.title}</span>{list.status === 'completed' ? <small>Done</small> : null}</Link>)}
+          </div>}
           <div className="sidebar-nav__extensions">
-            <button type="button" className="sidebar-nav__section-toggle" aria-expanded={workspaceNavigationExpanded} aria-controls="workspace-navigation-items" onClick={toggleWorkspaceNavigation}>
-              <span><span className="sidebar-nav__section-label">More</span><small>{workspaceNavigationExpanded ? 'Hide other views' : `${desktopNavigation.workspace.length} views`}</small></span><span className="sidebar-nav__section-chevron" aria-hidden="true"><AppIcon name="chevron-down" /></span>
+            <p className="sidebar-nav__label">Organize</p>
+            {desktopNavigation.organize.map((item) => (
+              <Link key={item.to} to={item.to} activeOptions={getLinkActiveOptions(item.to)} activeProps={{ className: 'active' }} className="sidebar-link" aria-label={item.label}><NavigationIcon icon={item.icon} /> <span>{item.label}</span></Link>
+            ))}
+          </div>
+          {desktopNavigation.review.length > 0 && <div className="sidebar-nav__extensions">
+            <button type="button" className="sidebar-nav__section-toggle" aria-expanded={reviewNavigationExpanded} aria-controls="review-navigation-items" onClick={toggleReviewNavigation}>
+              <span><span className="sidebar-nav__section-label">Review &amp; history</span><small>{reviewNavigationExpanded ? 'Hide' : 'Completed work and insights'}</small></span><span className="sidebar-nav__section-chevron" aria-hidden="true"><AppIcon name="chevron-down" /></span>
             </button>
-            <div id="workspace-navigation-items" className="sidebar-nav__section-items" hidden={!workspaceNavigationExpanded}>
-              {desktopNavigation.workspace.map((item) => (
+            <div id="review-navigation-items" className="sidebar-nav__section-items" hidden={!reviewNavigationExpanded}>
+              {desktopNavigation.review.map((item) => (
                 <Link key={item.to} to={item.to} activeOptions={getLinkActiveOptions(item.to)} activeProps={{ className: 'active' }} className="sidebar-link" aria-label={item.label}><NavigationIcon icon={item.icon} /> <span>{item.label}</span></Link>
               ))}
             </div>
-          </div>
+          </div>}
+          {desktopNavigation.collaborate.length > 0 && <div className="sidebar-nav__extensions">
+            <p className="sidebar-nav__label">Collaborate</p>
+            {desktopNavigation.collaborate.map((item) => <Link key={item.to} to={item.to} activeOptions={getLinkActiveOptions(item.to)} activeProps={{ className: 'active' }} className="sidebar-link" aria-label={item.label}><NavigationIcon icon={item.icon} /> <span>{item.label}</span></Link>)}
+          </div>}
           {desktopNavigation.utility.length > 0 && (
             <div className="sidebar-nav__extensions">
               <p className="sidebar-nav__label">Manage</p>
@@ -307,7 +344,6 @@ export function AppShell({ children, navItems }: AppShellProps) {
             <span className="sidebar-link__badge">FAQs</span>
           </Link>
           <AccountStatus provider={authProvider} />
-          <WorkspaceExperienceControl />
           <NotificationCenter />
 
         </div>
@@ -349,7 +385,6 @@ export function AppShell({ children, navItems }: AppShellProps) {
             </button>
             <AccountStatus provider={authProvider} onNavigate={() => setIsMobileMenuOpen(false)} />
             <NotificationCenter onNavigate={() => setIsMobileMenuOpen(false)} />
-            <WorkspaceExperienceControl />
             {mobilePrimaryTabs.map((item) => {
               const hasRecovery = item.to === '/settings' && recoveryAvailable;
               return (

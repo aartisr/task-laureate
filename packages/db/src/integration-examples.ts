@@ -12,7 +12,8 @@
  * - Decorator Pattern
  */
 
-import { createRepository, IRepository } from './repository';
+import { IRepository } from './repository';
+import { createRepository } from './index';
 import { builders, Application } from './builders';
 import { DIContainer, ServiceKeys } from './di';
 import {

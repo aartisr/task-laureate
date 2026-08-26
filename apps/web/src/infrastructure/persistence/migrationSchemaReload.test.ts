@@ -89,6 +89,17 @@ describe('PostgREST schema-cache migration contract', () => {
     expect(reminderPolicy).toContain("notify pgrst, 'reload schema';");
   });
 
+  it('reconciles completed List state from the authoritative Task rows', () => {
+    const lifecycleMigration = migration('049_reconcile_completed_list_lifecycle.sql');
+    const lifecycle = readFileSync(lifecycleMigration, 'utf8');
+
+    expect(existsSync(lifecycleMigration)).toBe(true);
+    expect(lifecycle).toContain('private.reconcile_collaboration_list_lifecycle');
+    expect(lifecycle).toContain("after insert or update of status, list_id or delete on public.collaboration_tasks");
+    expect(lifecycle).toContain("update public.collaboration_lists set status = 'completed'");
+    expect(lifecycle).toContain("update public.collaboration_lists set status = 'active'");
+  });
+
   it('qualifies the status-request recipient column outside the returned-field scope', () => {
     const statusRequestRepairMigration = migration('045_fix_status_update_request_recipient_ambiguity.sql');
     const statusRequestRepair = readFileSync(statusRequestRepairMigration, 'utf8');

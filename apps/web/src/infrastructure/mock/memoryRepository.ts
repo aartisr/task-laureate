@@ -15,6 +15,7 @@ import type {
 import { computeDashboardSummary, computeListCompletion, getVisibleTasks, sortTasksByOrder } from '../../core/domain/logic';
 import { createId } from '../../core/utils/ids';
 import { createCursorPage } from '../../core/domain/cursorPage';
+import { sortListsForAttention } from '../../core/domain/listOrdering';
 import type { WorkspaceData } from '../persistence/workspace';
 
 function clone<T>(value: T): T {
@@ -127,14 +128,14 @@ export function createMemoryTodoRepository(seed: WorkspaceData, options: { onCha
       const allTasks = [...tasks.values()];
       return {
         summary: computeDashboardSummary(allLists, allTasks),
-        // Completed work is still meaningful workspace history. Only archived
-        // and deleted lists leave the dashboard's retained-work population.
-        lists: allLists.filter((list) => list.deletedAt === null && (list.status === 'active' || list.status === 'completed')).map(clone),
+        // The dashboard is for action. Completed work remains reachable from
+        // Completed and All Lists, but never occupies an active-work slot.
+        lists: sortListsForAttention(allLists.filter((list) => list.deletedAt === null && list.status === 'active')).map(clone),
       };
     },
 
     async listLists() {
-      return [...lists.values()].filter((list) => list.deletedAt === null).map(clone);
+      return sortListsForAttention([...lists.values()].filter((list) => list.deletedAt === null)).map(clone);
     },
 
     async listListsPage(input) {
@@ -472,13 +473,14 @@ export function createMemoryTodoRepository(seed: WorkspaceData, options: { onCha
       const query = input.query.trim().toLowerCase();
       const allLists = [...lists.values()].filter((list) => list.deletedAt === null);
       const allTasks = getVisibleTasks([...lists.values()], [...tasks.values()]);
+      const listStatusById = new Map([...lists.values()].map((list) => [list.id, list.status]));
 
       if (query.length === 0) {
         return { query: input.query, results: [] };
       }
 
       const results: SearchResult[] = [
-        ...allLists
+        ...sortListsForAttention(allLists)
           .filter((list) => [list.title, list.description].some((value) => value.toLowerCase().includes(query)))
           .map((list) => ({
             id: list.id,
@@ -489,6 +491,11 @@ export function createMemoryTodoRepository(seed: WorkspaceData, options: { onCha
           })),
         ...allTasks
           .filter((task) => [task.title, task.notes, task.tags.join(' ')].some((value) => value.toLowerCase().includes(query)))
+          .sort((left, right) => {
+            const leftActive = listStatusById.get(left.listId) === 'active' ? 0 : 1;
+            const rightActive = listStatusById.get(right.listId) === 'active' ? 0 : 1;
+            return leftActive - rightActive || right.updatedAt.localeCompare(left.updatedAt) || right.id.localeCompare(left.id);
+          })
           .map((task) => ({
             id: task.id,
             kind: 'task' as const,
