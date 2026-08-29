@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef } from 'react';
 
 // Declare Web Speech API types
 interface IWindow extends Window {
@@ -12,11 +12,21 @@ export function useVoiceRecognition(onResult: (transcript: string) => void) {
   const [error, setError] = useState<string | null>(null);
   const recognitionRef = useRef<any>(null);
 
-  useEffect(() => {
+  const startListening = useCallback(() => {
+    setError(null);
+    setTranscript('');
+
     const win = window as unknown as IWindow;
     const SpeechRecognitionAPI = win.SpeechRecognition || win.webkitSpeechRecognition;
 
-    if (SpeechRecognitionAPI) {
+    if (!SpeechRecognitionAPI) {
+      setError('Speech recognition is not supported in this browser. You can type your command below.');
+      return;
+    }
+
+    try {
+      // Create the instance synchronously during the user click gesture
+      // This is crucial for iOS Safari microphone permission handling.
       const recognition = new SpeechRecognitionAPI();
       recognition.continuous = false;
       recognition.interimResults = true;
@@ -36,7 +46,12 @@ export function useVoiceRecognition(onResult: (transcript: string) => void) {
       };
 
       recognition.onerror = (event: any) => {
-        setError(event.error || 'Speech recognition error');
+        console.error('Speech recognition error', event.error);
+        if (event.error === 'not-allowed') {
+          setError('Microphone access denied. Please enable microphone permissions in your browser settings.');
+        } else {
+          setError(event.error || 'Speech recognition error');
+        }
         setIsListening(false);
       };
 
@@ -45,23 +60,11 @@ export function useVoiceRecognition(onResult: (transcript: string) => void) {
       };
 
       recognitionRef.current = recognition;
-    }
-  }, []);
-
-  const startListening = useCallback(() => {
-    setError(null);
-    setTranscript('');
-    const recognition = recognitionRef.current;
-    if (recognition) {
-      try {
-        recognition.start();
-      } catch (e) {
-        // Already started or unsupported
-        setIsListening(true);
-      }
-    } else {
-      setError('Speech recognition is not supported in this browser. You can type your command below.');
-      setIsListening(true); // Allow text fallback mode
+      recognition.start();
+    } catch (e: any) {
+      console.error('Failed to start speech recognition', e);
+      setError(`Failed to start microphone: ${e.message || 'Unknown error'}`);
+      setIsListening(false);
     }
   }, []);
 
