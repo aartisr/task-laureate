@@ -346,10 +346,10 @@ export const sleekInterfaceTheme: Theme = {
       onAction: '#ffffff',
     },
     action: {
-      primary: '#4f46e5',
-      secondary: '#6366f1',
-      hover: '#4338ca',
-      active: '#3730a3',
+      primary: '#4338ca',
+      secondary: '#4338ca',
+      hover: '#3730a3',
+      active: '#312e81',
       disabled: '#cbd5e1',
     },
     control: {
@@ -361,10 +361,10 @@ export const sleekInterfaceTheme: Theme = {
       },
     },
     status: {
-      success: '#16a34a',
-      warning: '#d97706',
-      error: '#dc2626',
-      info: '#2563eb',
+      success: '#15803d',
+      warning: '#b45309',
+      error: '#b91c1c',
+      info: '#1d4ed8',
     },
     border: {
       default: '#e2e8f0',
