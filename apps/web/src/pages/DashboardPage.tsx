@@ -134,7 +134,37 @@ export function DashboardPage() {
       spacing="spacious"
       footer={footer}
     >
-      <section className="dashboard-primary-action panel" aria-label={isEmptyWorkspace ? 'Start your first list' : 'Start your work'}><div className="dashboard-primary-action__content"><p className="eyebrow">Start here</p><h2>{isEmptyWorkspace ? 'Start with one simple list.' : 'What deserves your attention now?'}</h2><p>{isEmptyWorkspace ? 'Name one area of work first. You can add tasks when you are ready.' : 'Choose one feasible next action before looking at the whole workspace.'}</p></div>{isEmptyWorkspace ? <button type="button" className="primary-button dashboard-primary-action__cta" onClick={() => { clearPendingSaveIntent(); openComposer(); }}>Create a list <AppIcon name="arrow-right" /></button> : <Link to="/now" className="primary-button dashboard-primary-action__cta">Open Now <AppIcon name="arrow-right" /></Link>}</section>
+      <section className="dashboard-primary-action panel" aria-label={isEmptyWorkspace ? 'Start your first list' : 'Start your work'} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', alignItems: 'flex-start' }}>
+        <div className="dashboard-primary-action__content" style={{ width: '100%' }}>
+          <p className="eyebrow">Start here</p>
+          <h2 style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>{isEmptyWorkspace ? 'Start with one simple list.' : 'What\'s on your mind?'}</h2>
+          <p>{isEmptyWorkspace ? 'Name one area of work first. You can add tasks when you are ready.' : 'Instantly offload a task, idea, or reminder.'}</p>
+        </div>
+        
+        {isEmptyWorkspace ? (
+          <button type="button" className="primary-button dashboard-primary-action__cta" onClick={() => { clearPendingSaveIntent(); openComposer(); }}>Create a list <AppIcon name="arrow-right" /></button>
+        ) : (
+          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', width: '100%' }}>
+            <button
+              type="button"
+              className="primary-button hover-scale"
+              style={{ flex: 1, minWidth: '240px', padding: '1rem 1.5rem', fontSize: '1.125rem', justifyContent: 'flex-start', background: 'var(--color-bg-secondary)', color: 'var(--color-text-primary)', border: '1px solid var(--color-border-default)', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}
+              onClick={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true, shiftKey: true }))}
+            >
+              <span style={{ opacity: 0.5, marginRight: '0.75rem' }}><AppIcon name="plus" /></span> Quick Capture...
+            </button>
+            <button
+              type="button"
+              className="primary-button hover-scale"
+              style={{ padding: '1rem 1.5rem', fontSize: '1.125rem', background: '#4f46e5', color: '#fff', boxShadow: '0 4px 12px rgba(79, 70, 229, 0.3)' }}
+              onClick={() => window.dispatchEvent(new CustomEvent('open-voice-assistant'))}
+              aria-label="Use Voice Assistant"
+            >
+              🎙️ Voice Input
+            </button>
+          </div>
+        )}
+      </section>
 
       <details className="dashboard-details"><summary>Workspace snapshot</summary><Grid columns={4} gap="normal">
         <Card variant="elevated" ariaLabel="Lists summary" onClick={() => navigate({ to: '/lists-overview' })}>

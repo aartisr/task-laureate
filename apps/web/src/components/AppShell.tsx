@@ -211,6 +211,12 @@ export function AppShell({ children, navItems }: AppShellProps) {
   const getLinkActiveOptions = (to: string) => (to === '/' ? { exact: true } : undefined);
   const reviewNavigationIsActive = desktopNavigation.review.some((item) => item.to === '/' ? currentPath === '/' : currentPath === item.to || currentPath.startsWith(`${item.to}/`));
   useEffect(() => {
+    const handleOpenVoice = () => setIsVoiceAssistantOpen(true);
+    window.addEventListener('open-voice-assistant', handleOpenVoice);
+    return () => window.removeEventListener('open-voice-assistant', handleOpenVoice);
+  }, []);
+
+  useEffect(() => {
     if (reviewNavigationIsActive) setIsReviewExpanded(true);
   }, [reviewNavigationIsActive]);
 
