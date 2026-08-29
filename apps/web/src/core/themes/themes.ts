@@ -340,8 +340,8 @@ export const sleekInterfaceTheme: Theme = {
     },
     text: {
       primary: '#1e293b',
-      secondary: '#64748b',
-      tertiary: '#94a3b8',
+      secondary: '#475569',
+      tertiary: '#475569',
       inverse: '#ffffff',
       onAction: '#ffffff',
     },
