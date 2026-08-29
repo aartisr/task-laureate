@@ -9,6 +9,7 @@ import { parseVoiceCommand } from '../core/services/voiceParser';
 import { appServices } from '../app/runtime/appServices';
 import { useQueryClient } from '@tanstack/react-query';
 import { invalidateWorkspaceOverview } from '../core/queryCache/invalidation';
+import { AppIcon } from './AppIcon';
 
 interface VoiceAssistantModalProps {
   isOpen: boolean;
@@ -25,42 +26,27 @@ export function VoiceAssistantModal({ isOpen, onClose }: VoiceAssistantModalProp
     try {
       const intent = parseVoiceCommand(spokenText);
       const lists = await appServices.repository.listLists();
-      let targetListId = lists[0]?.id;
-      let targetListName = lists[0]?.title ?? 'Inbox';
-
-      if (intent.listName) {
-        const found = lists.find((l: { title: string }) => l.title.toLowerCase() === intent.listName?.toLowerCase());
-        if (found) {
-          targetListId = found.id;
-          targetListName = found.title;
-        } else {
-          // Create new list!
-          const newList = await appServices.repository.createList({
-            title: intent.listName,
-            description: 'Created via voice assistant',
-          });
-          targetListId = newList.id;
-          targetListName = newList.title;
-        }
-      }
-
+      
+      const targetListName = 'Voice Tasks';
+      let targetListId = lists.find((l: { title: string }) => l.title.toLowerCase() === targetListName.toLowerCase())?.id;
+      
       if (!targetListId) {
-        // Fallback default list
-        const defaultList = await appServices.repository.createList({ title: 'Voice Tasks' });
-        targetListId = defaultList.id;
-        targetListName = defaultList.title;
+        const newList = await appServices.repository.createList({
+          title: targetListName,
+          description: 'Created via voice assistant',
+        });
+        targetListId = newList.id;
       }
-
-      // Create task
+      
       await appServices.repository.createTask({
-        title: intent.taskTitle,
+        title: intent.taskTitle || spokenText,
         listId: targetListId,
         priority: 'medium',
       });
-
+      
       invalidateWorkspaceOverview(queryClient);
-
-      setSuccessMessage(`Successfully added task "${intent.taskTitle}" to list "${targetListName}"!`);
+      
+      setSuccessMessage(`Successfully added "${intent.taskTitle || spokenText}"`);
       setTimeout(() => {
         setSuccessMessage(null);
         onClose();
@@ -77,74 +63,56 @@ export function VoiceAssistantModal({ isOpen, onClose }: VoiceAssistantModalProp
   if (!isOpen) return null;
 
   const content = (
-    <div className="fixed inset-0 z-[99999] flex flex-col items-center justify-between bg-slate-950/85 backdrop-blur-xl transition-all duration-500 animate-fade-in p-6 pb-24 md:pb-12 h-[100dvh]">
-      {/* Close Button */}
-      <div className="w-full flex justify-end">
-        <button 
-          onClick={onClose}
-          className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center text-xl backdrop-blur-md transition-all z-10"
-          aria-label="Close voice assistant"
-        >
-          ✕
-        </button>
-      </div>
-
-      {/* Main Transcript Display */}
-      <div className="flex-1 flex flex-col items-center justify-center w-full px-4 text-center pb-8">
-        {successMessage ? (
-          <h2 className="text-3xl md:text-5xl font-medium text-emerald-400 tracking-tight animate-fade-in drop-shadow-md">
-            {successMessage}
-          </h2>
-        ) : error ? (
-           <div className="flex flex-col items-center gap-4 animate-fade-in">
-             <h2 className="text-xl md:text-2xl font-medium text-rose-400 max-w-2xl">{error}</h2>
-             <button onClick={onClose} className="mt-4 px-6 py-3 rounded-full bg-white/10 text-white font-medium hover:bg-white/20 transition-colors">Close</button>
-           </div>
-        ) : (
-          <h2 className="text-3xl md:text-5xl font-medium text-white/90 tracking-tight max-w-4xl leading-tight">
-            {transcript || (isListening ? "I'm listening..." : "Tap to speak")}
-          </h2>
-        )}
-      </div>
-
-      {/* The Ambient Orb */}
-      <div className="flex-shrink-0 flex flex-col items-center justify-center w-full relative mb-8">
-        <button
-          onClick={isListening ? stopListening : startListening}
-          className="relative group flex items-center justify-center"
-          disabled={isProcessing}
-          aria-label={isListening ? "Stop listening" : "Start listening"}
-        >
-          {/* Outer glowing rings */}
-          {isListening && (
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <div className="absolute w-[200%] h-[200%] rounded-full bg-indigo-500/40 blur-3xl animate-pulse" style={{ animationDuration: '2s' }}></div>
-              <div className="absolute w-[250%] h-[250%] rounded-full bg-fuchsia-500/30 blur-[40px] animate-ping" style={{ animationDuration: '3s' }}></div>
-              <div className="absolute w-[150%] h-[150%] rounded-full bg-cyan-400/40 blur-2xl animate-pulse" style={{ animationDelay: '200ms' }}></div>
-            </div>
-          )}
-          
-          {/* Core Orb */}
-          <div className={`relative z-10 w-24 h-24 md:w-32 md:h-32 rounded-full flex items-center justify-center transition-all duration-700 shadow-2xl ${
-            isProcessing ? 'bg-white scale-90 animate-spin' :
-            isListening ? 'bg-gradient-to-tr from-indigo-500 via-fuchsia-500 to-cyan-400 scale-110 shadow-[0_0_60px_rgba(139,92,246,0.6)]' :
-            'bg-slate-800 hover:bg-slate-700 scale-100 shadow-[0_0_30px_rgba(0,0,0,0.5)] border border-slate-700'
-          }`}>
-            <span className="text-4xl md:text-5xl filter drop-shadow-md">
-              {isProcessing ? '✨' : '🎙️'}
-            </span>
+    <div className="quick-capture" role="presentation">
+      <button className="quick-capture__backdrop" aria-label="Close voice assistant" type="button" onClick={onClose} />
+      <div role="dialog" aria-modal="true" className="panel quick-capture__dialog">
+        <header className="quick-capture__header">
+          <div>
+            <p className="eyebrow">Speak freely</p>
+            <h2>Voice Capture</h2>
           </div>
-        </button>
-
-        {/* Manual submit if speech recognition pauses without triggering end */}
-        {transcript && !isListening && !isProcessing && !successMessage && (
-          <button
-            onClick={() => submitTranscript(transcript)}
-            className="mt-12 px-8 py-3 rounded-full bg-white text-slate-900 font-bold text-lg hover:scale-105 transition-all shadow-[0_0_30px_rgba(255,255,255,0.3)] animate-fade-in"
-          >
-            Process Command →
+          <button type="button" className="quick-capture__close" onClick={onClose} aria-label="Close voice capture">
+            <AppIcon name="close" />
           </button>
-        )}
+        </header>
+
+        <div className="quick-capture__body" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem', textAlign: 'center' }}>
+          {successMessage ? (
+            <h3 style={{ color: 'var(--color-status-success)', margin: 0 }}>{successMessage}</h3>
+          ) : error ? (
+            <p style={{ color: 'var(--color-status-error)', margin: 0 }}>{error}</p>
+          ) : (
+            <h3 style={{ margin: 0, fontWeight: 500, fontSize: '1.25rem', color: 'var(--color-text-primary)' }}>
+              {transcript || (isListening ? "I'm listening..." : "Tap to speak")}
+            </h3>
+          )}
+
+          <button
+            onClick={isListening ? stopListening : startListening}
+            disabled={isProcessing}
+            style={{
+              width: '5rem', height: '5rem', borderRadius: '50%',
+              background: isProcessing ? 'var(--color-bg-tertiary)' : isListening ? 'var(--color-status-error)' : 'var(--color-action-primary)',
+              color: '#fff', fontSize: '2rem',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              border: 'none', cursor: 'pointer',
+              boxShadow: isListening ? '0 0 0 4px color-mix(in srgb, var(--color-status-error) 20%, transparent)' : 'none',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            {isProcessing ? '⏳' : isListening ? '⏹' : '🎙️'}
+          </button>
+
+          {transcript && !isListening && !isProcessing && !successMessage && (
+            <button
+              onClick={() => submitTranscript(transcript)}
+              className="primary-button"
+              style={{ width: '100%', marginTop: '0.5rem' }}
+            >
+              Save to Voice Tasks
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
