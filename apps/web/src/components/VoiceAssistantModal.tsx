@@ -18,7 +18,6 @@ interface VoiceAssistantModalProps {
 export function VoiceAssistantModal({ isOpen, onClose }: VoiceAssistantModalProps) {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [manualInput, setManualInput] = useState('');
   const queryClient = useQueryClient();
 
   const handleResult = async (spokenText: string) => {
@@ -78,117 +77,72 @@ export function VoiceAssistantModal({ isOpen, onClose }: VoiceAssistantModalProp
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-fade-in">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 border border-slate-200 relative overflow-hidden">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-200 animate-pulse">
-              🎙️
-            </div>
-            <div>
-              <h3 className="text-lg font-bold text-slate-800">Voice Assistant</h3>
-              <p className="text-xs text-slate-500">Speak naturally to add tasks & create lists</p>
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center font-bold text-sm transition-colors"
-          >
-            ✕
-          </button>
-        </div>
+    <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-slate-950/80 backdrop-blur-xl transition-all duration-500 animate-fade-in">
+      {/* Close Button */}
+      <button 
+        onClick={onClose}
+        className="absolute top-8 right-8 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center text-xl backdrop-blur-md transition-all"
+        aria-label="Close voice assistant"
+      >
+        ✕
+      </button>
 
-        {/* Success / Status Banner */}
-        {successMessage && (
-          <div className="mb-6 p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm font-medium flex items-center gap-3 animate-fade-in">
-            <span className="text-lg">✨</span>
-            <span>{successMessage}</span>
-          </div>
+      {/* Main Transcript Display */}
+      <div className="absolute top-1/4 left-0 w-full px-8 flex flex-col items-center text-center">
+        {successMessage ? (
+          <h2 className="text-3xl md:text-5xl font-medium text-emerald-400 tracking-tight animate-fade-in drop-shadow-md">
+            {successMessage}
+          </h2>
+        ) : error ? (
+           <div className="flex flex-col items-center gap-4 animate-fade-in">
+             <h2 className="text-xl md:text-2xl font-medium text-rose-400 max-w-2xl">{error}</h2>
+             <button onClick={onClose} className="mt-4 px-6 py-3 rounded-full bg-white/10 text-white font-medium hover:bg-white/20 transition-colors">Close</button>
+           </div>
+        ) : (
+          <h2 className="text-3xl md:text-5xl font-medium text-white/90 tracking-tight max-w-4xl leading-tight">
+            {transcript || (isListening ? "I'm listening..." : "Tap to speak")}
+          </h2>
         )}
+      </div>
 
-        {/* Listening Animation / Visualizer */}
-        <div className="my-8 py-8 px-4 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col items-center justify-center text-center relative">
+      {/* The Ambient Orb */}
+      <div className="absolute bottom-[30%] flex flex-col items-center justify-center">
+        <button
+          onClick={isListening ? stopListening : startListening}
+          className="relative group flex items-center justify-center"
+          disabled={isProcessing}
+          aria-label={isListening ? "Stop listening" : "Start listening"}
+        >
+          {/* Outer glowing rings */}
           {isListening && (
-            <div className="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none">
-              <div className="w-48 h-48 rounded-full bg-indigo-600 animate-ping"></div>
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="absolute w-[200%] h-[200%] rounded-full bg-indigo-500/40 blur-3xl animate-pulse" style={{ animationDuration: '2s' }}></div>
+              <div className="absolute w-[250%] h-[250%] rounded-full bg-fuchsia-500/30 blur-[40px] animate-ping" style={{ animationDuration: '3s' }}></div>
+              <div className="absolute w-[150%] h-[150%] rounded-full bg-cyan-400/40 blur-2xl animate-pulse" style={{ animationDelay: '200ms' }}></div>
             </div>
           )}
+          
+          {/* Core Orb */}
+          <div className={`relative z-10 w-24 h-24 md:w-32 md:h-32 rounded-full flex items-center justify-center transition-all duration-700 shadow-2xl ${
+            isProcessing ? 'bg-white scale-90 animate-spin' :
+            isListening ? 'bg-gradient-to-tr from-indigo-500 via-fuchsia-500 to-cyan-400 scale-110 shadow-[0_0_60px_rgba(139,92,246,0.6)]' :
+            'bg-slate-800 hover:bg-slate-700 scale-100 shadow-[0_0_30px_rgba(0,0,0,0.5)] border border-slate-700'
+          }`}>
+            <span className="text-4xl md:text-5xl filter drop-shadow-md">
+              {isProcessing ? '✨' : '🎙️'}
+            </span>
+          </div>
+        </button>
 
+        {/* Manual submit if speech recognition pauses without triggering end */}
+        {transcript && !isListening && !isProcessing && !successMessage && (
           <button
-            onClick={isListening ? stopListening : startListening}
-            className={`w-20 h-20 rounded-full flex items-center justify-center text-3xl shadow-xl transition-all duration-300 ${
-              isListening
-                ? 'bg-rose-600 text-white shadow-rose-200 scale-110 animate-bounce'
-                : 'bg-indigo-600 text-white shadow-indigo-200 hover:bg-indigo-700 hover:scale-105'
-            }`}
+            onClick={() => submitTranscript(transcript)}
+            className="mt-16 px-8 py-3 rounded-full bg-white text-slate-900 font-bold text-lg hover:scale-105 transition-all shadow-[0_0_30px_rgba(255,255,255,0.3)] animate-fade-in"
           >
-            {isListening ? '🛑' : '🎙️'}
+            Process Command →
           </button>
-
-          <p className="mt-4 font-semibold text-slate-700 text-sm">
-            {isListening ? 'Listening... Speak your command now' : 'Click the microphone to start speaking'}
-          </p>
-
-          <p className="mt-2 text-xs text-slate-400 italic max-w-xs">
-            Example: <span className="text-indigo-600 font-medium">"Add buy groceries to Shopping list"</span> or <span className="text-indigo-600 font-medium">"Create list Fitness with task Morning run"</span>
-          </p>
-        </div>
-
-        {/* Live Transcript Preview */}
-        {(transcript || isListening) && (
-          <div className="mb-6 p-4 rounded-xl bg-indigo-50/60 border border-indigo-100">
-            <span className="text-[10px] font-bold text-indigo-500 uppercase tracking-wider block mb-1">Live Transcript</span>
-            <p className="text-sm font-medium text-slate-800 italic">"{transcript || 'Listening for speech...'}"</p>
-            {transcript && (
-              <button
-                onClick={() => submitTranscript(transcript)}
-                disabled={isProcessing}
-                className="mt-3 w-full py-2 bg-indigo-600 text-white rounded-xl text-xs font-semibold shadow-md shadow-indigo-100 hover:bg-indigo-700 transition-colors"
-              >
-                {isProcessing ? 'Processing...' : 'Execute Voice Command →'}
-              </button>
-            )}
-          </div>
         )}
-
-        {error && (
-          <div className="mb-4 p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs">
-            {error}
-          </div>
-        )}
-
-        {/* Manual Fallback Input */}
-        <div className="pt-4 border-t border-slate-100">
-          <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Or type voice command:</label>
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={manualInput}
-              onChange={(e) => setManualInput(e.target.value)}
-              placeholder="e.g. Add review contract to Legal"
-              className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && manualInput.trim()) {
-                  submitTranscript(manualInput);
-                  setManualInput('');
-                }
-              }}
-            />
-            <button
-              onClick={() => {
-                if (manualInput.trim()) {
-                  submitTranscript(manualInput);
-                  setManualInput('');
-                }
-              }}
-              disabled={isProcessing || !manualInput.trim()}
-              className="px-4 py-2.5 bg-slate-900 text-white rounded-xl text-sm font-semibold hover:bg-slate-800 disabled:opacity-50 transition-colors"
-            >
-              Add
-            </button>
-          </div>
-        </div>
       </div>
     </div>
   );
