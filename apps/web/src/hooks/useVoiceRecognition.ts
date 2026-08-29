@@ -47,10 +47,19 @@ export function useVoiceRecognition(onResult: (transcript: string) => void) {
 
       recognition.onerror = (event: any) => {
         console.error('Speech recognition error', event.error);
-        if (event.error === 'not-allowed') {
-          setError('Microphone access denied. Please enable microphone permissions in your browser settings.');
+        const errCode = event?.error || 'unknown';
+        if (errCode === 'service-not-allowed') {
+          setError('Speech recognition is restricted by iOS/browser security. On iPhone, ensure "Enable Dictation" is ON in Settings > General > Keyboard, or type your command below.');
+        } else if (errCode === 'not-allowed') {
+          setError('Microphone access denied. Please enable microphone permissions in browser settings or type your command below.');
+        } else if (errCode === 'no-speech') {
+          setError('No speech was detected. Please try speaking again or type your command below.');
+        } else if (errCode === 'audio-capture') {
+          setError('No microphone found. Type your command below.');
+        } else if (errCode === 'network') {
+          setError('Network error connecting to speech service. Check internet connection or type below.');
         } else {
-          setError(event.error || 'Speech recognition error');
+          setError(`Speech recognition error (${errCode}). You can type your command below.`);
         }
         setIsListening(false);
       };

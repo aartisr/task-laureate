@@ -19,6 +19,7 @@ interface VoiceAssistantModalProps {
 export function VoiceAssistantModal({ isOpen, onClose }: VoiceAssistantModalProps) {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [manualText, setManualText] = useState('');
   const queryClient = useQueryClient();
 
   const handleResult = async (spokenText: string) => {
@@ -56,6 +57,14 @@ export function VoiceAssistantModal({ isOpen, onClose }: VoiceAssistantModalProp
     } finally {
       setIsProcessing(false);
     }
+  };
+
+  const handleManualSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!manualText.trim() || isProcessing) return;
+    const textToSubmit = manualText.trim();
+    setManualText('');
+    handleResult(textToSubmit);
   };
 
   const { isListening, transcript, error, startListening, stopListening, submitTranscript } = useVoiceRecognition(handleResult);
@@ -112,6 +121,32 @@ export function VoiceAssistantModal({ isOpen, onClose }: VoiceAssistantModalProp
               Save to Voice Tasks
             </button>
           )}
+
+          <form onSubmit={handleManualSubmit} style={{ width: '100%', marginTop: '0.5rem', display: 'flex', gap: '0.5rem' }}>
+            <input
+              type="text"
+              value={manualText}
+              onChange={(e) => setManualText(e.target.value)}
+              placeholder="Or type command e.g. Buy milk..."
+              style={{
+                flex: 1,
+                padding: '0.6rem 0.8rem',
+                borderRadius: 'var(--radius-md)',
+                border: '1px solid var(--color-border-default)',
+                background: 'var(--color-bg-primary)',
+                color: 'var(--color-text-primary)',
+                fontSize: '0.875rem'
+              }}
+            />
+            <button
+              type="submit"
+              className="primary-button"
+              disabled={!manualText.trim() || isProcessing}
+              style={{ padding: '0.6rem 1rem', whiteSpace: 'nowrap' }}
+            >
+              Submit
+            </button>
+          </form>
         </div>
       </div>
     </div>
