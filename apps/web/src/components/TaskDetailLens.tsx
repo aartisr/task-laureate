@@ -82,7 +82,18 @@ export function TaskDetailLens({ task, listTitle, mode = 'panel', startEditing =
       <div className="task-detail-lens__context"><div className="task-detail-lens__crumb">{listTitle ? `In ${listTitle}` : 'Task details'}</div><span className={`task-detail-lens__edit-status${readOnly ? ' is-readonly' : editing ? ' is-editing' : ''}`} role="status">{readOnly ? 'Read-only' : editing ? 'Editing now' : 'Ready to edit'}</span></div>
       <div className="task-detail-lens__header-actions">
         {!readOnly && !editing ? <button type="button" className="task-detail-lens__edit-trigger" onClick={() => setEditing(true)}>Edit task</button> : null}
-        {onOpenFocus && mode !== 'focus' ? <button type="button" className="task-detail-lens__utility" onClick={onOpenFocus}>Open focus</button> : null}
+        {onOpenFocus && mode !== 'focus' ? (
+          <button
+            type="button"
+            className="task-detail-lens__utility task-detail-lens__focus-btn"
+            onClick={onOpenFocus}
+            title="Open Focus Mode (⌘F)"
+            aria-label="Open Focus Mode"
+          >
+            <AppIcon name="focus" size="14" />
+            <span>Open Focus</span>
+          </button>
+        ) : null}
         {onClose ? <button type="button" className="task-detail-lens__close" onClick={onClose} aria-label="Close task details"><AppIcon name="close" /></button> : null}
       </div>
     </header>
