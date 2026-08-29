@@ -153,6 +153,39 @@ For the complete, current inventory use
 
 ## Architecture
 
+```mermaid
+flowchart TB
+  subgraph Client [Client Application (Browser / PWA)]
+    UI["React 18 + TanStack Router (A11y & Semantic Themes)"]
+    Omnibar["Quick Capture Omnibar (Natural Language Parser)"]
+    DomainEngine["Core Domain Engine (Anti-Backlog Policy & Capacity Estimator)"]
+    OutboxStore["Durable Mutation Outbox & Undo Journal"]
+    RepoAdapter["Repository Gateway & Cache Layer (TanStack Query)"]
+
+    UI --> Omnibar
+    Omnibar --> DomainEngine
+    DomainEngine --> OutboxStore
+    OutboxStore --> RepoAdapter
+  end
+
+  subgraph Cloud [Backend & Infrastructure Services]
+    direction TB
+    SupaAuth["Supabase GoTrue Auth (PKCE Flow)"]
+    PostgresRLS["PostgreSQL Database with Row-Level Security (RLS)"]
+    Realtime["Supabase Realtime Channel Engine"]
+    Storage["Supabase Object Storage (Task Attachments)"]
+    EdgeAPI["Vercel / Edge API Functions (Notification Dispatch & Invites)"]
+    GeminiAI["Google Gemini AI API (Smart Decomposition Preview)"]
+
+    RepoAdapter <-->|HTTPS REST / PostgREST| PostgresRLS
+    RepoAdapter <-->|OAuth / PKCE Session| SupaAuth
+    RepoAdapter <-->|WebSockets| Realtime
+    RepoAdapter <-->|S3 Compatible API| Storage
+    DomainEngine -.->|Opt-in Preview| GeminiAI
+    EdgeAPI --> PostgresRLS
+  end
+```
+
 ```text
 apps/web/                 Vite + React application and Vercel functions
   src/app/                Composition root, runtime services, routing, providers
@@ -177,6 +210,7 @@ Read the [migration history guide](supabase/migrations/README.md) and
 
 ## Documentation
 
+- **Self-Hosting Guide:** [Self-hosting & deployment](docs/SELF_HOSTING.md)
 - **Use the app:** [Quick feature guide](docs/QUICK_FEATURE_GUIDE.md)
 - **Run or deploy it:** [Production operations](docs/OPERATIONS.md)
 - **Understand the architecture:** [Architecture guide](docs/ARCHITECTURE_GUIDE.md)
@@ -187,12 +221,10 @@ Read the [migration history guide](supabase/migrations/README.md) and
 - **Browse the quick reference:** [GitHub Wiki](https://github.com/aartisr/task-laureate/wiki)
 - **Publish the Wiki:** [Wiki publishing guide](docs/GITHUB_WIKI_PUBLISHING.md)
 
-## Contributing
+## Contributing & Security
 
-Task-Laureate improves when people who use it can shape it. Accessibility
-observations, documentation corrections, concise bug reports, and focused pull
-requests all matter. Please run `npm run quality:gate` before opening a pull
-request, and never commit credentials, tokens, or private user data.
+- See [CONTRIBUTING.md](CONTRIBUTING.md) for local development workflows and contribution standards.
+- See [SECURITY.md](SECURITY.md) for responsible disclosure guidelines and security policies.
 
 ## License
 

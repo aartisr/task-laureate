@@ -1,39 +1,98 @@
-# Architecture guide
+# Architecture Guide & System Design
 
-## Boundaries
+This document details the architectural boundaries, domain concepts, data flow lifecycles, and extension points for **Task-Laureate**.
 
-```text
-React pages/components
-  -> domain contracts and mutation hooks
-  -> TodoRepository / CollaborationRepository capabilities
-  -> Supabase persistence and collaboration gateways
-  -> Supabase Auth + PostgREST/RPC with RLS
+---
 
-Vercel functions
-  -> server-only provider adapters (Resend, Twilio, Web Push)
-  -> Supabase service-role queue operations
+## 1. System Architecture & Boundaries (C4 Model)
+
+```mermaid
+flowchart TB
+  subgraph Client [Client Application (Browser / PWA)]
+    UI["React 18 + TanStack Router (A11y & Semantic Themes)"]
+    Omnibar["Quick Capture Omnibar (Natural Language Parser)"]
+    DomainEngine["Core Domain Engine (Anti-Backlog Policy & Capacity Estimator)"]
+    OutboxStore["Durable Mutation Outbox & Undo Journal"]
+    RepoAdapter["Repository Gateway & Cache Layer (TanStack Query)"]
+
+    UI --> Omnibar
+    Omnibar --> DomainEngine
+    DomainEngine --> OutboxStore
+    OutboxStore --> RepoAdapter
+  end
+
+  subgraph Cloud [Backend & Infrastructure Services]
+    direction TB
+    SupaAuth["Supabase GoTrue Auth (PKCE Flow)"]
+    PostgresRLS["PostgreSQL Database with Row-Level Security (RLS)"]
+    Realtime["Supabase Realtime Channel Engine"]
+    Storage["Supabase Object Storage (Task Attachments)"]
+    EdgeAPI["Vercel / Edge API Functions (Notification Dispatch & Invites)"]
+    GeminiAI["Google Gemini AI API (Smart Decomposition Preview)"]
+
+    RepoAdapter <-->|HTTPS REST / PostgREST| PostgresRLS
+    RepoAdapter <-->|OAuth / PKCE Session| SupaAuth
+    RepoAdapter <-->|WebSockets| Realtime
+    RepoAdapter <-->|S3 Compatible API| Storage
+    DomainEngine -.->|Opt-in Preview| GeminiAI
+    EdgeAPI --> PostgresRLS
+  end
+
+  subgraph NotificationProviders [Notification & Delivery Channels]
+    WebPush["Web Push VAPID"]
+    Email["Transactional Email (Invites & Reminders)"]
+    EdgeAPI --> WebPush
+    EdgeAPI --> Email
+  end
 ```
 
-The repository contracts in `apps/web/src/core/contracts` keep UI features independent of the current data store. `infrastructure/persistence` maps those contracts to authenticated Supabase requests. Collaboration authorization lives in Postgres predicates, RLS policies, and narrowly scoped RPCs; client-side role checks prevent confusing affordances but are not security controls.
+---
 
-## Design rules
+## 2. Core Domain Layer & Invariants
 
-1. Keep domain types and capability contracts free of framework or transport details.
-2. Compose concrete implementations at `src/config/persistence.config.ts` and `src/app/runtime` rather than importing providers throughout UI code.
-3. Make server functions thin orchestration layers. Delivery providers return normalized outcomes, while the database owns idempotency and audit state.
-4. Treat migrations as the database API. New mutations use an RPC when a direct table write could bypass a business invariant.
-5. Use opaque cursors and bounded reads for large lists; do not reintroduce whole-workspace fetches in scalable views.
-6. Make UI state explicit: loading, read-only, saving, success, and recoverable failure states must not be conflated.
-7. Model workflow state deliberately: `todo`, `doing`, `blocked`, and `done` communicate whether work has begun without inventing unnecessary stages.
-8. Keep private-object lifecycle in its owning service. Attachment bytes are managed through the Supabase Storage API; task metadata remains RLS-protected application data.
-9. Enforce graph invariants in the database. Dependency cycles and completion gates must hold for imports, REST clients, and future automations—not only the React UI.
+The domain layer in `src/core/domain` is strictly pure TypeScript with zero framework, DOM, or vendor dependencies.
 
-## Extension points
+### Domain Principles:
+1. **Anti-Backlog Philosophy**: Tasks are categorized by cognitive energy (`deep`, `light`, `quick`) and estimated duration, allowing users to find one realistic next action rather than feeling overwhelmed by an infinite backlog.
+2. **Deterministic Natural Language Parsing**: The omnibar parser interprets `/lists`, `~energy`, `!priority`, `#tags`, `30m/2h`, and relative dates (`today`, `tomorrow`) deterministically without unpredictable AI latency or cost.
+3. **Optimistic Local-First Mutations**: State transitions immediately update UI state and append an operation to the durable outbox and undo journal. If offline or network errors occur, the mutations persist in storage and replay automatically.
 
-- Add a persistence backend by implementing the repository contracts, then replace the composition-root adapter.
-- Add a delivery vendor by implementing the normalized adapter shape in `apps/web/api/notifications/providers.mjs`; do not leak provider semantics into the scheduler or UI.
-- Add a new reminder channel by extending the database channel constraint, queue claim, provider adapter, and recipient consent control together.
-- Add a collaboration permission only after updating the Postgres authorization predicate, RLS policy, RPC boundary, client capability, and tests as one change.
-- Add a dependency-aware persistence adapter by implementing `DependencyRepository`; adapters without it remain compatible and simply omit dependency UI.
+---
 
-See [OPERATIONS.md](OPERATIONS.md) for environment configuration and [QUICK_FEATURE_GUIDE.md](QUICK_FEATURE_GUIDE.md) for visible behavior.
+## 3. Data Flow & Synchronization Lifecycle
+
+```mermaid
+sequenceDiagram
+  autonumber
+  actor User
+  participant Omnibar as Quick Capture Omnibar
+  participant Domain as Anti-Backlog Domain
+  participant Outbox as Durable Outbox Queue
+  participant Repo as Supabase Repository
+  participant Postgres as Postgres DB (RLS)
+
+  User->>Omnibar: Type "/q3-launch ~deep !urgent 45m #pricing tomorrow"
+  Omnibar->>Domain: parseCapture(input, referenceDate)
+  Domain-->>Omnibar: ParsedTask (title, listSlug, energy, priority, estimate, tags, date)
+  Omnibar->>Outbox: Enqueue optimistic mutation
+  Outbox-->>User: Instant UI confirmation & task rendering
+  Outbox->>Repo: Flush mutation payload
+  Repo->>Postgres: Authenticated RPC / PostgREST write (Enforces RLS)
+  Postgres-->>Repo: 201 Created & DB timestamp
+  Repo-->>Outbox: Acknowledge & clear queue entry
+```
+
+---
+
+## 4. Extension Points
+
+- **Persistence Backend**: Implement `TodoRepository` or `CollaborationRepository` contracts in `src/core/contracts/domain.ts` to connect custom backends.
+- **Notification Adapters**: Implement the normalized adapter interface in `api/notifications/providers.mjs`.
+- **Custom AI Orchestration**: Extend `src/infrastructure/antiBacklog/aiDecomposition.ts` to plug in alternative LLMs or custom local fine-tuned models.
+
+---
+
+## 5. Security & Authorization Layer
+
+- **Database-Enforced Authorization**: Collaboration permissions (`owner`, `editor`, `viewer`) live in PostgreSQL predicates and Row-Level Security policies.
+- **Client Role Affordances**: Client-side UI disables read-only controls gracefully, but all actual enforcement is secured at the Postgres API boundary.
