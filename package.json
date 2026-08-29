@@ -36,14 +36,14 @@
     "motion": "^12.23.24"
   },
   "devDependencies": {
-    "@types/node": "^22.14.0",
+    "@types/node": "^26.3.0",
     "autoprefixer": "^10.4.21",
-    "esbuild": "^0.25.0",
+    "esbuild": "^0.28.2",
     "tailwindcss": "^4.1.14",
     "tsx": "^4.21.0",
-    "typescript": "~5.8.2",
+    "typescript": "~7.0.2",
     "vite": "^6.2.3",
     "@types/express": "^4.17.21",
-    "supabase": "^2.110.0"
+    "supabase": "^2.115.0"
   }
 }
