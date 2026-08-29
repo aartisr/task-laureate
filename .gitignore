@@ -1,8 +1,155 @@
+# ====================
+# Dependencies
+# ====================
 node_modules/
-build/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+bun.lockb
+
+# ====================
+# Build Outputs
+# ====================
 dist/
-coverage/
+build/
+.next/
+out/
+.vite/
+.cache/
+
+# Vite specific
+dist-types/
+.turbo/
+
+# TypeScript
+*.tsbuildinfo
+tsconfig.tsbuildinfo
+
+# ====================
+# IDE & Editor
+# ====================
+.vscode/
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/launch.json
+
+.idea/
+.idea_modules/
+*.iml
+*.iws
+*.ipr
+
+# Sublime Text
+.sublime-project
+.sublime-workspace
+
+# Vim/Neovim
+.vim/
+.netrwhist
+*.swp
+*.swo
+*~
+.tags
+.tags_sorted_by_file
+
+# Emacs
+*~
+\#*\#
+.\#*
+
+# ====================
+# Environment Variables
+# ====================
+.env
+.env.local
+.env.*.local
+.env.production
+.env.development
+.env.test
+.env.staging
+
+# ====================
+# OS Files
+# ====================
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+.AppleDouble
+.LSOverride
+
+# ====================
+# Testing
+# ====================
+coverage/
+.nyc_output/
+.c8out/
+test-results/
+*.trx
+.vitest/
+
+# Playwright
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+
+# ====================
+# Logs
+# ====================
 *.log
-.env*
-!.env.example
+logs/
+npm-debug.log*
+npm-error.log*
+npm-warn.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+pnpm-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# ====================
+# Temporary Files
+# ====================
+tmp/
+temp/
+*.tmp
+.tmp/
+
+# ====================
+# System & Runtime
+# ====================
+.env.*.local
+.env.example.local
+.cache/
+cache/
+.eslintcache
+.stylelintcache
+
+# ====================
+# Editor Backups & Swap
+# ====================
+*.backup
+*.bak
+*.orig
+*.swp
+*.swo
+*~
+
+# ====================
+# Miscellaneous
+# ====================
+.pnpm-store/
+.npm/
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+
+# Development artifacts
+.parcel-cache
+.parcelrc

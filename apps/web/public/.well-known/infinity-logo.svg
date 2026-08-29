@@ -1,0 +1,99 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+  <defs>
+    <!-- Radial gradient for enlightenment/sun radiance -->
+    <radialGradient id="sunRadiance" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#FDB813;stop-opacity:1" />
+      <stop offset="70%" style="stop-color:#FDB813;stop-opacity:0.6" />
+      <stop offset="100%" style="stop-color:#F37335;stop-opacity:0" />
+    </radialGradient>
+
+    <!-- Gradient for enlightenment glow -->
+    <linearGradient id="enlightenmentGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFD700;stop-opacity:0.8" />
+      <stop offset="50%" style="stop-color:#FFA500;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#FF6B35;stop-opacity:0.8" />
+    </linearGradient>
+
+    <!-- Filter for glow effect (enlightenment/Aarti light) -->
+    <filter id="glowEffect" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- Softer glow for kindness -->
+    <filter id="softGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="1.2" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background sun rays (Ravi - sun prince) - enlightenment rays -->
+  <g id="sunRays" opacity="0.4">
+    <line x1="100" y1="10" x2="100" y2="25" stroke="#FFD700" stroke-width="2" stroke-linecap="round"/>
+    <line x1="100" y1="175" x2="100" y2="190" stroke="#FFD700" stroke-width="2" stroke-linecap="round"/>
+    <line x1="25" y1="100" x2="10" y2="100" stroke="#FFD700" stroke-width="2" stroke-linecap="round"/>
+    <line x1="175" y1="100" x2="190" y2="100" stroke="#FFD700" stroke-width="2" stroke-linecap="round"/>
+    <line x1="29" y1="29" x2="18" y2="18" stroke="#FFD700" stroke-width="2" stroke-linecap="round"/>
+    <line x1="171" y1="171" x2="182" y2="182" stroke="#FFD700" stroke-width="2" stroke-linecap="round"/>
+    <line x1="171" y1="29" x2="182" y2="18" stroke="#FFD700" stroke-width="2" stroke-linecap="round"/>
+    <line x1="29" y1="171" x2="18" y2="182" stroke="#FFD700" stroke-width="2" stroke-linecap="round"/>
+  </g>
+
+  <!-- Outer radiance circle (enlightenment) -->
+  <circle cx="100" cy="100" r="92" fill="url(#sunRadiance)" filter="url(#glowEffect)"/>
+
+  <!-- Main infinity symbol structure (∞) with zero integration -->
+  <g id="infinityZero" filter="url(#glowEffect)">
+    <!-- Left lobe of infinity (with zero integrated) -->
+    <path d="M 70 100 C 55 75 55 125 70 100 Q 85 85 100 100 Q 85 115 70 100" 
+          fill="none" stroke="url(#enlightenmentGlow)" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+    
+    <!-- Right lobe of infinity -->
+    <path d="M 130 100 C 145 75 145 125 130 100 Q 115 85 100 100 Q 115 115 130 100" 
+          fill="none" stroke="url(#enlightenmentGlow)" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- Zero in center (duality of nothing and completeness) -->
+  <circle cx="100" cy="100" r="18" 
+          fill="none" stroke="#FFA500" stroke-width="2.5" 
+          filter="url(#glowEffect)" opacity="0.9"/>
+
+  <!-- Aarti flames (sacred light) - emerging from top and bottom -->
+  <g id="aartiFlames" filter="url(#softGlow)">
+    <!-- Top flame (compassion, kindness rising) -->
+    <path d="M 95 55 Q 90 50 92 40 Q 95 50 100 40 Q 102 50 105 40 Q 107 50 105 55 Q 100 58 95 55" 
+          fill="#FF6B35" opacity="0.85"/>
+    <path d="M 97 53 Q 95 50 96 45 Q 99 50 100 45 Q 101 50 104 45 Q 105 50 103 53 Q 100 55 97 53" 
+          fill="#FFD700" opacity="0.9"/>
+    
+    <!-- Bottom flame (grounded wisdom) -->
+    <path d="M 95 145 Q 90 150 92 160 Q 95 150 100 160 Q 102 150 105 160 Q 107 150 105 145 Q 100 142 95 145" 
+          fill="#FF6B35" opacity="0.85"/>
+    <path d="M 97 147 Q 95 150 96 155 Q 99 150 100 155 Q 101 150 104 155 Q 105 150 103 147 Q 100 145 97 147" 
+          fill="#FFD700" opacity="0.9"/>
+  </g>
+
+  <!-- Kindness curves (gentle, flowing lines around the infinity) -->
+  <g id="kindnessCurves" opacity="0.6" filter="url(#softGlow)">
+    <!-- Upper gentle curve -->
+    <path d="M 60 85 Q 100 50 140 85" 
+          fill="none" stroke="#FFD700" stroke-width="1.5" stroke-linecap="round" opacity="0.7"/>
+    <!-- Lower gentle curve -->
+    <path d="M 60 115 Q 100 150 140 115" 
+          fill="none" stroke="#FFD700" stroke-width="1.5" stroke-linecap="round" opacity="0.7"/>
+  </g>
+
+  <!-- Inner enlightenment circle (wisdom core) -->
+  <circle cx="100" cy="100" r="12" 
+          fill="#FFA500" opacity="0.3" filter="url(#glowEffect)"/>
+
+  <!-- Academic elegance: subtle outer ring -->
+  <circle cx="100" cy="100" r="88" 
+          fill="none" stroke="#FFD700" stroke-width="1" opacity="0.5" stroke-dasharray="2,4"/>
+</svg>

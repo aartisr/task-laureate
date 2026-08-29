@@ -1,0 +1,44 @@
+name: Update package-lock.json
+
+# Runs automatically when package.json changes (e.g. a new dependency was added
+# from a machine that can't reach registry.npmjs.org directly).
+# Also supports manual trigger from the GitHub Actions UI.
+on:
+  push:
+    branches: [master]
+    paths:
+      - '**/package.json'
+      - '!**/node_modules/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-lockfile:
+    name: Regenerate package-lock.json
+    runs-on: ubuntu-latest
+    # Skip if the last commit was already a lock file update (avoid infinite loop)
+    if: "!contains(github.event.head_commit.message, '[skip-lockfile]') && !contains(github.event.head_commit.message, 'sync package-lock.json')"
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Use a token so the committed lock file triggers downstream workflows
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Regenerate lock file
+        run: npm install --package-lock-only
+
+      - name: Commit updated lock file (if changed)
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add package-lock.json
+          git diff --staged --quiet && echo "Lock file already up to date" || \
+            git commit -m "chore: sync package-lock.json after dependency change"
+          git push

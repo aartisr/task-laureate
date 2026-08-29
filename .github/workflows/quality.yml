@@ -1,0 +1,70 @@
+name: Production quality gate
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+# A newer commit supersedes an older validation run for the same pull request
+# or branch. This keeps the status Vercel and reviewers see aligned with the
+# code that is actually about to ship.
+concurrency:
+  group: production-quality-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Test, build, and validate deployment contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci --include=dev --include=optional
+      - run: npm run quality:gate
+      # Date-only logic must remain correct for users outside the UTC CI host.
+      - name: Verify PWA and date boundaries in America/New_York
+        env:
+          TZ: America/New_York
+        run: npm run test:pwa-contract -w apps/web && npm run test -w apps/web -- src/core/domain/dateOnly.test.ts
+
+  security:
+    name: Production dependency security scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci --include=optional
+      - run: npm run check:security
+
+  database:
+    name: Replay every Supabase migration from scratch
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          # Keep the CI database engine aligned with the committed CLI. A
+          # floating "latest" version can make the same migration pass one day
+          # and fail the next without a repository change.
+          version: 2.110.0
+      - name: Verify migration history is complete and unambiguous
+        run: npm run verify:migrations
+      - name: Start an isolated Supabase stack
+        run: supabase db start
+      - name: Prove the schema is reproducible
+        run: supabase db reset --local --no-seed
+      - name: Lint the resulting database schema
+        run: supabase db lint --local --fail-on error

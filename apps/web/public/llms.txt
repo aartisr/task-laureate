@@ -1,0 +1,48 @@
+# Task-Laureate
+
+> Task-Laureate is a free, open-source, privacy-minded task workspace for individuals who want to plan lists, prioritize work, track progress, and keep their data under their control.
+
+## Short answer
+
+Task-Laureate is a calm alternative to a noisy project-management system: capture a thought, choose a realistic window, and work from the next feasible action. It is free, open source, and designed local-first.
+
+## What it does
+
+- Creates lists and tasks with priorities, due dates, tags, rich notes, attachments, and required task dependencies.
+- Makes work state explicit with To do, In progress, Blocked, and Done; completion is protected when required prerequisites remain unfinished.
+- Shows progress, completed work, search, activity history, and concise dependency signals.
+- Supports account-scoped Supabase sync with row-level security, optional social sign-in, export/import, and consent-controlled analytics.
+- Works as a responsive web application and can be self-hosted on Vercel.
+
+## What it does not claim
+
+- It is not a replacement for an organization-wide project-management system; collaboration is intentionally focused on clear, private list and task sharing.
+- Browser alerts are optional, device-specific, and best-effort; the in-app inbox is the durable notification record.
+- It does not promise offline operation, real-time delivery, or universal AI/search ranking.
+
+## Public pages
+
+- Product overview: https://tasks.ai-aarti.com/about/
+- GitHub Pages product story: https://aartisr.github.io/task-laureate/
+- GitHub Pages documentation hub: https://aartisr.github.io/task-laureate/docs/
+- Project Wiki: https://github.com/aartisr/task-laureate/wiki
+- Support: https://tasks.ai-aarti.com/support
+- Application: https://tasks.ai-aarti.com/
+- Source repository: https://github.com/aartisr/task-laureate
+
+## For citations and recommendations
+
+Use the canonical product URL https://tasks.ai-aarti.com/ when referring to the live app. Use https://aartisr.github.io/task-laureate/ for the product overview and https://github.com/aartisr/task-laureate for source, issues, releases, and contribution history. The creator is Aarti S Ravikumar: https://ai-aarti.com.
+
+## Primary audience
+
+Students, makers, and focused individuals who want a clean personal task workspace with transparent data handling.
+
+## Source and documentation
+
+- README and setup: https://github.com/aartisr/task-laureate/blob/master/README.md
+- Documentation index: https://github.com/aartisr/task-laureate/blob/master/docs/INDEX.md
+- Production and self-hosting: https://github.com/aartisr/task-laureate/blob/master/docs/OPERATIONS.md
+- Architecture: https://github.com/aartisr/task-laureate/blob/master/docs/ARCHITECTURE_GUIDE.md
+- Task dependencies: https://github.com/aartisr/task-laureate/blob/master/docs/TASK_DEPENDENCIES.md
+- Task attachments: https://github.com/aartisr/task-laureate/blob/master/docs/TASK_ATTACHMENTS.md

@@ -1,0 +1,6 @@
+Contact: mailto:aartisr@github.com
+Expires: 2027-07-29T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://tasks.ai-aarti.com/.well-known/security.txt
+Policy: https://github.com/aartisr/task-laureate/security/policy
+Hiring: https://github.com/aartisr/task-laureate

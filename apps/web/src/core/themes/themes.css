@@ -1,0 +1,237 @@
+/**
+ * LAUREATE DESIGN SYSTEM
+ * 
+ * Research-backed theme system inspired by world-class products:
+ * Linear (task management), Figma (collaboration), Apple (refinement),
+ * Stripe (professional elegance), GitHub (developer experience)
+ * 
+ * These variables are set dynamically by ThemeProvider.tsx
+ */
+
+:root {
+  /* ===== COLOR PALETTE ===== */
+  
+  /* Backgrounds - layered depth */
+  --color-bg-primary: #0a0a0a;
+  --color-bg-secondary: #1a1a1a;
+  --color-bg-tertiary: #2d2d2d;
+  --color-bg-surface: #141414;
+  --color-bg-overlay: rgba(0, 0, 0, 0.8);
+
+  /* Text - contrast-optimized */
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #b3b3b3;
+  --color-text-tertiary: #808080;
+  --color-text-inverse: #000000;
+  --color-text-on-action: #000000;
+  --color-text-muted: #595959;
+
+  /* Interactive - vibrant, accessible */
+  --color-action-primary: #7c3aed;
+  --color-action-secondary: #3b82f6;
+  --color-action-hover: #9f5cef;
+  --color-action-active: #6d28d9;
+  --color-action-disabled: #4a4a4a;
+
+  /* Neutral action controls: always use this tested foreground/surface pair. */
+  --control-quiet-bg: #1a1a1a;
+  --control-quiet-fg: #f5f5f5;
+  --control-quiet-border: #4b5563;
+  --control-quiet-hover-bg: #262626;
+
+  /* Semantic - status indicators */
+  --color-status-success: #10b981;
+  --color-status-warning: #f59e0b;
+  --color-status-error: #ef4444;
+  --color-status-info: #3b82f6;
+
+  /* Borders - subtle to prominent */
+  --color-border-default: #404040;
+  --color-border-light: #2d2d2d;
+  --color-border-dark: #595959;
+  --color-border-focus: #8b5cf6;
+
+  /* Accents - brand personality */
+  --color-accent-primary: #7c3aed;
+  --color-accent-secondary: #3b82f6;
+  --color-accent-tertiary: #06b6d4;
+
+  /* ===== TYPOGRAPHY ===== */
+  
+  --font-family-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto',
+    'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans',
+    'Helvetica Neue', sans-serif;
+  --font-family-mono: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  --font-family-display: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  
+  /* Refined type scales */
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
+
+  /* Line heights for readability */
+  --line-height-tight: 1.1;
+  --line-height-snug: 1.25;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.625;
+  --line-height-loose: 2;
+
+  /* ===== SPACING SYSTEM ===== */
+  /* 8px base unit */
+  --spacing-0: 0;
+  --spacing-1: 0.25rem; /* 4px */
+  --spacing-2: 0.5rem; /* 8px */
+  --spacing-3: 0.75rem; /* 12px */
+  --spacing-4: 1rem; /* 16px */
+  --spacing-5: 1.25rem; /* 20px */
+  --spacing-6: 1.5rem; /* 24px */
+  --spacing-8: 2rem; /* 32px */
+  --spacing-10: 2.5rem; /* 40px */
+  --spacing-12: 3rem; /* 48px */
+  --spacing-14: 3.5rem; /* 56px */
+  --spacing-16: 4rem; /* 64px */
+
+  /* ===== BORDER RADIUS ===== */
+  --radius-sm: 0.375rem; /* 6px */
+  --radius-md: 0.5rem; /* 8px */
+  --radius-lg: 0.75rem; /* 12px */
+  --radius-xl: 1rem; /* 16px */
+  --radius-2xl: 1.5rem; /* 24px */
+  --radius-full: 9999px;
+
+  /* ===== SHADOWS ===== */
+  /* Elevated, sophisticated shadows */
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 4px 6px 0 rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 10px 15px 0 rgba(0, 0, 0, 0.6);
+  --shadow-xl: 0 20px 25px 0 rgba(0, 0, 0, 0.7);
+  --shadow-2xl: 0 25px 50px 0 rgba(0, 0, 0, 0.8);
+  --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.3);
+  --shadow-focus: 0 0 0 3px rgba(139, 92, 246, 0.1), 0 0 0 1px rgba(139, 92, 246, 0.3);
+
+  /* ===== TRANSITIONS ===== */
+  --transition-fast: 100ms ease;
+  --transition-base: 150ms ease;
+  --transition-slow: 200ms ease;
+  --transition-slower: 300ms ease;
+
+  /* ===== COMPUTED VALUES ===== */
+  --typography-scale: 1;
+  --spacing-scale: 1;
+  --border-radius-scale: 0.9;
+}
+
+/* ===== GLOBAL BASE STYLES ===== */
+
+html,
+body {
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  font-family: var(--font-family-sans);
+  font-size: 16px;
+  line-height: var(--line-height-normal);
+  transition: background-color var(--transition-base), color var(--transition-base);
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* ===== FORM ELEMENTS ===== */
+
+input,
+select,
+textarea {
+  background-color: var(--color-bg-surface);
+  color: var(--color-text-primary);
+  border-color: var(--color-border-default);
+  font-family: var(--font-family-sans);
+  transition: all var(--transition-base);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--color-text-tertiary);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--color-action-primary);
+  box-shadow: var(--shadow-focus);
+}
+
+/* ===== BUTTONS ===== */
+
+button {
+  font-family: var(--font-family-sans);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+button:not([class*='btn-']):focus {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+}
+
+/* ===== LINKS ===== */
+
+a {
+  color: var(--color-action-primary);
+  text-decoration: none;
+  transition: color var(--transition-base);
+}
+
+a:hover {
+  color: var(--color-action-hover);
+}
+
+a:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-bg-primary), 0 0 0 4px var(--color-action-primary);
+  border-radius: 2px;
+}
+
+/* ===== SCROLLBAR ===== */
+
+html.dark {
+  scrollbar-color: var(--color-border-dark) var(--color-bg-secondary);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-dark);
+  border-radius: 5px;
+  border: 2px solid var(--color-bg-secondary);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-border-dark);
+}
+
+/* ===== SELECTION ===== */
+
+::selection {
+  background-color: var(--color-action-primary);
+  color: var(--color-text-on-action);
+}
+
+::-moz-selection {
+  background-color: var(--color-action-primary);
+  color: var(--color-text-on-action);
+}

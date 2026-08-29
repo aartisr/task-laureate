@@ -1,0 +1,29 @@
+<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="All Inclusive Aarti small logo">
+  <defs>
+    <radialGradient id="g" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffe08a"/>
+      <stop offset="100%" stop-color="#f59e0b"/>
+    </radialGradient>
+  </defs>
+
+  <circle cx="32" cy="32" r="30" fill="#fffaf0"/>
+  <circle cx="32" cy="32" r="28" fill="none" stroke="#f59e0b" stroke-width="2"/>
+
+  <!-- Simplified infinity for better small-size clarity -->
+  <path d="M 12 32 C 12 24, 22 24, 26 32 C 30 40, 40 40, 42 32 C 44 24, 52 24, 52 32 C 52 40, 44 40, 40 32 C 36 24, 28 24, 24 32 C 20 40, 12 40, 12 32 Z"
+    fill="none" stroke="url(#g)" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Center zero ring -->
+  <circle cx="32" cy="32" r="6" fill="none" stroke="#f59e0b" stroke-width="2.5"/>
+
+  <!-- Minimal flame accent -->
+  <path d="M 32 15 C 29 19, 31 22, 32 24 C 33 22, 35 19, 32 15 Z" fill="#fb923c"/>
+
+  <!-- Four directional rays for recognizability in thumbnails -->
+  <g stroke="#fbbf24" stroke-width="2" stroke-linecap="round">
+    <line x1="32" y1="5" x2="32" y2="9"/>
+    <line x1="32" y1="55" x2="32" y2="59"/>
+    <line x1="5" y1="32" x2="9" y2="32"/>
+    <line x1="55" y1="32" x2="59" y2="32"/>
+  </g>
+</svg>

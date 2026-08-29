@@ -1,0 +1,5 @@
+.status-badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: var(--radius-full); font-size: .72rem; font-weight: var(--font-weight-semibold); letter-spacing: .03em; white-space: nowrap; }
+.badge--active { background: rgba(34,197,94,.15); color: var(--color-status-success); border: 1px solid rgba(34,197,94,.3); }
+.badge--completed { background: rgba(16,185,129,.14); color: #047857; border: 1px solid rgba(16,185,129,.32); }
+.badge--archived { background: rgba(107,114,128,.15); color: var(--color-text-secondary); border: 1px solid rgba(107,114,128,.3); }
+.badge--deleted { background: rgba(239,68,68,.15); color: var(--color-status-error); border: 1px solid rgba(239,68,68,.3); }

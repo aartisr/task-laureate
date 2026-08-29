@@ -1,0 +1,44 @@
+{
+  "name": "@laureate/web",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "postbuild": "node scripts/mirror-build-output.mjs",
+    "check:perf-budgets": "node scripts/check-performance-budgets.mjs",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:pwa-contract": "vitest run src/infrastructure/pwa/pwaAssets.test.ts",
+    "test:supabase": "RUN_SUPABASE_INTEGRATION=true vitest run src/infrastructure/persistence/supabase.integration.test.ts",
+    "test:supabase:permissions": "RUN_SUPABASE_PERMISSION_INTEGRATION=true vitest run src/infrastructure/persistence/supabase.permissions.integration.test.ts",
+    "lint": "tsc --noEmit",
+    "verify:public-registry": "node ../../scripts/verify-public-registry.mjs",
+    "verify:production": "npm run verify:public-registry && node ../../scripts/verify-production-config.mjs"
+  },
+  "dependencies": {
+    "@puckeditor/core": "^0.23.0",
+    "@supabase/supabase-js": "^2.49.8",
+    "@tanstack/react-query": "^5.59.0",
+    "@tanstack/react-router": "^1.68.0",
+    "@tanstack/react-table": "^8.20.5",
+    "@vercel/analytics": "^2.0.1",
+    "posthog-js": "1.413.3",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.11",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.2",
+    "jsdom": "^26.1.0",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.8",
+    "vitest": "^2.1.2"
+  },
+  "optionalDependencies": {
+    "@esbuild/linux-x64": "0.21.5",
+    "@rollup/rollup-linux-x64-gnu": "4.62.2"
+  }
+}

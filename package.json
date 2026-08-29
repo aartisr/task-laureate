@@ -1,14 +1,27 @@
 {
-  "name": "react-example",
+  "name": "laureate",
   "private": true,
-  "version": "0.0.0",
-  "type": "module",
+  "version": "0.1.0",
+  "description": "A generic, extensible TanStack task-management platform.",
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "workspaces": [
+    "apps/*"
+  ],
   "scripts": {
-    "dev": "vite --port=3000 --host=0.0.0.0",
-    "build": "vite build",
-    "preview": "vite preview",
-    "clean": "rm -rf dist server.js",
-    "lint": "tsc --noEmit"
+    "dev": "npm run dev -w apps/web",
+    "build": "npm run build -w apps/web",
+    "test": "npm run test -w apps/web",
+    "lint": "npm run lint -w apps/web",
+    "check:perf-budgets": "npm run check:perf-budgets -w apps/web",
+    "check:security": "npm audit --omit=dev --audit-level=high",
+    "verify:migrations": "node scripts/verify-supabase-migrations.mjs",
+    "quality:gate": "npm run verify:migrations && npm run verify:production && npm run lint && npm test && npm run build && npm run check:perf-budgets",
+    "verify:public-registry": "node scripts/verify-public-registry.mjs",
+    "verify:production": "npm run verify:public-registry && node scripts/verify-production-config.mjs",
+    "generate:vapid": "node scripts/generate-vapid-keys.mjs",
+    "submit:indexnow": "node scripts/submit-indexnow.mjs"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",
@@ -30,6 +43,8 @@
     "tsx": "^4.21.0",
     "typescript": "~5.8.2",
     "vite": "^6.2.3",
-    "@types/express": "^4.17.21"
+    "@types/express": "^4.17.21",
+    "supabase": "^2.110.0"
+  }
   }
 }

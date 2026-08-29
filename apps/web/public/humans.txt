@@ -1,0 +1,19 @@
+/* TEAM */
+Developer & Designer: Aarti S Ravikumar
+Website: https://ai-aarti.com
+GitHub: https://github.com/aartisr
+School: Pioneer Charter School of Science II (PCSSII)
+School Website: https://saugus.pioneercss.org
+Location: California, USA
+
+/* THANKS */
+React team, TanStack team, the open-source community,
+and every student who ever felt overwhelmed by chaos.
+
+/* SITE */
+Last update: 2026-08-11
+Language: English
+Doctype: HTML5
+Technology: React 18, TypeScript, Vite, TanStack Router/Query
+Hosting: Vercel
+Standards: WCAG 2.1 AA, Schema.org, OpenGraph, Twitter Cards
