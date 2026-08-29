@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+### Voice assistant and mobile capture resilience
+
+- Added an interactive **Voice Assistant** modal with intent parsing and automatic routing to a dedicated **Voice Tasks** list.
+- Added iOS Safari dictation error handling for `service-not-allowed` with actionable device setup guidance (*Settings > General > Keyboard > Enable Dictation*).
+- Integrated an inline manual command text input fallback inside the voice capture modal to guarantee seamless command entry across all browsers and mobile webviews.
+- Added universal global keyboard shortcuts (`⌘T` for quick capture, `⌘F` for search, `⌘H` for dashboard).
+
+### Performance and accessibility compliance
+
+- Implemented virtualized list rendering (`VirtualTaskItems`) for high-frame-rate scrolling on large task collections.
+- Audit and fix text, control, and status color tokens across themes (including Sleek Interface) to guarantee 100% WCAG AA contrast ratio compliance (`>= 4.5:1`).
+- Optimized TanStack Query caching and mutation outbox sync buffering for sub-millisecond local interaction latency.
+
 ### Current task workflow and reference material
 
 - Added clear To do, In progress, Blocked, and Done task states, including a one-click **Start** action and a reversible state control in task details.

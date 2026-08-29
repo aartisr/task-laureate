@@ -40,16 +40,14 @@ the standard Task-Laureate tries to earn every day.
 ## What it does today
 
 - **Capture in seconds** — natural-language parsing for dates, durations, and
-  tags; local-first delivery; keyboard shortcuts; share-target and extension
+  tags; local-first delivery; keyboard shortcuts (`⌘T`, `⌘F`, `⌘H`); voice capture modal with iOS Safari dictation guidance and manual text fallback; share-target and extension
   distribution paths.
 - **Turn intent into action** — deterministic task templates for every task,
   plus editable, selective AI-generated decompositions for an approved internal
   Gemini preview cohort.
 - **Protect today’s attention** — Now, quick-win, deep-work, review, and
   commitment views use time and energy rather than guilt-driven priority noise.
-- **Keep work dependable** — local-first persistence, outbox recovery, clear
-  local/saving/synced/error states, undo for mutations, and resilient
-  deployment-chunk recovery.
+- **High-performance & high-accessibility** — virtualized list rendering (`VirtualTaskItems`) for smooth 60 FPS scrolling on large task volumes, 100% WCAG AA contrast-compliant themes, local-first persistence, outbox recovery, clear local/saving/synced/error states, and undo journals.
 - **Collaborate safely** — normalized Supabase Lists and Tasks, RLS-backed
   owner/editor/viewer permissions, invitations, shared-work discovery, task
   dependencies, attachments, reminders, and activity history.

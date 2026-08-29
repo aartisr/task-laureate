@@ -1,5 +1,12 @@
 # Task Laureate user guide
 
+## Capture and Voice Assistant
+
+- Create tasks via the quick capture omnibar (`⌘T` / `Ctrl+T`) with natural-language date, priority, and tag parsing.
+- Open the **Voice Assistant** modal to dictate tasks directly. Spoken commands are parsed into structured task titles and saved to your **Voice Tasks** list.
+- On **iOS / Safari / Mobile**, if Web Speech dictation is restricted by browser security (`service-not-allowed`), the modal provides clear setup tips (*iOS Settings > General > Keyboard > Enable Dictation*) and an inline manual command text input box so you can submit commands without interruption.
+- Access universal navigation shortcuts from anywhere: `⌘H` for Dashboard, `⌘F` for Search, and `⌘T` for Quick Capture.
+
 ## Lists and tasks
 
 - Create a List from the dashboard, then add Tasks inside it.
