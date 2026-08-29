@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host 0.0.0.0 --port 3000",
     "build": "tsc --noEmit && vite build",
     "postbuild": "node scripts/mirror-build-output.mjs",
     "check:perf-budgets": "node scripts/check-performance-budgets.mjs",

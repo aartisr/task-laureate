@@ -1,6 +1,6 @@
 {
-  "name": "DevCloud Workspace",
-  "description": "An elegant dark cloud IDE and GitHub repository workspace for cloning, inspecting, and editing projects.",
+  "name": "Task Laureate",
+  "description": "An extensible task management platform with collaboration, anti-backlog, and AI decomposition features.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

@@ -16,6 +16,7 @@ import { pruneListFavorites, useFavoriteListIds } from '../core/preferences/list
 import { sortListsForAttention } from '../core/domain/listOrdering';
 import { queryKeys } from '../core/contracts/queryKeys';
 import { appServices } from '../app/runtime/appServices';
+import { VoiceAssistantModal } from './VoiceAssistantModal';
 
 interface AppShellProps {
   children?: ReactNode;
@@ -132,6 +133,7 @@ export function AppShell({ children, navItems }: AppShellProps) {
   const isDarkTheme = currentTheme !== 'luxury-minimal';
   const isMobileViewport = useSyncExternalStore(subscribeToMobileViewport, getMobileViewportSnapshot, () => false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isVoiceAssistantOpen, setIsVoiceAssistantOpen] = useState(false);
   const [isReviewExpanded, setIsReviewExpanded] = useState(readWorkspaceNavigationPreference);
   const currentPath = useRouterState({ select: (state) => state.location.pathname });
   const recoveryAvailable = recoveryNeedsAttention(
@@ -237,6 +239,16 @@ export function AppShell({ children, navItems }: AppShellProps) {
           <small>Now viewing: {currentSection?.label ?? 'Dashboard'}</small>
         </div>
         <div className="mobile-topbar__actions">
+          <button
+            type="button"
+            onClick={() => setIsVoiceAssistantOpen(true)}
+            className="mobile-menu-toggle"
+            aria-label="Voice Assistant"
+            title="Voice Assistant"
+            style={{ marginRight: '6px', background: '#4f46e5', color: '#fff', border: 'none' }}
+          >
+            🎙️ Voice
+          </button>
           <NotificationCenter />
           <button
             type="button"
@@ -326,6 +338,17 @@ export function AppShell({ children, navItems }: AppShellProps) {
         <div className="sidebar-footer">
 
           {!isMobileViewport ? <QuickCapture /> : null}
+
+          {/* Voice Assistant button */}
+          <button
+            type="button"
+            onClick={() => setIsVoiceAssistantOpen(true)}
+            className="sidebar-link"
+            style={{ background: '#4f46e5', color: '#fff', borderRadius: '12px', justifyContent: 'center', marginBottom: '8px' }}
+            aria-label="Voice Assistant"
+          >
+            <span>🎙️</span> <span>Voice Assistant</span>
+          </button>
 
           <div className="sidebar-footer__divider">
             <span>Support</span>
@@ -456,6 +479,7 @@ export function AppShell({ children, navItems }: AppShellProps) {
           <span className="mobile-bottom-nav__label">More</span>
         </button>
       </nav>
+      <VoiceAssistantModal isOpen={isVoiceAssistantOpen} onClose={() => setIsVoiceAssistantOpen(false)} />
     </div>
   );
 }

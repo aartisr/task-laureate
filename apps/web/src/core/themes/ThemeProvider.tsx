@@ -13,12 +13,12 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [currentTheme, setCurrentThemeState] = useState<ThemeName>(() => {
-    // Get theme from localStorage or default to dark-pro
+    // Get theme from localStorage or default to sleek-interface
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('laureate-theme');
-      return (saved as ThemeName) || 'dark-pro';
+      return (saved as ThemeName) || 'sleek-interface';
     }
-    return 'dark-pro';
+    return 'sleek-interface';
   });
 
   const setTheme = (theme: ThemeName) => {

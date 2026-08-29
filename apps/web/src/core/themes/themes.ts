@@ -3,7 +3,7 @@
  * Researched from top SaaS products (Figma, Linear, GitHub, Stripe, Apple, Vercel, Airbnb)
  */
 
-export type ThemeName = 'dark-pro' | 'luxury-minimal' | 'warm-community';
+export type ThemeName = 'dark-pro' | 'luxury-minimal' | 'warm-community' | 'sleek-interface';
 
 export interface ThemeColors {
   // Backgrounds
@@ -326,13 +326,90 @@ export const warmCommunityTheme: Theme = {
   },
 };
 
+export const sleekInterfaceTheme: Theme = {
+  name: 'sleek-interface',
+  label: 'Sleek Interface',
+  description: 'Modern light dashboard with Indigo accents and crisp cards.',
+  colors: {
+    bg: {
+      primary: '#F7F9FC',
+      secondary: '#ffffff',
+      tertiary: '#f1f5f9',
+      surface: '#ffffff',
+      overlay: 'rgba(0, 0, 0, 0.1)',
+    },
+    text: {
+      primary: '#1e293b',
+      secondary: '#64748b',
+      tertiary: '#94a3b8',
+      inverse: '#ffffff',
+      onAction: '#ffffff',
+    },
+    action: {
+      primary: '#4f46e5',
+      secondary: '#6366f1',
+      hover: '#4338ca',
+      active: '#3730a3',
+      disabled: '#cbd5e1',
+    },
+    control: {
+      quiet: {
+        background: '#ffffff',
+        foreground: '#1e293b',
+        border: '#e2e8f0',
+        hoverBackground: '#f8fafc',
+      },
+    },
+    status: {
+      success: '#16a34a',
+      warning: '#d97706',
+      error: '#dc2626',
+      info: '#2563eb',
+    },
+    border: {
+      default: '#e2e8f0',
+      light: '#f1f5f9',
+      dark: '#cbd5e1',
+    },
+    accent: {
+      primary: '#4f46e5',
+      secondary: '#06b6d4',
+      tertiary: '#8b5cf6',
+    },
+  },
+  typography: {
+    fontFamily: {
+      sans: 'Inter, system-ui, -apple-system, sans-serif',
+      mono: 'monospace',
+    },
+    scale: 1,
+  },
+  spacing: {
+    scale: 1,
+  },
+  borderRadius: {
+    scale: 1,
+  },
+  shadows: {
+    sm: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+    md: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)',
+    lg: '0 10px 15px -3px rgba(0, 0, 0, 0.08)',
+  },
+};
+
 export const THEMES = {
   'dark-pro': darkProTheme,
   'luxury-minimal': luxuryMinimalTheme,
   'warm-community': warmCommunityTheme,
+  'sleek-interface': sleekInterfaceTheme,
 };
 
 export const THEME_OPTIONS: Array<{ name: ThemeName; label: string; description: string }> = [
+  {
+    name: 'sleek-interface',
+    label: 'Sleek Interface',
+    description: 'Modern light dashboard with Indigo accents',
+  },
   {
     name: 'dark-pro',
     label: 'Dark Pro',
