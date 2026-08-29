@@ -9,6 +9,7 @@ import { announceToScreenReader } from '../lib/a11y';
 import { TaskList } from '../components/TaskList';
 import { TaskComposer } from '../components/TaskComposer';
 import { ShareResourcePanel } from '../components/ShareResourcePanel';
+import { EcosystemIntegrationsPanel } from '../components/EcosystemIntegrationsPanel';
 import { ListAccessBanner } from '../components/ListAccessBanner';
 import { appServices } from '../app/runtime/appServices';
 import { supportsCollaboration } from '../core/contracts/repository';
@@ -30,6 +31,7 @@ export function ListDetailPage({ listId }: ListDetailPageProps) {
   const [newDescription, setNewDescription] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showSharing, setShowSharing] = useState(false);
+  const [showIntegrations, setShowIntegrations] = useState(false);
   const [shareNotice, setShareNotice] = useState<string | null>(null);
   const taskInputRef = useRef<HTMLInputElement>(null);
   const pendingSave = getPendingSaveIntent();
@@ -300,6 +302,16 @@ export function ListDetailPage({ listId }: ListDetailPageProps) {
               >
                 <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M19 8v6M22 11h-6" /></svg><span>Share</span>
               </button>
+              <button
+                type="button"
+                onClick={() => setShowIntegrations(true)}
+                title="Sync and export tasks with Google Calendar, Notion, and Todoist"
+                className="secondary-button"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.85rem' }}
+                aria-label="Open ecosystem integrations"
+              >
+                <span>🔗 Sync &amp; Export</span>
+              </button>
               <details className="list-detail-actions__utility" aria-label="More List actions">
               <summary>More actions</summary><button
                 type="button"
@@ -469,6 +481,42 @@ export function ListDetailPage({ listId }: ListDetailPageProps) {
           </details>
         </footer>
         {showSharing && supportsCollaboration(repository) ? <ShareResourcePanel repository={repository} resource={{ resourceType: 'list', resourceId: list.id }} resourceName={list.title} onClose={() => setShowSharing(false)} /> : null}
+        {showIntegrations ? (
+          <div className="quick-capture" role="presentation">
+            <button className="quick-capture__backdrop" aria-label="Close integrations dialog" type="button" onClick={() => setShowIntegrations(false)} />
+            <div role="dialog" aria-modal="true" className="panel quick-capture__dialog" style={{ maxWidth: '650px', width: '90%' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                <h3 style={{ margin: 0, fontSize: '1.2rem' }}>Ecosystem Sync &amp; Export</h3>
+                <button type="button" className="quick-capture__close" onClick={() => setShowIntegrations(false)} aria-label="Close modal">
+                  ✕
+                </button>
+              </div>
+              <EcosystemIntegrationsPanel
+                tasks={tasks.map((t) => ({
+                  id: t.id,
+                  title: t.title,
+                  notes: t.notes ?? undefined,
+                  dueDate: t.dueDate ?? undefined,
+                  priority: t.priority ?? undefined,
+                  status: t.status ?? undefined,
+                }))}
+                listTitle={list.title}
+                onImportTasks={async (importedTasks) => {
+                  for (const t of importedTasks) {
+                    await taskMutations.createTask.mutateAsync({
+                      title: t.title,
+                      notes: t.notes,
+                      listId: list.id,
+                      priority: (t.priority as any) || 'medium',
+                      dueDate: t.dueDate,
+                    });
+                  }
+                  setShowIntegrations(false);
+                }}
+              />
+            </div>
+          </div>
+        ) : null}
         {shareNotice ? <div className="mt-4 rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm text-indigo-950" role="status"><div className="flex items-start justify-between gap-3"><span>{shareNotice}</span><button type="button" className="font-semibold underline" onClick={() => setShareNotice(null)}>Dismiss</button></div></div> : null}
       </div>
     </section>

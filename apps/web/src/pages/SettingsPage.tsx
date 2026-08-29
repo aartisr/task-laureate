@@ -12,6 +12,7 @@ import { ReminderDeliveryPreferences } from '../components/ReminderDeliveryPrefe
 import { AnalyticsConsentControl } from '../components/AnalyticsConsentControl';
 import { AntiBacklogPrivacyControls } from '../components/AntiBacklogPrivacyControls';
 import { CalendarConnectionPanel } from '../components/CalendarConnectionPanel';
+import { EcosystemIntegrationsPanel } from '../components/EcosystemIntegrationsPanel';
 import { isFeatureEnabled } from '../config/featureFlags';
 import { SyncCenter } from '../components/SyncCenter';
 import { WorkspaceExperienceControl } from '../components/WorkspaceExperienceControl';
@@ -73,6 +74,13 @@ export function SettingsPage() {
         <details className="settings-disclosure">
           <summary><span>Account &amp; sync</span><small>Connect or manage your account</small></summary>
           <div className="settings-disclosure__body"><CloudSyncAuthPanel provider={authProvider} /><SyncCenter /></div>
+        </details>
+
+        <details className="settings-disclosure">
+          <summary><span>Ecosystem &amp; Calendar Integrations</span><small>Google Calendar, Notion, Todoist &amp; Webhooks</small></summary>
+          <div className="settings-disclosure__body">
+            <EcosystemIntegrationsPanel />
+          </div>
         </details>
 
         <details className="settings-disclosure">
