@@ -9,6 +9,7 @@ export interface KeyboardShortcutConfig {
   onOpenSettings?: () => void;
   onGoHome?: () => void;
   onToggleSidebar?: () => void;
+  onVoiceAssistant?: () => void;
 }
 
 /**
@@ -100,6 +101,13 @@ export function useKeyboardShortcuts(config: KeyboardShortcutConfig) {
           }
           break;
 
+        
+        case 'v':
+          if (e.shiftKey && config.onVoiceAssistant) {
+            e.preventDefault();
+            config.onVoiceAssistant();
+          }
+          break;
         default:
           break;
       }
@@ -113,6 +121,7 @@ export function useKeyboardShortcuts(config: KeyboardShortcutConfig) {
       config.onOpenSettings,
       config.onGoHome,
       config.onToggleSidebar,
+      config.onVoiceAssistant,
     ]
   );
 
@@ -139,6 +148,7 @@ export function getShortcutText(key: string): string {
     settings: `${modifier}+,`,
     home: `${modifier}+H`,
     sidebar: `${modifier}+B`,
+    voice: `${modifier}+Shift+V`,
   };
   return shortcuts[key] || key;
 }
@@ -156,6 +166,7 @@ export function useKeyboardShortcutsHelp() {
     { key: 'settings', label: 'Settings', display: getShortcutText('settings') },
     { key: 'home', label: 'Home', display: getShortcutText('home') },
     { key: 'sidebar', label: 'Toggle Sidebar', display: getShortcutText('sidebar') },
+    { key: 'voice', label: 'Voice Assistant', display: getShortcutText('voice') },
   ];
 
   return shortcuts;

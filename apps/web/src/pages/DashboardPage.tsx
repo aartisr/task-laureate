@@ -256,23 +256,30 @@ export function DashboardPage() {
       {/* Quick Actions */}
       {(isCreatingList || pendingList) ? <ListComposer initialInput={pendingList?.input} restoredDraft={Boolean(pendingList)} onCreate={handleCreateList} onCancel={() => { clearPendingSaveIntent(); setIsCreatingList(false); }} /> : null}
       <details className="dashboard-details quick-actions-wrapper"><summary>Workspace tools</summary>
-        <Grid columns={2} gap="normal">
+        <Grid columns={3} gap="normal">
           <Card onClick={() => { clearPendingSaveIntent(); openComposer(); }} ariaLabel="Create a new list">
-            <div className="text-4xl mb-4" aria-hidden="true">
+            <div className="text-4xl mb-4 text-[var(--color-action-primary)]" aria-hidden="true">
               <AppIcon name="plus" />
             </div>
-            <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2">Create New List</h3>
-            <p className="text-sm text-[var(--color-text-secondary)]">Start a new project or category</p>
-            <p className="text-xs text-[var(--color-text-tertiary)] mt-4">Or press Cmd+N</p>
+            <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2">New List</h3>
+            <p className="text-sm text-[var(--color-text-secondary)]">Start a new project</p>
+            <p className="text-xs text-[var(--color-text-tertiary)] mt-4">Cmd+N</p>
           </Card>
-
           <Card onClick={() => navigate({ to: '/search' })} ariaLabel="Search for tasks and lists">
-            <div className="text-4xl mb-4" aria-hidden="true">
+            <div className="text-4xl mb-4 text-[var(--color-action-primary)]" aria-hidden="true">
               <AppIcon name="search" />
             </div>
             <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2">Search</h3>
-            <p className="text-sm text-[var(--color-text-secondary)]">Find tasks across all lists</p>
-            <p className="text-xs text-[var(--color-text-tertiary)] mt-4">Or press Cmd+F</p>
+            <p className="text-sm text-[var(--color-text-secondary)]">Find anything</p>
+            <p className="text-xs text-[var(--color-text-tertiary)] mt-4">Cmd+F</p>
+          </Card>
+          <Card onClick={() => window.dispatchEvent(new Event('open-voice-assistant'))} ariaLabel="Open Voice Assistant">
+            <div className="text-4xl mb-4 text-[var(--color-action-primary)]" aria-hidden="true">
+              <AppIcon name="play" />
+            </div>
+            <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2">Voice Assistant</h3>
+            <p className="text-sm text-[var(--color-text-secondary)]">Hands-free capture</p>
+            <p className="text-xs text-[var(--color-text-tertiary)] mt-4">Cmd+Shift+V</p>
           </Card>
         </Grid>
         <p className="text-sm text-[var(--color-text-secondary)]">Prefer to look around first? <Link to="/sample">Explore the private sample</Link>.</p>

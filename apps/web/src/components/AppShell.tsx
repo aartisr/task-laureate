@@ -212,8 +212,18 @@ export function AppShell({ children, navItems }: AppShellProps) {
   const reviewNavigationIsActive = desktopNavigation.review.some((item) => item.to === '/' ? currentPath === '/' : currentPath === item.to || currentPath.startsWith(`${item.to}/`));
   useEffect(() => {
     const handleOpenVoice = () => setIsVoiceAssistantOpen(true);
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'v') {
+        e.preventDefault();
+        setIsVoiceAssistantOpen(true);
+      }
+    };
     window.addEventListener('open-voice-assistant', handleOpenVoice);
-    return () => window.removeEventListener('open-voice-assistant', handleOpenVoice);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('open-voice-assistant', handleOpenVoice);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
   }, []);
 
   useEffect(() => {
