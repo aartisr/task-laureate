@@ -62,6 +62,7 @@ export interface ShareResourceInput {
 export interface CreateShareInvitationInput extends ShareResourceInput {
   email: string;
   role: CollaboratorRole;
+  resourceTitle?: string;
 }
 
 /** Optional capability: private-only repositories intentionally do not expose it. */

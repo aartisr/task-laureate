@@ -91,7 +91,7 @@ export function createSupabaseCollaborationGateway(config: SupabasePersistenceCo
       if (config.invitationDeliveryUrl) {
         const accessToken = await config.getAccessToken?.();
         if (!accessToken) throw new Error('Sign in before sharing a List or Task.');
-        const response = await request(config.invitationDeliveryUrl, { method: 'POST', headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ resourceType: input.resourceType, resourceId: input.resourceId, email: normalizeInvitationEmail(input.email), role: input.role }) });
+        const response = await request(config.invitationDeliveryUrl, { method: 'POST', headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ resourceType: input.resourceType, resourceId: input.resourceId, email: normalizeInvitationEmail(input.email), role: input.role, resourceTitle: input.resourceTitle }) });
         if (!response.ok) {
           let payload: { message?: string } = {};
           try { payload = await response.json() as typeof payload; } catch { /* a proxy or stale deployment may return HTML */ }

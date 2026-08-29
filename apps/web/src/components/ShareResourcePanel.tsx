@@ -80,7 +80,7 @@ export function ShareResourcePanel({ repository, resource, resourceName, onClose
     if (!email.trim() || sharing || !canManageSharing) return;
     try {
       setSharing(true); setMessage('');
-      const created = await repository.createShareInvitation({ ...resource, email, role });
+      const created = await repository.createShareInvitation({ ...resource, email, role, resourceTitle: resourceName });
       if (created.delivery === 'sent') { setCreatedInvite(null); setMessage(`Invitation email sent to ${normalizeInvitationEmail(email)}. Access starts only after they accept it while signed in.`); }
       else if (created.acceptanceUrl) {
         setCreatedInvite({ email: normalizeInvitationEmail(email), acceptanceUrl: created.acceptanceUrl });

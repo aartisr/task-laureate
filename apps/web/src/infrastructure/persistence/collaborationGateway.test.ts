@@ -25,6 +25,46 @@ describe('Supabase collaboration gateway', () => {
     expect(result.acceptanceUrl).not.toContain(body.p_token_digest);
   });
 
+  it('forwards resourceTitle to the invitation delivery service when configured', async () => {
+    const requests: Array<{ url: string; init?: RequestInit }> = [];
+    const gateway = createSupabaseCollaborationGateway({
+      ...config,
+      invitationDeliveryUrl: '/api/invitations',
+    }, async (url, init) => {
+      requests.push({ url: String(url), init });
+      return new Response(JSON.stringify({
+        invitation: {
+          id: 'invite-123',
+          resource_type: 'list',
+          resource_id: '11111111-1111-1111-1111-111111111111',
+          email_normalized: 'collab@example.com',
+          role: 'editor',
+          status: 'pending',
+          invited_by: 'user-1',
+          expires_at: '2026-09-05T00:00:00.000Z',
+          created_at: '2026-08-29T00:00:00.000Z',
+          accepted_by: null,
+        },
+        delivery: 'sent',
+      }), { status: 200 });
+    });
+
+    const result = await gateway.createShareInvitation({
+      resourceType: 'list',
+      resourceId: '11111111-1111-1111-1111-111111111111',
+      email: 'collab@example.com',
+      role: 'editor',
+      resourceTitle: 'Sprint 24 Tasks',
+    });
+
+    expect(requests[0].url).toBe('/api/invitations');
+    const body = JSON.parse(String(requests[0].init?.body));
+    expect(body.resourceTitle).toBe('Sprint 24 Tasks');
+    expect(body.role).toBe('editor');
+    expect(body.email).toBe('collab@example.com');
+    expect(result.delivery).toBe('sent');
+  });
+
   it('uses the narrow invitation-revocation RPC', async () => {
     const requests: Array<{ url: string; init?: RequestInit }> = [];
     const gateway = createSupabaseCollaborationGateway(config, async (url, init) => {
