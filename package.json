@@ -10,8 +10,9 @@
     "apps/*"
   ],
   "scripts": {
-    "dev": "npm run dev -w apps/web",
+    "dev": "tsx server.ts",
     "build": "npm run build -w apps/web",
+    "start": "node server.ts",
     "test": "npm run test -w apps/web",
     "lint": "npm run lint -w apps/web",
     "check:perf-budgets": "npm run check:perf-budgets -w apps/web",

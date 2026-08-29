@@ -143,16 +143,18 @@ export function consumeOAuthReturnTo() {
 const baseProvider: AuthProvider = {
   configured: isSupabaseAuthConfigured,
   async getSession() {
-    const { data, error } = await requireClient().auth.getSession();
+    if (!client) return null;
+    const { data, error } = await client.auth.getSession();
     if (error) throw error;
     return toAuthSession(data.session);
   },
   async signOut() {
+    if (!client) return;
     // This app's sign-out control is intentionally "this device", not
     // "every device".  Local sign-out clears Supabase's browser session and
     // emits SIGNED_OUT without depending on a remote token-revocation call.
     // That makes it safe and dependable even if a prior session is stale.
-    const { error } = await requireClient().auth.signOut({ scope: deviceSignOutScope });
+    const { error } = await client.auth.signOut({ scope: deviceSignOutScope });
     if (error) throw error;
   },
   subscribe(listener) {
