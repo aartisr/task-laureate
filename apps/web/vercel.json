@@ -1,7 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "vite",
-  "installCommand": "cd ../.. && npm install",
+  "installCommand": "cd ../.. && npm ci --include=dev --include=optional",
   "buildCommand": "npm run verify:production && npm run build",
   "outputDirectory": "dist",
   "crons": [
