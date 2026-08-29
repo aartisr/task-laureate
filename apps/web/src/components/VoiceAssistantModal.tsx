@@ -2,8 +2,8 @@
  * Voice Assistant Modal
  * Allows voice activation to add tasks to existing or new lists.
  */
-
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useVoiceRecognition } from '../hooks/useVoiceRecognition';
 import { parseVoiceCommand } from '../core/services/voiceParser';
 import { appServices } from '../app/runtime/appServices';
@@ -25,7 +25,6 @@ export function VoiceAssistantModal({ isOpen, onClose }: VoiceAssistantModalProp
     try {
       const intent = parseVoiceCommand(spokenText);
       const lists = await appServices.repository.listLists();
-
       let targetListId = lists[0]?.id;
       let targetListName = lists[0]?.title ?? 'Inbox';
 
@@ -60,6 +59,7 @@ export function VoiceAssistantModal({ isOpen, onClose }: VoiceAssistantModalProp
       });
 
       invalidateWorkspaceOverview(queryClient);
+
       setSuccessMessage(`Successfully added task "${intent.taskTitle}" to list "${targetListName}"!`);
       setTimeout(() => {
         setSuccessMessage(null);
@@ -76,19 +76,21 @@ export function VoiceAssistantModal({ isOpen, onClose }: VoiceAssistantModalProp
 
   if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-slate-950/80 backdrop-blur-xl transition-all duration-500 animate-fade-in">
+  const content = (
+    <div className="fixed inset-0 z-[99999] flex flex-col items-center justify-between bg-slate-950/85 backdrop-blur-xl transition-all duration-500 animate-fade-in p-6 pb-24 md:pb-12 h-[100dvh]">
       {/* Close Button */}
-      <button 
-        onClick={onClose}
-        className="absolute top-8 right-8 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center text-xl backdrop-blur-md transition-all"
-        aria-label="Close voice assistant"
-      >
-        ✕
-      </button>
+      <div className="w-full flex justify-end">
+        <button 
+          onClick={onClose}
+          className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center text-xl backdrop-blur-md transition-all z-10"
+          aria-label="Close voice assistant"
+        >
+          ✕
+        </button>
+      </div>
 
       {/* Main Transcript Display */}
-      <div className="absolute top-1/4 left-0 w-full px-8 flex flex-col items-center text-center">
+      <div className="flex-1 flex flex-col items-center justify-center w-full px-4 text-center pb-8">
         {successMessage ? (
           <h2 className="text-3xl md:text-5xl font-medium text-emerald-400 tracking-tight animate-fade-in drop-shadow-md">
             {successMessage}
@@ -106,7 +108,7 @@ export function VoiceAssistantModal({ isOpen, onClose }: VoiceAssistantModalProp
       </div>
 
       {/* The Ambient Orb */}
-      <div className="absolute bottom-[30%] flex flex-col items-center justify-center">
+      <div className="flex-shrink-0 flex flex-col items-center justify-center w-full relative mb-8">
         <button
           onClick={isListening ? stopListening : startListening}
           className="relative group flex items-center justify-center"
@@ -138,7 +140,7 @@ export function VoiceAssistantModal({ isOpen, onClose }: VoiceAssistantModalProp
         {transcript && !isListening && !isProcessing && !successMessage && (
           <button
             onClick={() => submitTranscript(transcript)}
-            className="mt-16 px-8 py-3 rounded-full bg-white text-slate-900 font-bold text-lg hover:scale-105 transition-all shadow-[0_0_30px_rgba(255,255,255,0.3)] animate-fade-in"
+            className="mt-12 px-8 py-3 rounded-full bg-white text-slate-900 font-bold text-lg hover:scale-105 transition-all shadow-[0_0_30px_rgba(255,255,255,0.3)] animate-fade-in"
           >
             Process Command →
           </button>
@@ -146,4 +148,10 @@ export function VoiceAssistantModal({ isOpen, onClose }: VoiceAssistantModalProp
       </div>
     </div>
   );
+
+  if (typeof document !== 'undefined') {
+    return createPortal(content, document.body);
+  }
+  
+  return content;
 }
