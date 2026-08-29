@@ -16,8 +16,13 @@ export interface ParsedCapture {
   tags: string[];
   estimateMinutes: number | null;
   scheduledStartAt: string | null;
+  energyLevel: EnergyLevel | null;
+  priority: 'low' | 'medium' | 'high' | null;
+  targetListSlugOrName: string | null;
   confidence: 'high' | 'medium' | 'low';
   rawInput: string;
+  isMultiLine?: boolean;
+  individualItems?: ParsedCapture[];
 }
 
 export interface RecommendationContext {
@@ -59,20 +64,60 @@ export interface TaskPlanProposal {
 }
 
 const TAG_PATTERN = /(?:^|\s)#([\p{L}\p{N}_-]+)/gu;
-const DURATION_PATTERN = /(?:^|\s)(\d{1,3})\s*(?:m|min|mins|minutes)\b/i;
+const DURATION_PATTERN = /(?:^|\s)(\d{1,3})\s*(?:m|min|mins|minutes|h|hr|hrs|hours)\b/i;
 const TOMORROW_PATTERN = /\btomorrow\b/i;
+const TODAY_PATTERN = /\btoday\b/i;
+const LIST_ROUTING_PATTERN = /(?:^|\s)\/([\p{L}\p{N}_-]+)/gu;
+const ENERGY_PATTERN = /(?:^|\s)~(deep|light|quick|focus|easy)\b/i;
+const PRIORITY_PATTERN = /(?:^|\s)!(urgent|high|med|medium|low)\b/i;
 
-export function parseCapture(rawInput: string, now = new Date()): ParsedCapture {
+export function parseSingleLineCapture(rawInput: string, now = new Date()): ParsedCapture {
   const tags = Array.from(rawInput.matchAll(TAG_PATTERN), (match) => match[1].toLocaleLowerCase());
+  
+  const listMatches = Array.from(rawInput.matchAll(LIST_ROUTING_PATTERN), (match) => match[1]);
+  const targetListSlugOrName = listMatches.length > 0 ? listMatches[listMatches.length - 1] : null;
+
   const durationMatch = rawInput.match(DURATION_PATTERN);
-  const estimateMinutes = durationMatch ? Number(durationMatch[1]) : null;
-  const scheduledStartAt = TOMORROW_PATTERN.test(rawInput)
-    ? new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 9).toISOString()
-    : null;
+  let estimateMinutes: number | null = null;
+  if (durationMatch) {
+    const rawVal = Number(durationMatch[1]);
+    const isHours = /h|hr|hrs|hours/i.test(durationMatch[0]);
+    estimateMinutes = isHours ? rawVal * 60 : rawVal;
+  }
+
+  const energyMatch = rawInput.match(ENERGY_PATTERN);
+  let energyLevel: EnergyLevel | null = null;
+  if (energyMatch) {
+    const rawEnergy = energyMatch[1].toLowerCase();
+    if (rawEnergy === 'deep' || rawEnergy === 'focus') energyLevel = 'deep';
+    else if (rawEnergy === 'light' || rawEnergy === 'easy') energyLevel = 'light';
+    else if (rawEnergy === 'quick') energyLevel = 'quick';
+  }
+
+  const priorityMatch = rawInput.match(PRIORITY_PATTERN);
+  let priority: 'low' | 'medium' | 'high' | null = null;
+  if (priorityMatch) {
+    const rawPri = priorityMatch[1].toLowerCase();
+    if (rawPri === 'urgent' || rawPri === 'high') priority = 'high';
+    else if (rawPri === 'med' || rawPri === 'medium') priority = 'medium';
+    else if (rawPri === 'low') priority = 'low';
+  }
+
+  let scheduledStartAt: string | null = null;
+  if (TOMORROW_PATTERN.test(rawInput)) {
+    scheduledStartAt = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 9).toISOString();
+  } else if (TODAY_PATTERN.test(rawInput)) {
+    scheduledStartAt = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours() + 1).toISOString();
+  }
+
   const title = rawInput
     .replace(TAG_PATTERN, ' ')
+    .replace(LIST_ROUTING_PATTERN, ' ')
+    .replace(ENERGY_PATTERN, ' ')
+    .replace(PRIORITY_PATTERN, ' ')
     .replace(DURATION_PATTERN, ' ')
     .replace(TOMORROW_PATTERN, ' ')
+    .replace(TODAY_PATTERN, ' ')
     .replace(/\s+/g, ' ')
     .trim();
 
@@ -82,8 +127,26 @@ export function parseCapture(rawInput: string, now = new Date()): ParsedCapture 
     tags,
     estimateMinutes: estimateMinutes && estimateMinutes > 0 ? estimateMinutes : null,
     scheduledStartAt,
-    confidence: title ? (scheduledStartAt || estimateMinutes || tags.length ? 'high' : 'medium') : 'low',
+    energyLevel,
+    priority,
+    targetListSlugOrName,
+    confidence: title ? (scheduledStartAt || estimateMinutes || tags.length || energyLevel || priority || targetListSlugOrName ? 'high' : 'medium') : 'low',
   };
+}
+
+export function parseCapture(rawInput: string, now = new Date()): ParsedCapture {
+  const lines = rawInput.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+  if (lines.length > 1) {
+    const individualItems = lines.map((line) => parseSingleLineCapture(line, now));
+    const combined = parseSingleLineCapture(lines[0], now);
+    return {
+      ...combined,
+      rawInput,
+      isMultiLine: true,
+      individualItems,
+    };
+  }
+  return parseSingleLineCapture(rawInput, now);
 }
 
 export function needsClarity(metadata: Pick<TaskPlanningMetadata, 'estimateMinutes' | 'energyLevel'>): boolean {

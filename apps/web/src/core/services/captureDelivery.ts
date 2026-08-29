@@ -31,7 +31,31 @@ async function captureIntoLocalInbox(repository: TodoRepository, item: CaptureOu
   const lists = await repository.listLists();
   const inbox = requestedList ? lists.find((list) => list.id === requestedList) : lists.find((list) => list.title === 'Inbox' && list.status === 'active');
   const destination = inbox ?? await repository.createList({ title: 'Inbox', description: 'Fast capture inbox' });
-  return repository.createTask({ listId: destination.id, title: item.payload.parsed.title, tags: item.payload.parsed.tags });
+  
+  const parsed = item.payload.parsed;
+  if (parsed.isMultiLine && parsed.individualItems && parsed.individualItems.length > 1) {
+    const createdTasks = [];
+    for (const subItem of parsed.individualItems) {
+      if (!subItem.title) continue;
+      const created = await repository.createTask({
+        listId: destination.id,
+        title: subItem.title,
+        tags: subItem.tags,
+        priority: subItem.priority ?? 'medium',
+        dueDate: subItem.scheduledStartAt ? subItem.scheduledStartAt.slice(0, 10) : undefined,
+      });
+      createdTasks.push(created);
+    }
+    return createdTasks[0];
+  }
+
+  return repository.createTask({
+    listId: destination.id,
+    title: parsed.title,
+    tags: parsed.tags,
+    priority: parsed.priority ?? 'medium',
+    dueDate: parsed.scheduledStartAt ? parsed.scheduledStartAt.slice(0, 10) : undefined,
+  });
 }
 
 /** One place owns capture delivery semantics for local and remote repositories. */

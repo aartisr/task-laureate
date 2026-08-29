@@ -14,6 +14,27 @@ describe('anti-backlog domain policy', () => {
     expect(parsed.scheduledStartAt).toContain('2026-02-02');
   });
 
+  it('parses omnibar rich tokens like /list, ~energy, !priority, and durations in hours', () => {
+    const parsed = parseCapture('Draft pitch deck /launch-plan ~deep !urgent 2h #q3', new Date('2026-02-01T12:00:00.000Z'));
+    expect(parsed.title).toBe('Draft pitch deck');
+    expect(parsed.targetListSlugOrName).toBe('launch-plan');
+    expect(parsed.energyLevel).toBe('deep');
+    expect(parsed.priority).toBe('high');
+    expect(parsed.estimateMinutes).toBe(120);
+    expect(parsed.tags).toEqual(['q3']);
+  });
+
+  it('detects and splits multi-line brain dumps into individual task items', () => {
+    const rawDump = 'Call dentist tomorrow 10m\nReview budget /finance ~deep !urgent\nOrder groceries #personal';
+    const parsed = parseCapture(rawDump, new Date('2026-02-01T12:00:00.000Z'));
+    expect(parsed.isMultiLine).toBe(true);
+    expect(parsed.individualItems).toHaveLength(3);
+    expect(parsed.individualItems?.[0].title).toBe('Call dentist');
+    expect(parsed.individualItems?.[1].targetListSlugOrName).toBe('finance');
+    expect(parsed.individualItems?.[1].priority).toBe('high');
+    expect(parsed.individualItems?.[2].tags).toEqual(['personal']);
+  });
+
   it('makes the recommendation policy explainable and deterministic', () => {
     const candidates = [task({ id: 'deep' }), task({ id: 'other', order: 2 })];
     const result = recommendTasks(candidates, {
