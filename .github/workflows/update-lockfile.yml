@@ -22,7 +22,7 @@ jobs:
     if: "!contains(github.event.head_commit.message, '[skip-lockfile]') && !contains(github.event.head_commit.message, 'sync package-lock.json')"
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           # Use a token so the committed lock file triggers downstream workflows
           token: ${{ secrets.GITHUB_TOKEN }}
