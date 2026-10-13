@@ -54,7 +54,7 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
-      - uses: supabase/setup-cli@v1
+      - uses: supabase/setup-cli@v3
         with:
           # Keep the CI database engine aligned with the committed CLI. A
           # floating "latest" version can make the same migration pass one day
